@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 # --- SSH Config ---
-HOST = "10.10.16.231"  
+HOST = "10.10.16.79"  
 PORT = 22
 USER = "ASUS"
 PASSWORD = "120605"

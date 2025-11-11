@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#app/services/iptables_service.py
+# app/services/iptables_service.py
 """
 iptables_service.py — service chạy nền (root)
 Nghe lệnh từ Redis để BLOCK / UNBLOCK IP.
@@ -27,6 +27,7 @@ logger = logging.getLogger("iptables_service")
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_CHANNEL = "iptables_commands"
+REDIS_SOCKET_TIMEOUT = 60  # tăng timeout để tránh disconnect
 
 
 def iptables_block(ip: str):
@@ -72,14 +73,17 @@ def start_redis_listener():
     """Lắng nghe Redis channel để nhận lệnh block/unblock."""
     while True:
         try:
-            r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, socket_timeout=10)
-            pubsub = r.pubsub()
+            r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, socket_timeout=REDIS_SOCKET_TIMEOUT)
+            pubsub = r.pubsub(ignore_subscribe_messages=True)  # bỏ qua message subscribe ban đầu
             pubsub.subscribe(REDIS_CHANNEL)
             logger.info(f"[REDIS] Đã kết nối Redis channel: {REDIS_CHANNEL}")
 
             for message in pubsub.listen():
+                if message is None:
+                    continue
                 if message["type"] != "message":
                     continue
+
                 payload = message["data"].decode("utf-8").strip()
                 logger.info(f"[REDIS] Nhận lệnh: {payload}")
 
@@ -99,8 +103,11 @@ def start_redis_listener():
         except redis.ConnectionError as e:
             logger.error(f"[REDIS] Mất kết nối Redis: {e}, thử lại sau 5s...")
             time.sleep(5)
+        except redis.TimeoutError as e:
+            logger.error(f"[REDIS] Timeout khi đọc từ socket: {e}, reconnect sau 5s...")
+            time.sleep(5)
         except Exception as e:
-            logger.error(f"[ERROR] Lỗi không xác định: {e}")
+            logger.error(f"[ERROR] Lỗi không xác định: {e}, reconnect sau 5s...")
             time.sleep(5)
 
 
@@ -108,5 +115,7 @@ if __name__ == "__main__":
     logger.info("=" * 60)
     logger.info(f"🚀 Bắt đầu iptables_service tại {datetime.now()}")
     logger.info("=" * 60)
+    print("🚀 Bắt đầu iptables_service...")
 
     start_redis_listener()
+    logger.info("iptables_service đã dừng.")

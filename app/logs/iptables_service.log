@@ -4,3 +4,317 @@
 2025-10-28 12:22:09,562 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
 2025-10-28 12:22:27,911 [INFO] [REDIS] Nhận lệnh: BLOCK 1.1.1.1
 2025-10-28 12:22:27,944 [WARNING] [SKIP] IP 1.1.1.1 đã bị chặn từ trước.
+2025-11-11 10:32:59,436 [INFO] ============================================================
+2025-11-11 10:32:59,436 [INFO] 🚀 Bắt đầu iptables_service tại 2025-11-11 10:32:59.436536
+2025-11-11 10:32:59,436 [INFO] ============================================================
+2025-11-11 10:32:59,437 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:33:09,448 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:33:14,449 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:33:24,459 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:33:29,459 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:33:39,470 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:33:44,470 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:33:54,481 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:33:55,417 [INFO] ============================================================
+2025-11-11 10:33:55,417 [INFO] 🚀 Bắt đầu iptables_service tại 2025-11-11 10:33:55.417779
+2025-11-11 10:33:55,417 [INFO] ============================================================
+2025-11-11 10:33:55,419 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:34:05,422 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:34:10,423 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:34:20,433 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:34:25,434 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:34:35,444 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:34:40,445 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:34:50,455 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:34:55,456 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:35:05,466 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:35:10,466 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:35:20,476 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:35:25,476 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:35:35,486 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:35:40,487 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:35:50,497 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:35:55,498 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:36:05,508 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:36:10,508 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:36:20,518 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:36:25,518 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:36:35,528 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:36:40,529 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:36:50,538 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:36:55,539 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:37:05,549 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:37:10,549 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:37:20,559 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:37:25,560 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:37:35,570 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:37:40,571 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:37:50,581 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:37:55,581 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:38:05,583 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:38:10,584 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:38:20,588 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:38:25,589 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:38:35,598 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:38:40,599 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:38:50,609 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:38:55,610 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:39:05,620 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:39:10,620 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:39:20,630 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:39:25,631 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:39:35,641 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:39:40,642 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:39:50,652 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:39:55,652 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:40:05,661 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:40:10,661 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:40:20,671 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:40:25,671 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:40:35,681 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:40:40,682 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:40:50,691 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:40:55,692 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:41:05,702 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:41:10,703 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:41:20,712 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:41:25,712 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:41:35,723 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:41:40,723 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:41:50,733 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:41:55,734 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:42:05,744 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:42:10,744 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:42:20,754 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:42:25,755 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:42:26,776 [INFO] ============================================================
+2025-11-11 10:42:26,777 [INFO] 🚀 Bắt đầu iptables_service tại 2025-11-11 10:42:26.777069
+2025-11-11 10:42:26,777 [INFO] ============================================================
+2025-11-11 10:42:26,778 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:42:36,789 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:42:41,789 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:42:51,800 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:42:56,801 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:43:06,810 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:43:11,811 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:43:21,821 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:43:26,822 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:43:36,832 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:43:41,833 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:43:51,843 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:43:56,844 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:44:06,854 [ERROR] [ERROR] Lỗi không xác định: Timeout reading from socket
+2025-11-11 10:44:11,855 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:44:46,003 [INFO] ============================================================
+2025-11-11 10:44:46,003 [INFO] 🚀 Bắt đầu iptables_service tại 2025-11-11 10:44:46.003872
+2025-11-11 10:44:46,003 [INFO] ============================================================
+2025-11-11 10:44:46,005 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:45:26,059 [INFO] [REDIS] Nhận lệnh: BLOCK 1.2.3.4
+2025-11-11 10:45:26,076 [INFO] [BLOCKED] 1.2.3.4 - Đã thêm vào iptables
+2025-11-11 10:46:26,136 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:46:31,137 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:47:31,182 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:47:36,183 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:48:14,516 [INFO] [REDIS] Nhận lệnh: BLOCK 1.2.3.4
+2025-11-11 10:48:14,524 [WARNING] [SKIP] IP 1.2.3.4 đã bị chặn từ trước.
+2025-11-11 10:49:14,584 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:49:19,584 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:50:19,645 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:50:24,646 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:51:24,706 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:51:29,707 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:52:29,766 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:52:34,766 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:53:34,826 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:53:39,827 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:54:39,887 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:54:44,888 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:55:44,948 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:55:49,948 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:56:50,008 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:56:55,009 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:57:55,069 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:58:00,070 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 10:59:00,121 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 10:59:05,122 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:00:05,155 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:00:10,155 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:01:10,215 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:01:15,216 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:02:15,272 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:02:20,273 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:03:20,331 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:03:25,332 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:04:25,392 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:04:30,392 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:05:30,452 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:05:35,452 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:06:35,507 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:06:40,508 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:07:03,147 [INFO] ============================================================
+2025-11-11 11:07:03,147 [INFO] 🚀 Bắt đầu iptables_service tại 2025-11-11 11:07:03.147408
+2025-11-11 11:07:03,147 [INFO] ============================================================
+2025-11-11 11:07:03,148 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 11:07:24,454 [INFO] [REDIS] Nhận lệnh: BLOCK 127.0.0.1
+2025-11-11 11:07:24,467 [INFO] [BLOCKED] 127.0.0.1 - Đã thêm vào iptables
+2025-11-11 11:08:24,527 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 11:09:29,587 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout connecting to server, reconnect sau 5s...
+2025-11-11 11:10:34,647 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout connecting to server, reconnect sau 5s...
+2025-11-11 11:11:39,707 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout connecting to server, reconnect sau 5s...
+2025-11-11 11:12:44,767 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout connecting to server, reconnect sau 5s...
+2025-11-11 14:38:54,942 [INFO] ============================================================
+2025-11-11 14:38:54,942 [INFO] 🚀 Bắt đầu iptables_service tại 2025-11-11 14:38:54.942388
+2025-11-11 14:38:54,942 [INFO] ============================================================
+2025-11-11 14:38:54,943 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:39:55,004 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:40:00,004 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:41:00,006 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:41:05,007 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:42:05,067 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:42:10,068 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:43:10,128 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:43:15,129 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:44:15,189 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:44:20,189 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:45:20,249 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:45:25,249 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:46:25,283 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:46:30,284 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:47:30,344 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:47:35,344 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:47:49,966 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:47:49,979 [INFO] [BLOCKED] 10.10.16.80 - Đã thêm vào iptables
+2025-11-11 14:47:52,618 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:47:52,634 [INFO] [BLOCKED] 10.10.30.195 - Đã thêm vào iptables
+2025-11-11 14:47:56,741 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:47:56,747 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:47:59,288 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:47:59,296 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:02,817 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:02,823 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:05,475 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:05,484 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:08,710 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:08,717 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:13,135 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:48:13,142 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:15,732 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:48:15,739 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:18,607 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:48:18,616 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:21,664 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:21,675 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:25,170 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:48:25,178 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:28,919 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:28,928 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:32,205 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:48:32,215 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:35,398 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:35,407 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:37,853 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:48:37,863 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:48:42,912 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:42,921 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:48:42,941 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:48:42,950 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:49:42,991 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:49:47,992 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:50:48,055 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:50:53,056 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:50:56,387 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.108
+2025-11-11 14:50:56,409 [INFO] [BLOCKED] 10.10.30.108 - Đã thêm vào iptables
+2025-11-11 14:51:00,082 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:51:00,092 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:51:03,516 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.108
+2025-11-11 14:51:03,523 [WARNING] [SKIP] IP 10.10.30.108 đã bị chặn từ trước.
+2025-11-11 14:51:06,703 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.108
+2025-11-11 14:51:06,711 [WARNING] [SKIP] IP 10.10.30.108 đã bị chặn từ trước.
+2025-11-11 14:52:06,771 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:52:11,771 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:53:11,831 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:53:16,831 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:54:16,891 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:54:21,891 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:55:21,951 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:55:26,952 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:56:27,012 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:56:32,013 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:57:32,073 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:57:37,074 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 14:58:31,784 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:58:31,803 [INFO] [BLOCKED] 10.10.16.80 - Đã thêm vào iptables
+2025-11-11 14:58:34,882 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:58:34,902 [INFO] [BLOCKED] 10.10.30.195 - Đã thêm vào iptables
+2025-11-11 14:58:37,711 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.16.80
+2025-11-11 14:58:37,721 [WARNING] [SKIP] IP 10.10.16.80 đã bị chặn từ trước.
+2025-11-11 14:58:42,676 [INFO] [REDIS] Nhận lệnh: BLOCK 10.10.30.195
+2025-11-11 14:58:42,685 [WARNING] [SKIP] IP 10.10.30.195 đã bị chặn từ trước.
+2025-11-11 14:59:42,745 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 14:59:47,745 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:00:47,805 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:00:52,806 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:01:52,866 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:01:57,867 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:02:57,906 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:03:02,907 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:04:02,967 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:04:07,968 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:05:08,028 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:05:13,028 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:06:13,086 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:06:18,086 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:07:18,099 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:07:23,100 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:08:23,133 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:08:28,133 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:09:28,155 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:09:33,155 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:10:33,216 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:10:38,216 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:11:38,277 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:11:43,277 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:12:43,314 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:12:48,315 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:13:48,378 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:13:53,379 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:14:53,435 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:14:58,435 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:15:58,496 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:16:03,496 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:17:03,557 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:17:08,557 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:18:08,618 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:18:13,618 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:19:13,678 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:19:18,678 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:20:18,738 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:20:23,739 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:21:23,799 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:21:28,800 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:22:28,860 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:22:33,861 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:23:33,921 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:23:38,922 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:24:38,982 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:24:43,983 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:25:44,046 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:25:49,047 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:26:49,107 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:26:54,108 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:27:54,118 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:27:59,119 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:28:59,161 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:29:04,161 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:30:04,222 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:30:09,222 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:31:09,285 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:31:14,287 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:32:14,347 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:32:19,348 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:33:19,408 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:33:24,409 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:34:24,450 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:34:29,451 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands
+2025-11-11 15:35:29,511 [ERROR] [REDIS] Timeout khi đọc từ socket: Timeout reading from socket, reconnect sau 5s...
+2025-11-11 15:35:34,512 [INFO] [REDIS] Đã kết nối Redis channel: iptables_commands

@@ -1,4 +1,25 @@
-# # app/main.py
+from fastapi import FastAPI
+from app.api import api_router
+from app.database import init_db
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import uvicorn
+
+app = FastAPI(title="IDR Project API")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+templates = Jinja2Templates(directory="app/templates")
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+# Gắn các router API
+app.include_router(api_router)
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
 
 # from pathlib import Path
 # from fastapi import FastAPI, Request
@@ -110,6 +131,56 @@
 #         logger.error(f"Lỗi render template 'index.html': {e}", exc_info=True)
 #         return HTMLResponse(content="<h1>Lỗi 500: Không thể tải template.</h1>", status_code=500)
 
+# @app.get("/dashboard", response_class=HTMLResponse)
+# async def dashboard_page(request: Request):
+#     """
+#     Trang Dashboard chính.
+#     """
+#     return templates.TemplateResponse("index.html", {"request": request})
+
+
+# @app.get("/incidents", response_class=HTMLResponse)
+# async def incidents_page(request: Request):
+#     """
+#     Trang quản lý sự kiện tấn công.
+#     """
+#     return templates.TemplateResponse("incident.html", {"request": request})
+
+
+# @app.get("/analytics", response_class=HTMLResponse)
+# async def analytics_page(request: Request):
+#     """
+#     Trang phân tích & thống kê.
+#     """
+#     return templates.TemplateResponse("analytics.html", {"request": request})
+
+
+# @app.get("/settings", response_class=HTMLResponse)
+# async def settings_page(request: Request):
+#     """
+#     Trang cấu hình hệ thống.
+#     """
+#     ctx = {
+#         "request": request,
+#         "db_url": "mysql+pymysql://idr_user:***@localhost:3306/ids_honeypot",
+#         "smtp_host": "smtp.gmail.com",
+#         "api_base": "/api"
+#     }
+#     return templates.TemplateResponse("settings.html", ctx)
+
+# @app.get("/rules", response_class=HTMLResponse)
+# async def rules_page(request: Request):
+#     """
+#     Trang quản lý IDS Rules.
+#     """
+#     return templates.TemplateResponse("rules.html", {"request": request})
+
+# @app.get("/login", response_class=HTMLResponse)
+# async def login_page(request: Request):
+#     """
+#     Trang đăng nhập hệ thống.
+#     """
+#     return templates.TemplateResponse("login.html", {"request": request})
 
 # # ------------------------------------------------------
 # # 7️⃣ Endpoint kiểm tra tình trạng hệ thống
@@ -118,25 +189,3 @@
 # async def health():
 #     """Kiểm tra trạng thái server."""
 #     return JSONResponse(content={"status": "ok"})
-from fastapi import FastAPI
-from app.api import api_router
-from app.database import init_db
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-import uvicorn
-
-app = FastAPI(title="IDR Project API")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-templates = Jinja2Templates(directory="app/templates")
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
-
-# Gắn các router API
-app.include_router(api_router)
-
-if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-

@@ -4,6 +4,11 @@ ids_byte_deep.py - simple Snort-like byte-level IDS
 """
 
 from __future__ import annotations
+import sys
+import os
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 import argparse
 import threading
 import queue
@@ -22,9 +27,10 @@ from urllib.parse import unquote_plus
 from typing import Dict, Any, Tuple, List, Optional
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import os
 import requests
 
+
+from app.workers.blocker import enqueue_block
 # ----------------- Config paths -----------------
 BASE_DIR = Path("app")
 LOG_DIR = BASE_DIR / "logs"
@@ -35,32 +41,6 @@ ALERTS_LOG = LOG_DIR / "alerts.log"
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-# # ----------------- Logging setup -----------------
-# traffic_logger = logging.getLogger("traffic")
-# alerts_logger = logging.getLogger("alerts")
-# console_logger = logging.getLogger("console")
-
-# for lg in (traffic_logger, alerts_logger, console_logger):
-#     lg.setLevel(logging.DEBUG)
-
-# # console handler
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.INFO)
-# fmt_console = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-# ch.setFormatter(fmt_console)
-# console_logger.addHandler(ch)
-
-# # traffic file handler
-# fh_traffic = logging.FileHandler(str(TRAFFIC_LOG), encoding="utf-8")
-# fh_traffic.setLevel(logging.INFO)
-# fh_traffic.setFormatter(logging.Formatter("%(asctime)s [TRAFFIC] %(message)s"))
-# traffic_logger.addHandler(fh_traffic)
-
-# # alerts file handler
-# fh_alerts = logging.FileHandler(str(ALERTS_LOG), encoding="utf-8")
-# fh_alerts.setLevel(logging.INFO)
-# fh_alerts.setFormatter(logging.Formatter("%(asctime)s [ALERT] %(message)s"))
-# alerts_logger.addHandler(fh_alerts)
 # ----------------- Logging setup -----------------
 traffic_logger = logging.getLogger("traffic")
 alerts_logger = logging.getLogger("alerts")
@@ -403,7 +383,7 @@ class IDS:
         except Exception:
             console_logger.exception("log_traffic error")
 
-    def log_alert(self, meta: Dict[str, Any], payload: bytes, rid: str, message: str, matched_variant: str, action: str):
+    def log_alert(self, meta: Dict[str, Any], payload: bytes, rid: str, message: str, matched_variant: str, action: str, severity: str):
         try:
             key = (meta.get('src'), meta.get('dst'), meta.get('sport'), meta.get('dport'), meta.get('proto'), hashlib.sha1(payload).hexdigest())
             print(key)
@@ -422,6 +402,7 @@ class IDS:
             s = f"ALERT [{rid}] {message} | proto={meta.get('proto')} {src}->{dst} variant={matched_variant} entropy={ent:.3f}\nhexdump:\n{hd}\n"
             alerts_logger.info(s)
             console_logger.info("ALERT %s %s -> %s (%s)", rid, src, dst, message)
+            severity = meta.get('severity', 'medium')
             #Gửi cảnh báo đến api:
             try:
                 api_payload ={
@@ -437,14 +418,14 @@ class IDS:
                     "hexdump": hd,
                     "action": action,
                     "payload": base64.b64encode(payload).decode('ascii'),
-                    "severity": meta.get('severity', 'medium'),
+                    "severity": severity
                 }
 
-                response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=5)
-                if response.status_code == 201:
-                    console_logger.info("Alert sent to API successfully: %s", response.json())
-                else:
-                    console_logger.error("Failed to send alert to API: %s - %s", response.status_code, response.text)
+                # response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=5)
+                # if response.status_code == 201:
+                #     console_logger.info("Alert sent to API successfully: %s", response.json())
+                # else:
+                #     console_logger.error("Failed to send alert to API: %s - %s", response.status_code, response.text)
             except requests.exceptions.RequestException as e:
                 console_logger.error("Error sending alert to API: %s", e)
                 # Handle specific request exceptions if needed
@@ -675,10 +656,22 @@ class IDS:
                     #lấy thêm action trong rules chứa alerts để biết mức độ nghiêm trọng của alert
                     if rid in self.rules:
                         meta["action"] = self.rules[rid].get("action", "unknown")
+                        meta["severity"] = self.rules[rid].get("severity", "medium")
                     else:
                         meta["action"] = "unknown"
+                        meta["severity"] = "medium"
                     action = meta["action"]
-                    self.log_alert(meta, p, rid, message, variant, action)
+                    severity = meta["severity"]
+                    self.log_alert(meta, p, rid, message, variant, action, severity)
+
+                    # if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
+                    #     src_ip = meta.get("src")
+                    #     if src_ip:
+                    #         try:
+                    #             enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
+                    #             console_logger.info("Enqueued block for %s", src_ip)
+                    #         except Exception:
+                    #             console_logger.exception("enqueue_block error")
                 except Exception:
                     console_logger.exception("log_alert error")
         else:

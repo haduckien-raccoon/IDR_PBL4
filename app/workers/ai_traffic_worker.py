@@ -134,31 +134,7 @@ async def ai_process_block(queue: asyncio.Queue):
                 description = " ".join(reason).strip() if isinstance(reason, list) else str(reason).strip()
                 #fill bằng hexdump lấy hết
                 description += f"\n--- Hexdump ---\n{block.strip()}\n--- End Hexdump ---"
-                # gửi API
-                api_payload = {
-                    "sent_at": datetime.now().isoformat(),
-                    "alert_id": str(uuid.uuid4()),
-                    "event_id": str(generate_uuid()),
-                    "message": label,
-                    "alert_message": "AI " + label,
-                    "src_ip": result.get("src", "0.0.0.0"),
-                    "dst_ip": result.get("dst", "0.0.0.0"),
-                    "proto": result.get("proto", "TCP"),
-                    "entropy": result.get("entropy", 0.0),
-                    "hexdump": block.strip(),
-                    "severity": result.get("severity", "medium"),
-                    "alert_level": result.get("severity", "medium"),
-                    "confidence": result.get("confidence", 0.5),
-                    "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
-                    "description": description,
-                    "action": result.get("action", "monitor"),
-                    "captured_file": LOG_FILE,
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "New",
-                    "source_ip": result.get("src", "0.0.0.0"),
-                    "destination_ip": result.get("dst", "0.0.0.0"),
-                    "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
-                }
+                alert_id, event_id = None, None
                 session = SessionLocal()
                 try:
                     # 1️⃣ Tạo hoặc lấy AttackType
@@ -216,22 +192,49 @@ async def ai_process_block(queue: asyncio.Queue):
                         "severity": e.severity,
                         "description": e.description
                     }
+
+                    alert_id = str(a.alert_id)
+                    event_id = str(e.event_id)
+
                     try:
                         alert_dict = Alert(**alert_dict)
                         event_dict = Event(**event_dict)
                         asyncio.create_task(emit_alert_realtime(alert_dict, event_dict))
                     except RuntimeError:
                         await emit_alert_realtime(alert_dict, event_dict)
-
                     session.commit()
                 except Exception as db_err:
                     session.rollback()
                     logger.exception(f"[DB ERROR] Failed to insert alert: {db_err}")
                 finally:
                     session.close()
+                api_payload = {
+                    "sent_at": datetime.now().isoformat(),
+                    "alert_id": alert_id,
+                    "event_id": event_id,
+                    "message": label,
+                    "alert_message": "AI " + label,
+                    "src_ip": result.get("src", "0.0.0.0"),
+                    "dst_ip": result.get("dst", "0.0.0.0"),
+                    "proto": result.get("proto", "TCP"),
+                    "entropy": result.get("entropy", 0.0),
+                    "hexdump": block.strip(),
+                    "severity": result.get("severity", "medium")+"-"+str(result.get("confidence", "0.5"))+"-"+result.get("action", "warning"),
+                    "alert_level": result.get("severity", "medium"),
+                    "confidence": result.get("confidence", 0.5),
+                    "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
+                    "description": description,
+                    "action": result.get("action", "monitor"),
+                    "captured_file": LOG_FILE,
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "New",
+                    "source_ip": result.get("src", "0.0.0.0"),
+                    "destination_ip": result.get("dst", "0.0.0.0"),
+                    "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
+                }
                 email_attempted = False
                 try:
-                    await to_thread(_send_email_sync, api_payload)
+                    # await to_thread(_send_email_sync, api_payload)
                     email_attempted = True
                     logger.info(f"Email alert sent for alert_id: {api_payload['alert_id']}")
                 except Exception as e:

@@ -5,11 +5,198 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IDR_Project Dashboard</title>
 
-  <!-- Static (FastAPI): -->
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+  <style>
+    /* Style cho Globe Container (Giữ nguyên)
+    */
+    #globe-container {
+      width: 100%;
+      height: 400px;
+      background-color: black; 
+      border-radius: 5px;
+      position: relative;
+      overflow: hidden; 
+      display: block; /* Mặc định hiện */
+    }
+
+    #globe-container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important; 
+      height: 100% !important;
+    }
+
+    /* BỔ SUNG: Style cho Map Container (Leaflet)
+    */
+    #map-container {
+      width: 100%;
+      height: 400px; /* Cùng chiều cao với globe */
+      background-color: #222; /* Màu nền chờ tải map */
+      border-radius: 5px;
+      overflow: hidden;
+      display: none; /* Mặc định ẩn */
+    }
+
+    /* BỔ SUNG: Style cho nút controls (dựa trên ảnh) 
+    */
+    .widget-controls span {
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 0.9em;
+      margin-left: 5px;
+      transition: background-color 0.2s, color 0.2s;
+      color: #999; /* Màu text inactive */
+    }
+    .widget-controls span.view-active {
+      background-color: #f0f0f0; /* Màu nền active (gần trắng) */
+      color: #1a1a1a; /* Màu text active (đen) */
+      font-weight: 600;
+    }
+    .widget-controls span:not(.view-active):hover {
+      background-color: #444; /* Hover effect cho nút inactive */
+      color: #eee;
+    }
+    
+    /* BỔ SUNG: Tùy chỉnh Leaflet cho theme tối
+    */
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background-color: #333;
+      color: #eee;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+    }
+    .leaflet-control-attribution, .leaflet-control-attribution a {
+        color: #aaa !important; /* Chỉnh màu link attribution */
+    }
+  
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // (Code highlight sidebar của bạn giữ nguyên)
+      const currentPath = window.location.pathname;
+      document.querySelectorAll(".sidebar ul li a").forEach(link => {
+        if (link.getAttribute("href") === currentPath) {
+          link.parentElement.classList.add("active");
+        } else {
+          link.parentElement.classList.remove("active");
+        }
+      });
+
+      // BỔ SUNG: Logic chuyển đổi Map/Globe View
+      const btnMapView = document.getElementById('btn-map-view');
+      const btnGlobeView = document.getElementById('btn-globe-view');
+      const mapContainer = document.getElementById('map-container');
+      const globeContainer = document.getElementById('globe-container');
+
+      let leafletMap = null; // Biến lưu trữ đối tượng map
+      let isMapInitialized = false; // Cờ check map đã init chưa
+
+      // (Lấy lại dữ liệu mẫu từ code globe của bạn)
+      const attackData = [
+        { id: 'a1', srcLat: 34.0522, srcLng: -118.2437, dstLat: 40.7128, dstLng: -74.0060, color: 'orange' },
+        { id: 'a2', srcLat: 51.5074, srcLng: -0.1278, dstLat: 48.8566, dstLng: 2.3522, color: 'yellow' },
+        { id: 'a3', srcLat: 35.6895, srcLng: 139.6917, dstLat: -33.8688, dstLng: 151.2093, color: 'red' },
+        { id: 'a4', srcLat: -23.5505, srcLng: -46.6333, dstLat: 19.4326, dstLng: -99.1332, color: 'pink' },
+      ];
+
+      function initLeafletMap() {
+        // Chỉ khởi tạo 1 lần duy nhất
+        if (isMapInitialized || !L) return; 
+
+        console.log("Initializing Leaflet Map...");
+        leafletMap = L.map('map-container').setView([20.0, 0.0], 2); // View toàn cầu
+
+        // Dùng tile layer tối màu (CartoDB Dark) cho hợp dashboard
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
+        }).addTo(leafletMap);
+        
+        // Vẽ các đường tấn công lên map 2D
+        attackData.forEach(attack => {
+          // 1. Vẽ đường polyline (đường thẳng trên map 2D)
+          const latlngs = [
+            [attack.srcLat, attack.srcLng],
+            [attack.dstLat, attack.dstLng]
+          ];
+          L.polyline(latlngs, { 
+            color: attack.color, 
+            weight: 2,
+            opacity: 0.7 
+          }).addTo(leafletMap);
+
+          // 2. Vẽ điểm nguồn (Source)
+          L.circleMarker([attack.srcLat, attack.srcLng], {
+            radius: 4,
+            color: attack.color,
+            fillColor: attack.color,
+            fillOpacity: 1
+          }).addTo(leafletMap).bindPopup(`<b>Source:</b> ${attack.id}<br>(${attack.srcLat}, ${attack.srcLng})`);
+          
+          // 3. Vẽ điểm đích (Destination)
+          L.circleMarker([attack.dstLat, attack.dstLng], {
+            radius: 4,
+            color: 'white', // Viền trắng cho điểm đích
+            weight: 1,
+            fillColor: attack.color,
+            fillOpacity: 1
+          }).addTo(leafletMap).bindPopup(`<b>Destination:</b> ${attack.id}<br>(${attack.dstLat}, ${attack.dstLng})`);
+        });
+
+        isMapInitialized = true;
+      }
+
+      // Xử lý click Map View
+      btnMapView.addEventListener('click', () => {
+        if (btnMapView.classList.contains('view-active')) return; // Đã active, không làm gì
+
+        // Ẩn Globe, Hiện Map
+        globeContainer.style.display = 'none';
+        mapContainer.style.display = 'block';
+
+        // Cập nhật nút
+        btnMapView.classList.add('view-active');
+        btnGlobeView.classList.remove('view-active');
+
+        // Khởi tạo map (nếu chưa)
+        initLeafletMap();
+        
+        // QUAN TRỌNG: Báo cho Leaflet tự resize sau khi container hiện ra
+        setTimeout(() => {
+            if (leafletMap) {
+                leafletMap.invalidateSize();
+            }
+        }, 10); // Đợi 1 chút cho DOM update layout
+      });
+
+      // Xử lý click Globe View
+      btnGlobeView.addEventListener('click', () => {
+        if (btnGlobeView.classList.contains('view-active')) return; // Đã active
+
+        // Hiện Globe, Ẩn Map
+        globeContainer.style.display = 'block';
+        mapContainer.style.display = 'none';
+
+        // Cập nhật nút
+        btnGlobeView.classList.add('view-active');
+        btnMapView.classList.remove('view-active');
+
+        // Không cần làm gì thêm, vì Globe đã có resize listener
+        // (Nếu Globe bị lỗi, bạn có thể trigger resize ở đây)
+      });
+    });
+    </script>
 </head>
+
+
 <body>
   <div class="dashboard-container">
 
@@ -18,12 +205,11 @@
         <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
       </div>
       <ul>
-        <li class="active"><a href="#"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="/logs"><i class="fa-solid fa-file-lines"></i> Event Logs</a></li>
-        <li><a href="/alerts"><i class="fa-solid fa-triangle-exclamation"></i> Alerts</a></li>
-        <li><a href="/rules"><i class="fa-solid fa-gavel"></i> Manage Rules</a></li>
-        <li><a href="/system"><i class="fa-solid fa-server"></i> System</a></li>
-        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        <li class="active"><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li class="active"><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+        <li class="active"><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
+        <li class="active"><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
+        <li class="active"><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
       </ul>
     </nav>
 
@@ -44,14 +230,15 @@
           <div class="widget-header">
             <h4><i class="fa-solid fa-map-location-dot"></i> Live Attack Map</h4>
             <div class="widget-controls">
-              <span><i class="fa-solid fa-map"></i> Map View</span>
-              <span><i class="fa-solid fa-globe"></i> Globe View</span>
+              <span id="btn-map-view"><i class="fa-solid fa-map"></i> Map View</span>
+              <span id="btn-globe-view" class="view-active"><i class="fa-solid fa-globe"></i> Globe View</span>
             </div>
           </div>
-          <!-- Placeholder ảnh; bạn có thể nhúng bản đồ sau -->
-          <img src="https://i.imgur.com/g0P23A5.png" alt="Live attack map placeholder" style="width:100%;opacity:.6;">
+          
+          <div id="map-container"></div>
+            
+          <div id="globe-container"></div>
         </div>
-
         <div class="widget-row">
           <div class="widget">
             <div class="widget-header">
@@ -77,7 +264,6 @@
           </div>
           <button class="btn btn-danger" id="btn-investigate">Investigate</button>
         </div>
-
         <div class="widget widget-summary" id="blocked-requests">
           <div class="summary-icon"><i class="fa-solid fa-ban"></i></div>
           <div class="summary-text">
@@ -86,7 +272,6 @@
           </div>
           <button class="btn btn-secondary" id="btn-view-logs">View Logs</button>
         </div>
-
         <div class="widget widget-summary" id="suspicious-anomalies">
           <div class="summary-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
           <div class="summary-text">
@@ -95,7 +280,6 @@
           </div>
           <button class="btn btn-secondary" id="btn-analyze">Analyze</button>
         </div>
-
         <div class="widget widget-summary" id="safe-requests">
           <div class="summary-icon"><i class="fa-solid fa-shield-check"></i></div>
           <div class="summary-text">
@@ -105,37 +289,131 @@
           <button class="btn btn-secondary" id="btn-monitor">Monitor</button>
         </div>
       </aside>
-
       <aside class="right-column">
         <div class="widget" id="incident-timeline">
           <div class="widget-header">
             <h4><i class="fa-solid fa-clock-rotate-left"></i> Incident Timeline</h4>
           </div>
           <ul class="timeline-list" id="timeline-list">
-            <!-- JS render -->
-          </ul>
+            </ul>
         </div>
-
         <div class="widget" id="top-ips">
           <div class="widget-header">
             <h4><i class="fa-solid fa-satellite-dish"></i> Top Attacking IPs</h4>
           </div>
           <ul class="ip-list" id="ip-list">
-            <!-- JS render -->
-          </ul>
+            </ul>
         </div>
       </aside>
+
     </main>
   </div>
 
-  <!-- JS -->
   <script>
-    // Cho phép truyền API base từ server nếu muốn
+    // (Config object giữ nguyên)
     window.__CONFIG__ = {
-      API_BASE: "{{ api_base if api_base is defined else '' }}",   // ví dụ: https://idr.example.com
+      API_BASE: "{{ api_base if api_base is defined else '' }}",
       WS_PATH:  "{{ ws_path  if ws_path  is defined else '/ws' }}"
     };
   </script>
-  <script src="{{ url_for('static', path='js/script.js') }}"></script>
-</body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@latest/dist/globe.gl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+  
+  <script>
+    // (Toàn bộ code khởi tạo Globe.gl của bạn giữ nguyên)
+    window.addEventListener('load', () => { 
+      const globeContainer = document.getElementById('globe-container');
+      if (!globeContainer) {
+        console.error('Không tìm thấy #globe-container');
+        return;
+      }
+
+      // Dữ liệu tấn công mẫu (giữ nguyên)
+      const attackData = [
+        { id: 'a1', srcLat: 34.0522, srcLng: -118.2437, dstLat: 40.7128, dstLng: -74.0060, color: 'orange' }, // California to New York
+        { id: 'a2', srcLat: 51.5074, srcLng: -0.1278, dstLat: 48.8566, dstLng: 2.3522, color: 'yellow' }, // London to Paris
+        { id: 'a3', srcLat: 35.6895, srcLng: 139.6917, dstLat: -33.8688, dstLng: 151.2093, color: 'red' }, // Tokyo to Sydney
+        { id: 'a4', srcLat: -23.5505, srcLng: -46.6333, dstLat: 19.4326, dstLng: -99.1332, color: 'pink' }, // Sao Paulo to Mexico City
+        { id: 'a5', srcLat: 39.9042, srcLng: 116.4074, dstLat: 34.6937, dstLng: 135.5022, color: 'purple' }, // Beijing to Osaka
+        { id: 'a6', srcLat: -1.2921, srcLng: 36.8219, dstLat: 9.0820, dstLng: 8.6753, color: 'lime' }, // Nairobi to Abuja
+      ];
+
+      const pointData = [];
+      attackData.forEach(arc => {
+        pointData.push({ 
+          id: arc.id + '_src', 
+          lat: arc.srcLat, 
+          lng: arc.srcLng, 
+          size: 0.3,
+          color: arc.color
+        });
+        pointData.push({ 
+          id: arc.id + '_dst', 
+          lat: arc.dstLat, 
+          lng: arc.dstLng, 
+          size: 0.3,
+          color: arc.color
+        });
+      });
+
+      const myGlobe = Globe()
+        (globeContainer) 
+        .width(1)
+        .height(1) 
+        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+        .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png') 
+        .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+        .backgroundColor('#000011')
+        .showAtmosphere(true)
+        .atmosphereColor('lightskyblue')
+        .atmosphereAltitude(0.15)
+        .enablePointerInteraction(false)
+        .pointsData(pointData)
+        .pointAltitude(0.01)
+        .pointColor(d => d.color)
+        .pointRadius(d => d.size * 0.75)
+        .pointResolution(20)
+        .pointsMerge(true)
+        .arcsData(attackData)
+        .arcLabel(d => `Attack: ${d.srcLat},${d.srcLng} -> ${d.dstLat},${d.dstLng}`)
+        .arcStartLat(d => d.srcLat)
+        .arcStartLng(d => d.srcLng)
+        .arcEndLat(d => d.dstLat)
+        .arcEndLng(d => d.dstLng)
+        .arcAltitude(0.3)
+        .arcColor(d => [`${d.color}BB`, `${d.color}22`])
+        .arcStroke(1.5)
+        .arcDashLength(0.5)
+        .arcDashGap(0.1)
+        .arcDashAnimateTime(1500)
+        .arcCircularResolution(32)
+        .arcsTransitionDuration(0);
+
+      function setStableSize() {
+          const width = globeContainer.clientWidth;
+          const height = globeContainer.clientHeight;
+          
+          console.log(`Setting STABLE size for Globe: ${width} x ${height}`);
+
+          myGlobe.width(width);
+          myGlobe.height(height);
+
+          window.addEventListener('resize', () => {
+              if (globeContainer.clientWidth > 0 && globeContainer.clientHeight > 0) {
+                myGlobe.width(globeContainer.clientWidth);
+                myGlobe.height(globeContainer.clientHeight);
+              }
+          });
+      }
+
+      setTimeout(setStableSize, 0);
+
+      console.log("Globe initialized (1x1). Waiting for stable layout..."); 
+    }); 
+  </script>
 </html>

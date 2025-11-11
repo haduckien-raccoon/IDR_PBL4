@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Đăng nhập - IDR_Project</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="auth-body">
+
+  <div class="auth-container">
+    <div class="auth-title">
+      <i class="fa-solid fa-shield-halved fa-2x"></i>
+      <h2>IDR_Project</h2>
+    </div>
+
+    <form method="post" action="/login">
+      <div class="auth-form-group">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" id="username" name="username" autocomplete="username" required>
+      </div>
+
+      <div class="auth-form-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+
+      <div class="auth-actions">
+        <label style="display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" style="width:auto;"> Remember me
+        </label>
+        <a href="/forgot">Quên mật khẩu?</a>
+      </div>
+
+      <button class="btn btn-danger auth-submit" type="submit">
+        <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Chưa có tài khoản?
+      <a href="/register">Đăng ký</a>
+    </div>
+  </div>
+
+</body>
+</html>

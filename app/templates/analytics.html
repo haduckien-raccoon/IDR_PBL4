@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics & Reports - IDR_Project</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Lấy path hiện tại (vd: /dashboard, /incidents)
+  const currentPath = window.location.pathname;
+
+  // Tìm tất cả các link trong sidebar
+  document.querySelectorAll(".sidebar ul li a").forEach(link => {
+    if (link.getAttribute("href") === currentPath) {
+      link.parentElement.classList.add("active");
+    } else {
+      link.parentElement.classList.remove("active");
+    }
+  });
+});
+</script>
+<body>
+  <div class="dashboard-container">
+
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
+      </div>
+      <ul>
+        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+        <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
+        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
+        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
+        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <header class="header">
+        <div class="system-status">
+          ANALYTICS & REPORTS • <span class="status-online">LAST 30 DAYS</span>
+        </div>
+        <div class="user-menu">
+          <i class="fa-solid fa-bell"></i>
+          <i class="fa-solid fa-moon"></i>
+          <i class="fa-solid fa-user-circle"></i>
+        </div>
+      </header>
+
+      <!-- Cột trái: bộ lọc thời gian -->
+      <aside class="left-column">
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-calendar-alt"></i> Khoảng thời gian</h4>
+          </div>
+          <div class="filter-row">
+            <div>
+              <label>Chế độ</label>
+              <select id="range-mode">
+                <option value="7d">7 ngày</option>
+                <option value="30d" selected>30 ngày</option>
+                <option value="90d">90 ngày</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-row">
+            <div>
+              <label>Từ ngày</label>
+              <input type="date" id="range-from">
+            </div>
+            <div>
+              <label>Đến ngày</label>
+              <input type="date" id="range-to">
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:10px;width:100%;">
+            <i class="fa-solid fa-chart-line"></i> Cập nhật thống kê
+          </button>
+        </div>
+
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-percent"></i> Tỉ lệ loại tấn công</h4>
+          </div>
+          <canvas id="attackTypePie" height="200"></canvas>
+        </div>
+      </aside>
+
+      <!-- Cột giữa: các biểu đồ chính -->
+      <section class="main-column">
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-chart-area"></i> Lưu lượng tấn công theo thời gian</h4>
+          </div>
+          <canvas id="attackTimeSeries" height="220"></canvas>
+        </div>
+
+        <div class="widget-row">
+          <div class="widget">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-globe"></i> Top quốc gia tấn công</h4>
+            </div>
+            <canvas id="countryBarChart" height="180"></canvas>
+          </div>
+          <div class="widget">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-bug"></i> Phân bố mức độ severity</h4>
+            </div>
+            <canvas id="severityRadar" height="180"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cột phải: heatmap & báo cáo -->
+      <aside class="right-column">
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-fire-flame-curved"></i> Thời gian cao điểm (Heatmap)</h4>
+          </div>
+          <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;">
+            Heatmap theo giờ trong ngày & ngày trong tuần. (có thể render bằng canvas hoặc SVG riêng).
+          </p>
+          <img src="{{ url_for('static', path='img/heatmap_placeholder.png') }}"
+               alt="Heatmap attacks"
+               style="width:100%;opacity:.7;border-radius:8px;">
+        </div>
+
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-file-export"></i> Báo cáo</h4>
+          </div>
+          <p style="font-size:0.85rem;color:var(--text-secondary);">
+            Tạo báo cáo PDF/CSV theo ngày, tuần, tháng cho quản trị viên.
+          </p>
+          <button class="btn btn-secondary" style="width:100%;margin-top:8px;">
+            <i class="fa-solid fa-file-pdf"></i> Export PDF
+          </button>
+          <button class="btn btn-secondary" style="width:100%;margin-top:6px;">
+            <i class="fa-solid fa-file-csv"></i> Export CSV
+          </button>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    // Khởi tạo các biểu đồ Chart.js sau này
+  </script>
+</body>
+</html>

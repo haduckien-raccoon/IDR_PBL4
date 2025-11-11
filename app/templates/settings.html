@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings - IDR_Project</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Lấy path hiện tại (vd: /dashboard, /incidents)
+  const currentPath = window.location.pathname;
+
+  // Tìm tất cả các link trong sidebar
+  document.querySelectorAll(".sidebar ul li a").forEach(link => {
+    if (link.getAttribute("href") === currentPath) {
+      link.parentElement.classList.add("active");
+    } else {
+      link.parentElement.classList.remove("active");
+    }
+  });
+});
+</script>
+<body>
+  <div class="dashboard-container">
+
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
+      </div>
+      <ul>
+        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+        <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
+        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
+        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
+        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <header class="header">
+        <div class="system-status">
+          SYSTEM SETTINGS • <span class="status-online">CONFIG MODE</span>
+        </div>
+        <div class="user-menu">
+          <i class="fa-solid fa-bell"></i>
+          <i class="fa-solid fa-moon"></i>
+          <i class="fa-solid fa-user-circle"></i>
+        </div>
+      </header>
+
+      <!-- Cột trái: quản lý user -->
+      <aside class="left-column">
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-users-gear"></i> Quản lý người dùng</h4>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Active</th>
+              </tr>
+            </thead>
+            <tbody id="user-table">
+              <tr>
+                <td>admin</td>
+                <td>Admin</td>
+                <td>
+                  <div class="toggle on">
+                    <div class="toggle-circle"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>analyst01</td>
+                <td>Analyst</td>
+                <td>
+                  <div class="toggle on">
+                    <div class="toggle-circle"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>viewer01</td>
+                <td>Viewer</td>
+                <td>
+                  <div class="toggle">
+                    <div class="toggle-circle"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="btn btn-secondary" style="margin-top:10px;width:100%;">
+            <i class="fa-solid fa-user-plus"></i> Thêm người dùng
+          </button>
+        </div>
+      </aside>
+
+      <!-- Cột giữa: cấu hình hệ thống chính -->
+      <section class="main-column">
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-gears"></i> Cấu hình hệ thống</h4>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>Database URL</label>
+              <input type="text" value="{{ db_url if db_url is defined else 'postgresql+psycopg2://idr_user:***@localhost:5432/ids_honeypot' }}" />
+            </div>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>Rule Engine Path</label>
+              <input type="text" value="/etc/idr/rules/rules.json" />
+            </div>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>Default Severity Threshold</label>
+              <select>
+                <option>High</option>
+                <option selected>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:10px;">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu cấu hình
+          </button>
+        </div>
+
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-robot"></i> Tích hợp AI Engine</h4>
+          </div>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">
+            Cấu hình endpoint cho module AI (Isolation Forest / AutoEncoder...) để phân tích bất thường.
+          </p>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>AI API Endpoint</label>
+              <input type="text" value="http://127.0.0.1:9000/api/analyze" />
+            </div>
+          </div>
+          <div class="filter-row">
+            <div>
+              <label>Timeout (s)</label>
+              <input type="number" value="3" />
+            </div>
+            <div>
+              <label>Enable AI</label>
+              <div class="toggle on">
+                <div class="toggle-circle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cột phải: tích hợp cảnh báo -->
+      <aside class="right-column">
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-envelope"></i> Email Alerts</h4>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>SMTP Host</label>
+              <input type="text" value="{{ smtp_host if smtp_host is defined else 'smtp.gmail.com' }}" />
+            </div>
+          </div>
+          <div class="filter-row">
+            <div>
+              <label>Port</label>
+              <input type="number" value="587" />
+            </div>
+            <div>
+              <label>Use TLS</label>
+              <div class="toggle on">
+                <div class="toggle-circle"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>From</label>
+              <input type="email" value="idr-alerts@example.com" />
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:8px;width:100%;">
+            <i class="fa-solid fa-paper-plane"></i> Gửi mail test
+          </button>
+        </div>
+
+        <div class="widget">
+          <div class="widget-header">
+            <h4><i class="fa-brands fa-slack"></i> Tích hợp khác</h4>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>Slack Webhook URL</label>
+              <input type="text" placeholder="https://hooks.slack.com/..." />
+            </div>
+          </div>
+          <div class="filter-row">
+            <div style="flex:1;">
+              <label>Firewall API URL</label>
+              <input type="text" value="http://127.0.0.1:8080/api/firewall" />
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    // JS bật / tắt toggle sau này
+  </script>
+</body>
+</html>

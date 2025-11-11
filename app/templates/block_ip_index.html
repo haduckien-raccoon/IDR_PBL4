@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blocked IPs</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 0;
+}
+
+h2, h3 {
+    text-align: center;
+    color: #333;
+}
+
+.container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+tr:nth-child(even) {background-color: #f9f9f9;}
+tr:hover {background-color: #f1f1f1;}
+
+.status-blocked {
+    color: white;
+    background-color: #e74c3c;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.status-unblocked {
+    color: white;
+    background-color: #2ecc71;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+form.manual-block {
+    text-align: center;
+    margin-top: 20px;
+}
+
+form.manual-block input {
+    padding: 8px 12px;
+    margin: 0 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Blocked IPs</h2>
+
+    <table>
+        <tr>
+            <th>IP</th>
+            <th>Reason</th>
+            <th>Blocked At</th>
+            <th>Expire At</th>
+            <th>Status</th> 
+            <th>Action</th>
+        </tr>
+        {% for ip in blocked_ips %}
+        <tr>
+            <td>{{ ip.ip_address }}</td>
+            <td>{{ ip.reason }}</td>
+            <td>{{ ip.blocked_at }}</td>
+            <td>{{ ip.expires_at }}</td>
+            <td>
+                {% if ip.status == "blocked" %}
+                    <span class="status-blocked">Blocked</span>
+                {% else %}
+                    <span class="status-unblocked">Unblocked</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if ip.status == "blocked" %}
+                <form method="post" action="/api/ip/unblock_ip">
+                    <input type="hidden" name="ip_address" value="{{ ip.ip_address }}">
+                    <button type="submit">Unblock</button>
+                </form>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Manual Block IP</h3>
+    <form method="post" action="/api/ip/blocked" class="manual-block">
+        <input type="text" name="ip_address" placeholder="IP to block">
+        <input type="text" name="reason" placeholder="Reason">
+        <button type="submit">Block</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Realtime Alerts Monitor</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0d1117;
+      color: #e6edf3;
+      margin: 0;
+    }
+    header {
+      background: #161b22;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    a { color: #58a6ff; text-decoration: none; }
+    .container { padding: 15px 20px; }
+    input {
+      width: 350px; padding: 6px; border: none;
+      border-radius: 4px; background: #21262d;
+      color: #e6edf3; margin-bottom: 10px;
+    }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #30363d; padding: 5px; vertical-align: top;
+    }
+    th {
+      background: #161b22; color: #ff6b6b;
+    }
+    tr:nth-child(even) { background: #161b22; }
+    pre { white-space: pre-wrap; color: #aaa; margin: 0; }
+  </style>
+  <script>
+    let logs = [];
+
+    function renderTable() {
+      const q = document.getElementById("search").value.toLowerCase();
+      const tbody = document.getElementById("alertTable");
+      tbody.innerHTML = "";
+      for (const item of logs) {
+        if (q && !JSON.stringify(item).toLowerCase().includes(q)) continue;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.timestamp || ""}</td>
+          <td>${item.alert_id || ""}</td>
+          <td>${item.message || ""}</td>
+          <td>${item.proto || ""}</td>
+          <td>${item.src || ""}</td>
+          <td>${item.dst || ""}</td>
+          <td>${item.variant || ""}</td>
+          <td>${item.entropy || ""}</td>
+          <td><pre>${item.body || ""}</pre></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function initWS() {
+      let ws = new WebSocket("ws://localhost:8000/api/logs/ws/alerts");
+      ws.onmessage = e => {
+        const data = JSON.parse(e.data);
+        logs.unshift(data);
+        if (logs.length > 1000) logs.pop();
+        renderTable();
+      };
+      ws.onclose = () => setTimeout(initWS, 2000);
+    }
+
+    window.onload = () => {
+      initWS();
+      document.getElementById("search").addEventListener("input", renderTable);
+    };
+  </script>
+</head>
+<body>
+  <header>
+    <h1>🚨 Realtime Alerts Monitor</h1>
+    <a href="/api/logs/traffic">View Traffic</a>
+  </header>
+  <div class="container">
+    <input id="search" placeholder="🔍 Filter alerts..." />
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Alert ID</th>
+          <th>Message</th>
+          <th>Proto</th>
+          <th>Source</th>
+          <th>Destination</th>
+          <th>Variant</th>
+          <th>Entropy</th>
+          <th>Body</th>
+        </tr>
+      </thead>
+      <tbody id="alertTable"></tbody>
+    </table>
+  </div>
+</body>
+</html>

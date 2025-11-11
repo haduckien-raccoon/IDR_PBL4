@@ -1,0 +1,4 @@
+#sudo python ids_byte_deep.py --iface wlx40ae30551234 --filter "tcp or udp"
+conda activate base
+conda install -c conda-forge scapy
+conda install -c conda-forge pyahocorasick

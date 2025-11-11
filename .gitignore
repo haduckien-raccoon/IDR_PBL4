@@ -1,0 +1,9 @@
+# Environment variables
+.env
+app/services/cai_project/.env
+
+# Virtual environment
+.venv/
+
+# AI model / data
+app/services/cai_project/cai/*

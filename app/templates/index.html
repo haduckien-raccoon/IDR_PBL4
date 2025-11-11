@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IDR_Project Dashboard</title>
+
+  <!-- Static (FastAPI): -->
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
+      </div>
+      <ul>
+        <li class="active"><a href="#"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="/logs"><i class="fa-solid fa-file-lines"></i> Event Logs</a></li>
+        <li><a href="/alerts"><i class="fa-solid fa-triangle-exclamation"></i> Alerts</a></li>
+        <li><a href="/rules"><i class="fa-solid fa-gavel"></i> Manage Rules</a></li>
+        <li><a href="/system"><i class="fa-solid fa-server"></i> System</a></li>
+        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <header class="header">
+        <div class="system-status">
+          SYSTEM STATUS: <span id="system-status" class="status-online">ONLINE</span>
+        </div>
+        <div class="user-menu">
+          <i class="fa-solid fa-bell" id="bell"></i>
+          <i class="fa-solid fa-moon" id="theme-toggle"></i>
+          <i class="fa-solid fa-user-circle"></i>
+        </div>
+      </header>
+
+      <section class="main-column">
+        <div class="widget" id="live-map-widget">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-map-location-dot"></i> Live Attack Map</h4>
+            <div class="widget-controls">
+              <span><i class="fa-solid fa-map"></i> Map View</span>
+              <span><i class="fa-solid fa-globe"></i> Globe View</span>
+            </div>
+          </div>
+          <!-- Placeholder ảnh; bạn có thể nhúng bản đồ sau -->
+          <img src="https://i.imgur.com/g0P23A5.png" alt="Live attack map placeholder" style="width:100%;opacity:.6;">
+        </div>
+
+        <div class="widget-row">
+          <div class="widget">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-chart-simple"></i> Attack Type Analysis</h4>
+            </div>
+            <canvas id="attackTypeChart" height="200"></canvas>
+          </div>
+          <div class="widget">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-chart-line"></i> Traffic Overview</h4>
+            </div>
+            <canvas id="trafficChart" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <aside class="left-column">
+        <div class="widget widget-summary" id="critical-threats">
+          <div class="summary-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+          <div class="summary-text">
+            <span>Critical Threats</span>
+            <strong id="critical-count">0 <span class="new-alert" id="critical-new"></span></strong>
+          </div>
+          <button class="btn btn-danger" id="btn-investigate">Investigate</button>
+        </div>
+
+        <div class="widget widget-summary" id="blocked-requests">
+          <div class="summary-icon"><i class="fa-solid fa-ban"></i></div>
+          <div class="summary-text">
+            <span>Blocked Requests</span>
+            <strong id="blocked-count">0 <span class="new-alert" id="blocked-new"></span></strong>
+          </div>
+          <button class="btn btn-secondary" id="btn-view-logs">View Logs</button>
+        </div>
+
+        <div class="widget widget-summary" id="suspicious-anomalies">
+          <div class="summary-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+          <div class="summary-text">
+            <span>Suspicious Anomalies</span>
+            <strong id="anomaly-count">0 <span class="new-alert" id="anomaly-new"></span></strong>
+          </div>
+          <button class="btn btn-secondary" id="btn-analyze">Analyze</button>
+        </div>
+
+        <div class="widget widget-summary" id="safe-requests">
+          <div class="summary-icon"><i class="fa-solid fa-shield-check"></i></div>
+          <div class="summary-text">
+            <span>Safe Requests</span>
+            <strong id="safe-count">0</strong>
+          </div>
+          <button class="btn btn-secondary" id="btn-monitor">Monitor</button>
+        </div>
+      </aside>
+
+      <aside class="right-column">
+        <div class="widget" id="incident-timeline">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-clock-rotate-left"></i> Incident Timeline</h4>
+          </div>
+          <ul class="timeline-list" id="timeline-list">
+            <!-- JS render -->
+          </ul>
+        </div>
+
+        <div class="widget" id="top-ips">
+          <div class="widget-header">
+            <h4><i class="fa-solid fa-satellite-dish"></i> Top Attacking IPs</h4>
+          </div>
+          <ul class="ip-list" id="ip-list">
+            <!-- JS render -->
+          </ul>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- JS -->
+  <script>
+    // Cho phép truyền API base từ server nếu muốn
+    window.__CONFIG__ = {
+      API_BASE: "{{ api_base if api_base is defined else '' }}",   // ví dụ: https://idr.example.com
+      WS_PATH:  "{{ ws_path  if ws_path  is defined else '/ws' }}"
+    };
+  </script>
+  <script src="{{ url_for('static', path='js/script.js') }}"></script>
+</body>
+</html>

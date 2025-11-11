@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>IDS Rules Manager</title>
+<style>
+    /* ===== Body & Typography ===== */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f4f6f8;
+        color: #333;
+        padding: 20px;
+        margin: 0;
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 10px;
+        color: #222;
+    }
+    h3 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #555;
+    }
+
+    /* ===== Search ===== */
+    #searchContainer {
+        max-width: 1200px;
+        margin: 0 auto 15px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    #searchInput {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        width: 250px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    #searchInput:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        outline: none;
+    }
+
+    /* ===== Form Card Styling ===== */
+    #ruleForm {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        max-width: 1200px;
+        margin: 0 auto 30px;
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+
+    #ruleForm input,
+    #ruleForm select,
+    #ruleForm textarea,
+    #ruleForm button {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 14px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    #ruleForm input:focus,
+    #ruleForm select:focus,
+    #ruleForm textarea:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        outline: none;
+    }
+
+    #ruleForm textarea {
+        min-height: 80px;
+        resize: vertical;
+        grid-column: span 4;
+    }
+
+    #ruleForm button.btn-submit {
+        background: #007bff;
+        color: #fff;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        grid-column: span 4;
+        transition: background 0.3s ease;
+    }
+
+    #ruleForm button.btn-submit:hover {
+        background: #0056b3;
+    }
+
+    .btn {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+    }
+    .btn-edit { background: #28a745; color: #fff; }
+    .btn-edit:hover { background: #218838; }
+    .btn-delete { background: #dc3545; color: #fff; }
+    .btn-delete:hover { background: #c82333; }
+
+    .hidden { display: none; }
+
+    /* ===== Table Styling ===== */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        margin-bottom: 50px;
+    }
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+    }
+    th {
+        background: #007bff;
+        color: #fff;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+    }
+    tr:nth-child(even) {
+        background: #f9f9f9;
+    }
+    tr:hover {
+        background: #e6f0ff;
+    }
+    td pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 13px;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+        #ruleForm {
+            grid-template-columns: 1fr;
+        }
+        #ruleForm textarea,
+        #ruleForm button.btn-submit {
+            grid-column: span 1;
+        }
+        table, th, td {
+            font-size: 13px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<h2>IDS Rules</h2>
+
+<!-- ===== Search ===== -->
+<div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Tìm kiếm...">
+</div>
+
+<!-- ===== Form ===== -->
+<form id="ruleForm">
+    <div style="grid-column: span 4;">
+        <h3 id="formTitle">Add Rule</h3>
+    </div>
+
+    <div id="uuidField" class="hidden" style="grid-column: span 4;">
+        <label>UUID (for update)</label>
+        <input type="text" id="uuid" name="uuid" readonly>
+    </div>
+
+    <input type="text" id="group_id" name="group_id" placeholder="Group ID" required>
+    <input type="text" id="message" name="message" placeholder="Message" required>
+    <select id="severity" name="severity">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+        <option value="critical">Critical</option>
+    </select>
+
+    <input type="text" id="proto" name="proto" placeholder="Proto (e.g. TCP)">
+    <input type="number" id="dst_port" name="dst_port" placeholder="Dst Port">
+
+    <textarea id="pattern_regex_bytes" name="pattern_regex_bytes" placeholder="Regex pattern..."></textarea>
+    <select id="action" name="action">
+        <option value="alert" selected>Alert</option>
+        <option value="block">Block</option>
+        <option value="log">Log</option>
+    </select>
+
+    <button type="submit" id="submitBtn" class="btn-submit">Add Rule</button>
+</form>
+
+<!-- ===== Table ===== -->
+<table id="rulesTable">
+<thead>
+<tr>
+    <th>UUID</th><th>Group ID</th><th>Message</th><th>Severity</th>
+    <th>Proto</th><th>Dst Port</th><th>Pattern Regex</th><th>Action</th><th>Activity</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rules %}
+<tr>
+    <td>{{ r.uuid }}</td>
+    <td>{{ r.group_id }}</td>
+    <td>{{ r.message }}</td>
+    <td>{{ r.severity }}</td>
+    <td>{{ r.proto }}</td>
+    <td>{{ r.dst_port or '-' }}</td>
+    <td><pre>{{ r.pattern_regex_bytes or '-' }}</pre></td>
+    <td>{{ r.action }}</td>
+    <td>
+        <button class="btn btn-edit" data-rule='{{ r | tojson }}'>Edit</button>
+        <form action="/api/rules/delete_rule" method="post" style="display:inline;">
+            <input type="hidden" name="uuid" value="{{ r.uuid }}">
+            <button class="btn btn-delete" type="submit">Delete</button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<script>
+const form = document.getElementById('ruleForm');
+const uuidField = document.getElementById('uuidField');
+const formTitle = document.getElementById('formTitle');
+const submitBtn = document.getElementById('submitBtn');
+const searchInput = document.getElementById('searchInput');
+const rulesTable = document.getElementById('rulesTable').getElementsByTagName('tbody')[0];
+
+function resetForm() {
+    form.reset();
+    uuidField.classList.add('hidden');
+    formTitle.textContent = 'Add Rule';
+    submitBtn.textContent = 'Add Rule';
+}
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const isUpdate = !!formData.get('uuid');
+    const url = isUpdate ? '/api/rules/update_rules' : '/api/rules/add_rule';
+    const res = await fetch(url, { method: 'POST', body: formData });
+    const data = await res.json();
+    alert(data.message);
+    location.reload();
+});
+
+document.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const rule = JSON.parse(btn.dataset.rule);
+        for (const k in rule) {
+            const el = document.getElementById(k);
+            if (el) el.value = rule[k] || '';
+        }
+        uuidField.classList.remove('hidden');
+        formTitle.textContent = 'Update Rule';
+        submitBtn.textContent = 'Update Rule';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
+
+// ===== Search Function =====
+searchInput.addEventListener('keyup', () => {
+    const filter = searchInput.value.toLowerCase();
+    const rows = rulesTable.getElementsByTagName('tr');
+    Array.from(rows).forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+</script>
+
+</body>
+</html>

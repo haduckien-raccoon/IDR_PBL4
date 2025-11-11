@@ -1,0 +1,226 @@
+2025-10-22 23:06:55,396 [RULES] Started file watcher for app/capture_packet/rules.json
+2025-10-22 23:07:19,305 [RULES] Detected moved event dest=/media/haduckien/E/Studying/HK5/PBL4(3)/idr_project/app/capture_packet/rules.json src=/media/haduckien/E/Studying/HK5/PBL4(3)/idr_project/app/capture_packet/rules.json.tmp
+2025-10-22 23:07:19,305 [RULES] Starting incremental reload from app/capture_packet/rules.json
+2025-10-22 23:07:19,308 [RULES] Initial load rule b3c4d9f0-8a1b-11ef-9cba-0242ac120002 summary: group=SQLI message=Possible SQL injection attempt detected
+2025-10-22 23:07:19,308 [RULES] Initial load rule susp_single_char_001 summary: group=INPUT_NOISE message=Suspicious single-character payload (possible tampering / noise)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_tautology_or_001 summary: group=SQLI_TAUTOLOGY message=SQL tautology detected (OR TRUE or OR 1=1 with optional comment)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_x_eq_x_001 summary: group=SQLI_TAUTOLOGY message=SQL tautology detected ("x" = "x" style)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_admin_bypass_001 summary: group=SQLI_AUTH_BYPASS message=Authentication bypass attempt (admin OR 1=1 variants)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_parentheses_tautology_001 summary: group=SQLI_COMPLEX message=Parentheses-style SQL tautology or nested comparison detected
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_or_true_comment_001 summary: group=SQLI_COMMENT message=OR TRUE with SQL comment terminator detected (possible injection)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_union_select_001 summary: group=SQLI_UNION message=UNION SELECT pattern detected (possible SQL injection / data exfiltration)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_comment_trailer_001 summary: group=SQLI_COMMENT message=SQL-style comment trailer detected at end of input (possible SQLi payload)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_weird_1e_001 summary: group=SQLI_OBSCURE message=Unusual numeric/expression pattern (e.g. 1.e(1)) often used in obfuscated injections
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_quotes_or_space_variants_001 summary: group=SQLI_QUOTE_VARIANTS message=Quote + OR + single-symbol variants detected (common fuzzing/injection payloads)
+2025-10-22 23:07:19,309 [RULES] Initial load rule sqli_login_hash_union_001 summary: group=SQLI_UNION_HASH message=UNION ALL SELECT with credential-like content detected
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_tauto_or_and_001 summary: group=SQLI_TAUTOLOGY_ADV message=SQL tautology detected (OR/AND 1=1, 0=0, TRUE) possibly with comment/trailer
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_emptystring_equals_001 summary: group=SQLI_EMPTY_EQ message=Empty-string equality or equivalent (''='' or ""="") — common blind/fuzzing injection
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_like_wildcard_001 summary: group=SQLI_LIKE message=LIKE '%' pattern detected — common SQLi / wildcard checks
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_groupby_having_001 summary: group=SQLI_GROUPBY_HAVING message=GROUP BY ... HAVING tautology pattern (attempt to manipulate aggregation/having clauses)
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_union_info_001 summary: group=SQLI_UNION_ADV message=UNION SELECT or information-disclosure functions detected (UNION ALL SELECT, @@version, system_user(), information_schema...)
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_substring_enum_001 summary: group=SQLI_ENUMERATE message=Substring/substring-like function usage detected — may be used in blind extraction
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_comment_trailer_any_001 summary: group=SQLI_COMMENT_EXT message=SQL comment/trailer at end of payload detected (--, #, /*, ;, en-dash variants) — common in injection payloads
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_quoted_tauto_variants_001 summary: group=SQLI_QUOTED_VARIANTS message=Quoted tautology variants (handles smart quotes and backticks)
+2025-10-22 23:07:19,310 [RULES] Initial load rule adv_misc_obscure_001 summary: group=SQLI_MISC message=Misc common obfuscated tautologies and comment-trailer combos
+2025-10-22 23:07:19,310 [RULES] Initial load rule timebased_waitfor_delay_001 summary: group=SQLI_TIMEBASED message=Time-based SQLi detected: WAITFOR DELAY '...' (handles leading parentheses/quotes and trailing comments)
+2025-10-22 23:07:19,311 [RULES] Initial load rule timebased_waitfor_delay_parenthesis_002 summary: group=SQLI_TIMEBASED message=Waitfor-delay with many closing parentheses/quotes before payload (obfuscated variants)
+2025-10-22 23:07:19,311 [RULES] Initial load rule timebased_generic_sleep_003 summary: group=SQLI_TIMEBASED message=Generic time-based function detected (SLEEP / pg_sleep / BENCHMARK / WAITFOR) — possible time-based SQLi
+2025-10-22 23:07:19,311 [RULES] Initial load rule timebased_numeric_delay_004 summary: group=SQLI_TIMEBASED message=WAITFOR/TIME keyword presence — additional detection
+2025-10-22 23:07:19,311 [RULES] Initial load rule exec_xp_cmdshell_001 summary: group=SQLI_DANGEROUS_CMDS message=Exec/xp_cmdshell attempt detected (remote command execution).
+2025-10-22 23:07:19,311 [RULES] Initial load rule create_user_drop_table_002 summary: group=SQLI_ADMIN_DDL message=DDL or user-management SQL detected (CREATE USER / DROP TABLE / ALTER USER / CREATE DATABASE).
+2025-10-22 23:07:19,311 [RULES] Initial load rule sp_addlogin_srvrole_003 summary: group=SQLI_STORED_PROCS message=Potential privileged stored-proc usage detected (sp_addlogin, sp_addsrvrolemember, sp_executesql...).
+2025-10-22 23:07:19,311 [RULES] Initial load rule insert_into_mysql_user_password_004 summary: group=SQLI_CREDENTIALS message=Attempt to insert into mysql.user or call password() — possible credential creation/exfiltration.
+2025-10-22 23:07:19,311 [RULES] Initial load rule grant_connect_resource_005 summary: group=SQLI_PRIV_ESC message=Granting privileges detected (GRANT CONNECT/RESOURCE/DBA/ALL).
+2025-10-22 23:07:19,311 [RULES] Initial load rule char_hex_concat_006 summary: group=SQLI_OBFUSCATION message=Hex literal or CHAR(0x...) usage detected — possible obfuscated payload (char(0x70)+...).
+2025-10-22 23:07:19,311 [RULES] Initial load rule union_parenthesis_select_007 summary: group=SQLI_UNION_ADV message=UNION (SELECT ...) pattern detected (handles parentheses between UNION and SELECT).
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_sqli_version_generic_001 summary: group=SQLI_INFO message=Information-disclosure variable detected (SELECT @@variable) — possible SQLi fingerprinting (@@version, @@servername, ...).
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_sqli_master_sys_002 summary: group=SQLI_INFO message=Access to master/sys tables detected (master..*, sysusers, sysservers, etc.) — possible info disclosure.
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_exec_xp_cmdshell_plus_003 summary: group=SQLI_DANGEROUS_CMDS message=xp_cmdshell execution attempt detected (handles + as space and quoted command).
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_backup_to_disk_unc_004 summary: group=SQLI_FILE_OPS message=BACKUP DATABASE to UNC path detected (possible data exfiltration to remote share).
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_bulk_insert_and_local_path_005 summary: group=SQLI_FILE_OPS message=BULK INSERT or local file path (C:\...) detected — possible file write/read or LFI via SQL.
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_unc_or_smb_share_006 summary: group=SQLI_FILE_OPS message=UNC/SMB share path detected (\\host\share) — possible exfiltration target.
+2025-10-22 23:07:19,312 [RULES] Initial load rule ms_common_command_exec_names_007 summary: group=SQLI_DANGEROUS_CMDS message=Common OS command after xp_cmdshell detected (ipconfig/net/ping/...).
+2025-10-22 23:07:19,312 [RULES] Initial load rule sqli_digit_quote_digit_001 summary: group=SQLI_QUOTE_ANOMALY message=Suspicious digit-quote-digit pattern detected (possible malformed quote injection like 1'1).
+2025-10-22 23:07:19,312 [RULES] Initial load rule sqli_exec_sp_xp_generic_002 summary: group=SQLI_STORED_PROCS message=Execution of stored-proc pattern detected (exec sp_* or exec xp_*) — possible privilege escalation or command exec.
+2025-10-22 23:07:19,312 [RULES] Initial load rule sqli_subselect_comparison_003 summary: group=SQLI_SUBSELECT message=Comparison to subselect detected (e.g. 1 = (SELECT ...)) — potential blind or advanced SQLi.
+2025-10-22 23:07:19,313 [RULES] Initial load rule timebased_benchmark_decoded_001 summary: group=SQLI_TIMEBASED message=Time-based MySQL BENCHMARK() detected (decoded form) — possible time-based SQLi.
+2025-10-22 23:07:19,313 [RULES] Initial load rule timebased_benchmark_encoded_002 summary: group=SQLI_TIMEBASED message=Time-based MySQL BENCHMARK() detected (URL-encoded form, handles %20, %2D%2D, %23, %2F*).
+2025-10-22 23:07:19,313 [RULES] Initial load rule timebased_benchmark_generic_003 summary: group=SQLI_TIMEBASED message=Generic BENCHMARK keyword detected (catch other benchmark(...) variants).
+2025-10-22 23:07:19,313 [RULES] Initial load rule http-dothtaccess-cmd-001 summary: group=WEB-HTTP message=Possible remote command attempt: .htaccess?cmd=... in HTTP request
+2025-10-22 23:07:19,313 [RULES] Initial load rule mysql_load_data_infile_decoded_001 summary: group=SQLI_FILE_OPS_MYSQL message=MySQL LOAD DATA INFILE / LOAD DATA LOCAL INFILE detected (possible local file read via SQLi).
+2025-10-22 23:07:19,313 [RULES] Initial load rule mysql_load_data_infile_encoded_002 summary: group=SQLI_FILE_OPS_MYSQL message=URL-encoded MySQL LOAD DATA INFILE pattern detected (handles %20, %2D%2D, %23, %2F*).
+2025-10-22 23:07:19,313 [RULES] Initial load rule mysql_load_file_func_003 summary: group=SQLI_FILE_OPS_MYSQL message=MySQL LOAD_FILE() detected (possible local file read / disclosure).
+2025-10-22 23:07:19,313 [RULES] Initial load rule mysql_into_outfile_dumpfile_004 summary: group=SQLI_FILE_OPS_MYSQL message=INTO OUTFILE or INTO DUMPFILE detected (possible file write/exfiltration to local path).
+2025-10-22 23:07:19,313 [RULES] Initial load rule file_path_unix_windows_005 summary: group=SQLI_FILE_PATHS message=Absolute or relative local file path detected (C:\..., /etc/..., ../.. ) — possible local-file disclosure attempt.
+2025-10-22 23:07:19,313 [RULES] Initial load rule mysql_select_from_myfile_006 summary: group=SQLI_FILE_OPS_MYSQL message=SELECT from temporary/myfile table pattern detected — common pattern after LOAD DATA INFILE.
+2025-10-22 23:07:19,313 [RULES] Initial load rule oracle_utl_http_001 summary: group=SQLI_ORACLE_EXFIL message=Possible Oracle HTTP exfiltration via UTL_HTTP.REQUEST (string concat or direct call).
+2025-10-22 23:07:19,314 [RULES] Initial load rule oracle_utl_inaddr_002 summary: group=SQLI_ORACLE_EXFIL message=Possible Oracle DNS/host exfiltration via UTL_INADDR.GET_HOST_ADDRESS.
+2025-10-22 23:07:19,314 [RULES] Initial load rule oracle_v$_and_sys_003 summary: group=SQLI_ORACLE_INFO message=Access to Oracle V$ or SYS metadata detected (v$version, v$instance, global_name, SYS.LOGIN_USER...).
+2025-10-22 23:07:19,314 [RULES] Initial load rule oracle_distinct_rownum_limit_004 summary: group=SQLI_ORACLE_INFO message=Subselects with DISTINCT/ROWNUM patterns detected — possible blind enumeration via ROWNUM paging.
+2025-10-22 23:07:19,314 [RULES] Initial load rule oracle_string_concat_func_005 summary: group=SQLI_ORACLE_EXFIL message=String-concatenation with function call detected (|| func(...) ||) — possible outbound call construction (HTTP/DNS).
+2025-10-22 23:07:19,314 [RULES] Initial load rule oracle_proc_custom_006 summary: group=SQLI_ORACLE_PROCS message=Call to application stored-proc detected in injection (e.g. myappadmin.adduser).
+2025-10-22 23:07:19,314 [RULES] Initial load rule oracle_url_in_payload_007 summary: group=SQLI_EXFIL_URL message=Outbound URL or IP-based UNC path found inside SQL payload — possible exfiltration destination.
+2025-10-22 23:07:19,314 [RULES] Initial load rule pg_func_version_001 summary: group=SQLI_PG_INFO message=Postgres version() detected — possible info disclosure attempt.
+2025-10-22 23:07:19,314 [RULES] Initial load rule pg_current_db_user_002 summary: group=SQLI_PG_INFO message=Postgres current_database/current_user/session_user detected — possible info disclosure.
+2025-10-22 23:07:19,314 [RULES] Initial load rule pg_current_setting_003 summary: group=SQLI_PG_CONFIG message=Postgres current_setting(...) detected (sensitive server config exposed).
+2025-10-22 23:07:19,314 [RULES] Initial load rule pg_sys_tables_004 summary: group=SQLI_PG_INFO message=Access to PostgreSQL system tables detected (pg_shadow/pg_group/pg_*).
+2025-10-22 23:07:19,315 [RULES] Initial load rule pg_copy_file_ops_005 summary: group=SQLI_PG_FILEOPS message=Postgres COPY ... FROM/TO local file path detected (possible file disclosure/exfiltration).
+2025-10-22 23:07:19,315 [RULES] Initial load rule pg_select_from_myfile_006 summary: group=SQLI_PG_INFO message=SELECT from temporary/myfile table detected — common pattern after COPY from file.
+2025-10-22 23:07:19,315 [RULES] Initial load rule pg_ddl_generic_007 summary: group=SQLI_DDL message=DDL statement detected (CREATE/ALTER/DROP) — may indicate injection attempting schema changes.
+2025-10-22 23:07:19,315 [RULES] Initial load rule pg_file_path_generic_008 summary: group=SQLI_FILE_PATHS message=Absolute/relative file path detected (UNIX/Windows) — possible local file read/write via SQL.
+2025-10-22 23:07:19,315 [RULES] Initial load rule pg_generic_function_009 summary: group=SQLI_PG_INFO message=Postgres file-related function detected (pg_read_file/pg_ls_dir/pg_stat_file) — possible local file disclosure.
+2025-10-22 23:07:19,315 [RULES] Initial load rule sqli_boolean_001 summary: group=SQLI_BOOLEAN message=Boolean-based SQL Injection attempt detected (AND/OR 1=1 pattern).
+2025-10-22 23:07:19,315 [RULES] Initial load rule sqli_union_select_002 summary: group=SQLI_UNION message=UNION SELECT SQL Injection attempt detected.
+2025-10-22 23:07:19,315 [RULES] Initial load rule sqli_comment_003 summary: group=SQLI_COMMENTS message=SQL comment-style injection pattern detected (--, #, /* */).
+2025-10-22 23:07:19,315 [RULES] Initial load rule sqli_benchmark_004 summary: group=SQLI_TIME_BASED message=Time-based SQL Injection attempt using BENCHMARK() or delay functions.
+2025-10-22 23:07:19,315 [RULES] Initial load rule sqli_exec_cmdshell_005 summary: group=SQLI_CMD_EXEC message=Command execution attempt via MSSQL xp_cmdshell or stored procedures.
+2025-10-22 23:07:19,315 [RULES] Initial load rule sqli_pg_info_006 summary: group=SQLI_POSTGRES_INFO message=PostgreSQL information disclosure attempt detected.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_mysql_info_007 summary: group=SQLI_MYSQL_INFO message=MySQL information disclosure or file read attempt detected.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_file_load_008 summary: group=SQLI_FILE_PATHS message=Possible SQL file read/write via LOAD DATA or COPY FROM statement.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_orderby_009 summary: group=SQLI_ORDERBY_ENUM message=SQL Injection ORDER BY column enumeration detected.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_if_case_010 summary: group=SQLI_CONDITIONAL message=Conditional IF/CASE SQLi pattern detected.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_rlike_011 summary: group=SQLI_REGEX_TEST message=MySQL RLIKE subselect SQL Injection detected.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_wildcard_012 summary: group=SQLI_WILDCARD message=Wildcard-based SQLi attempt using '%' and boolean logic.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_short_token_quote_013 summary: group=SQLI_QUOTE_ANOMALY message=Suspicious short numeric token followed by quote/backtick/backslash/bracket (e.g. 1', 1", 1`, 1\, [1]) — possible injection fuzzing or malformed quote.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_mysql_version_comment_014 summary: group=SQLI_COMMENT_MYSQL message=MySQL versioned comment pattern detected (/*! ... */) — often used for obfuscated payloads.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_concat_pipepipe_015 summary: group=SQLI_CONCATENATION message=String concatenation operator '||' detected in payload (quoted concatenation or concatenation with function calls) — possible Oracle/SQL injection exfiltration.
+2025-10-22 23:07:19,316 [RULES] Initial load rule sqli_empty_string_tautology_016 summary: group=SQLI_TAUTOLOGY_QUOTED message=Empty-string equality or obfuscated quoted tautology detected (e.g. ''='' , ""="" , or ''='').
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli_bracket_index_017 summary: group=SQLI_BRACKET_ENUM message=Bracketed numeric index detected (e.g. [1]) — often used in ORDER BY / column enumeration attacks on some DBs.
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli-order-sleep-001 summary: group=SQLI_TIME_BASED message=SQL Injection attempt: ORDER BY with SLEEP() time-based payload
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli-benchmark-md5-002 summary: group=SQLI_TIME_BASED message=SQL Injection attempt: Time delay using SLEEP() or BENCHMARK()
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli-union-select-003 summary: group=SQLI_UNION_BASED message=SQL Injection attempt: UNION ALL SELECT enumeration
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli-union-select-comment-004 summary: group=SQLI_UNION_BASED message=SQL Injection attempt: UNION ALL SELECT with SQL comment
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli-order-sleep-comment-005 summary: group=SQLI_TIME_BASED message=SQL Injection attempt: ORDER BY with SLEEP() and comment
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli_sleep_func_013 summary: group=SQLI_TIME_BASED message=Time-based SQL Injection attempt using SLEEP() function.
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli_waitfor_delay_014 summary: group=SQLI_TIME_BASED message=Time-based SQL Injection attempt using WAITFOR DELAY (MSSQL).
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli_subselect_015 summary: group=SQLI_BOOLEAN_SUBSELECT message=Boolean-based SQL Injection using sub-select expression.
+2025-10-22 23:07:19,317 [RULES] Initial load rule sqli_groupby_016 summary: group=SQLI_GROUPBY_ENUM message=SQL Injection GROUP BY column enumeration detected.
+2025-10-22 23:07:19,318 [RULES] Initial load rule sqli_waitfor_013 summary: group=SQLI_TIME_BASED_MSSQL message=MS-SQL Time-based SQLi attempt using WAITFOR DELAY.
+2025-10-22 23:07:19,318 [RULES] Initial load rule sqli_sleep_014 summary: group=SQLI_TIME_BASED_MYSQL message=MySQL Time-based SQLi using SLEEP().
+2025-10-22 23:07:19,318 [RULES] Initial load rule sqli_encoded_time_015 summary: group=SQLI_TIME_BASED_ENCODED message=URL-encoded time-based SQLi attempt detected (e.g. %20waitfor%20delay%20, %20sleep%20).
+2025-10-22 23:07:19,318 [RULES] Initial load rule sqli_groupby_016 summary: group=SQLI_GROUPBY_ENUM message=SQL Injection GROUP BY column enumeration detected.
+2025-10-22 23:07:19,318 [RULES] Initial load rule sqli_subselect_boolean_017 summary: group=SQLI_SUBSELECT_BOOLEAN message=Boolean/subselect SQLi pattern detected (AND/OR (SELECT ...) = ...).
+2025-10-22 23:07:19,318 [RULES] Initial load rule http-dothtaccess-encoded-cmd-002 summary: group=WEB-HTTP message=Possible remote command attempt via encoded .htaccess (cmd param)
+2025-10-22 23:07:19,318 [RULES] Initial load rule c5d6e1f2-8a1b-11ef-9cba-0242ac120002 summary: group=DNS message=DNS traffic detected
+2025-10-22 23:07:19,318 [RULES] Initial load rule d7e8f304-8a1b-11ef-9cba-0242ac120002 summary: group=SHELLCODE message=Possible shellcode NOP/JMP pattern
+2025-10-22 23:07:19,318 [RULES] Initial load rule e9f00116-8a1b-11ef-9cba-0242ac120002 summary: group=HTTP message=HTTP GET request detected
+2025-10-22 23:07:19,319 [RULES] Initial load rule fa012328-8a1b-11ef-9cba-0242ac120002 summary: group=CRED_LEAK message=Possible credential leakage in payload
+2025-10-22 23:07:19,319 [RULES] Initial load rule aa123456-8a1b-11ef-9cba-0242ac120002 summary: group=COMMAND_INJECTION message=Possible command injection attempt
+2025-10-22 23:07:19,319 [RULES] Initial load rule bb234567-8a1b-11ef-9cba-0242ac120002 summary: group=XSS message=Possible cross-site scripting (XSS) attempt
+2025-10-22 23:07:19,319 [RULES] Initial load rule cc345678-8a1b-11ef-9cba-0242ac120002 summary: group=FTP_CRED message=FTP credentials detected
+2025-10-22 23:07:19,319 [RULES] Initial load rule dd456789-8a1b-11ef-9cba-0242ac120002 summary: group=TELNET message=Telnet login attempt detected
+2025-10-22 23:07:19,319 [RULES] Initial load rule f1a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI message=Possible LFI probe - /etc/passwd variants detected
+2025-10-22 23:07:19,319 [RULES] Initial load rule f2a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_TRAVERSAL message=Directory traversal pattern detected (../ / encoded / overlong)
+2025-10-22 23:07:19,320 [RULES] Initial load rule f3a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_NULLBYTE message=Null byte (%00) in URI/param — possible LFI/null-byte poisoning
+2025-10-22 23:07:19,320 [RULES] Initial load rule f4a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_WINDOWS message=Possible Windows file-read probe (boot.ini / win.ini)
+2025-10-22 23:07:19,320 [RULES] Initial load rule f5a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_HTTPD_LOGS message=Probe for webserver config/log files (httpd.conf / access_log / error_log)
+2025-10-22 23:07:19,320 [RULES] Initial load rule f6a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_ENCODING_EVASION message=Encoded/overlong UTF-8 or double-encoded slash sequences — possible evasion for LFI
+2025-10-22 23:07:19,320 [RULES] Initial load rule f7a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_MULTITRY message=File-read probe combining common filenames with encoding/NULL — high confidence
+2025-10-22 23:07:19,320 [RULES] Initial load rule f8a2b3c4-9a1b-11ef-9cba-0242ac120002 summary: group=LFI_RATE message=Repeated traversal attempts detected — suggest rate-limit or block IP
+2025-10-22 23:07:19,320 [RULES] Initial load rule lfi_media_001 summary: group=MEDIA_EXPLOIT message=Possible malicious media upload (playlist/embed references local paths or EXTM3U)
+2025-10-22 23:07:19,320 [RULES] Initial load rule lfi_media_002 summary: group=MEDIA_EXPLOIT message=Possible malicious media upload (media file contains embedded script tags or PHP)
+2025-10-22 23:07:19,321 [RULES] Initial load rule m1a2b3c4-media-exploit-001 summary: group=MEDIA_EXPLOIT message=Possible malicious media upload (embedded playlist/byte-range pointing to local/remote resource)
+2025-10-22 23:07:19,321 [RULES] Initial load rule m1a2b3c4-media-exploit-002 summary: group=MEDIA_EXPLOIT message=Possible malicious media upload (media file contains embedded script tags or PHP code)
+2025-10-22 23:07:19,321 [RULES] Initial load rule ht-001 summary: group=WEB_SHELL message=Possible remote .htaccess web-shell access attempt
+2025-10-22 23:07:19,321 [RULES] Initial load rule ht-002 summary: group=UPLOAD_PHP_TAG message=Uploaded file contains PHP tag or dangerous Apache directives
+2025-10-22 23:07:19,321 [RULES] Initial load rule b871c676-8949-4d25-b665-2cde15fd02e2 summary: group=CMD-INJ-001 message=Potential Command Injection Detected (semicolon in parameter)
+2025-10-22 23:07:19,321 [RULES] Initial load rule 69ce2f3e-15c4-4e95-ae5f-f04da634819a summary: group=CMD-INJ-002 message=Potential Command Injection Detected (common commands in parameter)
+2025-10-22 23:07:19,321 [RULES] Initial load rule 5f39cffb-2347-4b0f-a868-547a496d8e44 summary: group=CMD-INJ-003 message=Potential Command Injection in POST Body
+2025-10-22 23:07:19,321 [RULES] Initial load rule htshell-001 summary: group=WEB_SHELL message=Suspicious .htaccess mapping to PHP detected
+2025-10-22 23:07:19,321 [RULES] Initial load rule htshell-002 summary: group=WEB_SHELL message=PHP code detected inside uploaded file
+2025-10-22 23:07:19,322 [RULES] Initial load rule htshell-003 summary: group=SERVER_INFO message=Attempt to enable server-status/server-info via .htaccess
+2025-10-22 23:07:19,322 [RULES] Initial load rule htshell-004 summary: group=ACCESS message=Direct access attempt to .htaccess
+2025-10-22 23:07:19,322 [RULES] Initial load rule rce-addtype-001 summary: group=WEB_SHELL message=Detected AddType mapping .rce to PHP (possible .htaccess web-shell)
+2025-10-22 23:07:19,322 [RULES] Initial load rule rce-upload-002 summary: group=UPLOAD message=Uploaded file with .rce extension detected
+2025-10-22 23:07:19,322 [RULES] Initial load rule rce-phpcode-003 summary: group=UPLOAD_PHP_TAG message=Uploaded content contains PHP tags
+2025-10-22 23:07:19,322 [RULES] Initial load rule rce-access-004 summary: group=ACCESS message=Direct access attempt to .rce file
+2025-10-22 23:07:19,322 [RULES] Initial load rule http-dothtaccess-cmd-001 summary: group=WEB-HTTP message=Remote command injection attempt via .htaccess (cmd parameter)
+2025-10-22 23:07:19,322 [RULES] Initial load rule http-sqli-union-001 summary: group=WEB-SQLI message=Possible SQL injection: UNION SELECT pattern detected in HTTP request
+2025-10-22 23:07:19,323 [RULES] Initial load rule http-sqli-boolean-or-001 summary: group=WEB-SQLI message=Possible SQL injection: boolean OR / comment-based injection
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-001 summary: group=WEB_SHELL message=Suspicious AddType mapping .htaccess/.rce to PHP detected
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-002 summary: group=WEB_SHELL message=PHP code detected in uploaded content
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-003 summary: group=WEB_SHELL message=Directive making .htaccess accessible detected
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-004 summary: group=ACCESS message=Direct access attempt to .htaccess
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-005 summary: group=ACCESS message=Direct access attempt to .rce file
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-zip-001 summary: group=UPLOAD message=Uploaded zip filename contains path traversal or encoded ../
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-zip-002 summary: group=UPLOAD message=ZIP archive contains path traversal entries (PK header + ../ or encoded variants)
+2025-10-22 23:07:19,323 [RULES] Initial load rule htb-zip-003 summary: group=UPLOAD message=ZIP contains ../.../__init__.py entry — possible python package trojanization
+2025-10-22 23:07:19,324 [RULES] Initial load rule htb-zip-004 summary: group=UPLOAD message=ZIP archive contains absolute path entries (leading slash) — suspicious
+2025-10-22 23:07:19,324 [RULES] Initial load rule htb-upload-005 summary: group=UPLOAD message=Upload attempt contains potentially executable/config files (.py, .php, .htaccess)
+2025-10-22 23:07:19,324 [RULES] Initial load rule htb-path-enc-006 summary: group=ACCESS message=URL-encoded traversal sequence detected in request
+2025-10-22 23:07:19,324 [RULES] Initial load rule uwsgi-exec-001 summary: group=CONFIG message=uWSGI config executes system command (exec://)
+2025-10-22 23:07:19,324 [RULES] Initial load rule uwsgi-http-002 summary: group=CONFIG message=uWSGI config loads remote content (http://)
+2025-10-22 23:07:19,324 [RULES] Initial load rule uwsgi-fd-003 summary: group=CONFIG message=uWSGI config reads from file descriptor (fd://)
+2025-10-22 23:07:19,324 [RULES] Initial load rule uwsgi-call-004 summary: group=CONFIG message=uWSGI config calls internal C function (call://)
+2025-10-22 23:07:19,324 [RULES] Initial load rule upload-xss-001 summary: group=UPLOAD message=Possible XSS payload in uploaded file
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-xss-002 summary: group=UPLOAD message=Possible XSS payload in uploaded file
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-xss-003 summary: group=UPLOAD message=Possible XSS payload in uploaded file
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-php-001 summary: group=UPLOAD message=Attempt to upload PHP executable file (possible webshell)
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-php-002 summary: group=UPLOAD message=Possible PHP webshell code in uploaded file
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-php-003 summary: group=UPLOAD message=Possible malicious .htaccess upload to enable PHP execution
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-php-004 summary: group=UPLOAD message=Attempt to upload PHP-related or disguised PHP file
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-php-005 summary: group=UPLOAD message=Possible PHP webshell payload inside uploaded file
+2025-10-22 23:07:19,325 [RULES] Initial load rule detect-jpeg-php-001 summary: group=UPLOAD message=JPEG contains embedded PHP tag between SOS and EOI (possible disguised webshell)
+2025-10-22 23:07:19,325 [RULES] Initial load rule upload-php-filename-001 summary: group=UPLOAD message=Upload filename indicates disguised PHP (double extension / null byte)
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-file-vector-001 summary: group=IMAGEMAGICK message=Possible ImageMagick vector or embedded PostScript content
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-localfile-001 summary: group=IMAGEMAGICK message=Upload references sensitive local path (possible file disclosure)
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-command-pipe-001 summary: group=IMAGEMAGICK message=ImageMagick PostScript or shell pipe command detected
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-shell-rce-001 summary: group=IMAGEMAGICK message=Possible reverse shell or shell command execution
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-url-inject-001 summary: group=IMAGEMAGICK message=Suspicious url(...) containing shell metacharacters
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-url-ssrf-001 summary: group=IMAGEMAGICK message=Request to internal/private IP detected (possible SSRF)
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-callback-001 summary: group=IMAGEMAGICK message=Callback or exfiltration domain detected
+2025-10-22 23:07:19,326 [RULES] Initial load rule imgmag-obfuscation-001 summary: group=IMAGEMAGICK message=Encoded or obfuscated payload content (possible evasion attempt)
+2025-10-22 23:07:19,327 [RULES] Initial load rule imgmag-xxe-001 summary: group=IMAGES message=Possible XXE payload in uploaded XML/SVG file
+2025-10-22 23:07:19,327 [RULES] Initial load rule imgmag-cve-2021-22204 summary: group=IMAGEMAGICK message=Possible ImageMagick/ExifTool DjVu PostScript RCE (CVE-2021-22204)
+2025-10-22 23:07:19,327 [RULES] Initial load rule imgmag-exif-rce-001 summary: group=IMAGEMAGICK message=ExifTool metadata execution attempt (possible CVE-2021-22204)
+2025-10-22 23:07:19,327 [RULES] Initial load rule png-metadata-php-shell summary: group=IMAGE_EXPLOIT message=Suspicious PHP code embedded in PNG metadata (Pillow/Exif injection)
+2025-10-22 23:07:19,327 [RULES] Initial load rule png-metadata-suspicious-key summary: group=IMAGE_EXPLOIT message=Suspicious PNG metadata key (possible malicious file generation)
+2025-10-22 23:07:19,327 [RULES] Initial load rule python-pillow-malicious-metadata summary: group=CODE_GENERATION message=Python script embedding PHP shell into PNG metadata (Pillow exploit generator)
+2025-10-22 23:07:19,327 [RULES] Initial load rule ssi-exec-shell-commands summary: group=WEB_PAYLOADS message=SSI #exec payload attempting to run shell commands (cat /etc/passwd, id, ls, netstat, ...)
+2025-10-22 23:07:19,327 [RULES] Initial load rule inline-shell-separators-pipes-backticks summary: group=WEB_PAYLOADS message=Inline shell separators, pipes or backticks with common command names (id, ls, cat, netstat)
+2025-10-22 23:07:19,328 [RULES] Initial load rule system-popen-exec-php-constructs summary: group=CODE_INJECTION message=Use of runtime execution functions (system/exec/popen/...) with suspicious command strings
+2025-10-22 23:07:19,328 [RULES] Initial load rule encoded-newline-and-percent-encoding-commands summary: group=WEB_PAYLOADS message=Percent-encoded or literal newline followed by suspicious command (cat /etc/passwd, id, ls, ping, netstat)
+2025-10-22 23:07:19,328 [RULES] Initial load rule suspicious-ping-netstat-longrun summary: group=DOS_AND_RECON message=Ping/netstat usage attempts (possible recon/long-run command injection)
+2025-10-22 23:07:19,328 [RULES] Initial load rule suspicious-vertical-bars-and-ids summary: group=WEB_PAYLOADS message=Patterns containing pipes/vertical-bars around 'id' or '/usr/bin/id' (common in injected payloads)
+2025-10-22 23:07:19,328 [RULES] Initial load rule semicolon-id-variants summary: group=WEB_PAYLOADS message=Semicolon-wrapped 'id' variants and common payload fragments (e.g. a);id )
+2025-10-22 23:07:19,328 [RULES] Initial load rule rce_gop_shellshock summary: group=WEB_RCE message=Shellshock-style payload or immediate command substitution/download following '() { :; };' pattern
+2025-10-22 23:07:19,328 [RULES] Initial load rule rce_gop_cmdsub_and_backticks summary: group=WEB_RCE message=Command substitution / backticks / ${...} containing common commands (id, ls, cat, curl, wget, nc, phpinfo, ...)
+2025-10-22 23:07:19,328 [RULES] Initial load rule rce_gop_operators_percent_newline summary: group=WEB_RCE message=Command chaining operators (|, ||, &, &&, ;) or encoded newlines followed by suspicious commands
+2025-10-22 23:07:19,329 [RULES] Initial load rule rce_gop_php_eval_system_echo_write summary: group=CODE_EXECUTION message=Runtime eval/exec/system or PHP tags / echo write-to-file / template-injection (phpinfo/sleep/get_user_file etc.)
+2025-10-22 23:07:19,329 [RULES] Initial load rule rce_gop_rev_shell_perl_windows_flood summary: group=DOS_RCE message=Download/reverse-shell (curl/wget/nc), perl flood, Windows RCE/admin commands, reconnaissance commands (whoami/which/etc.)
+2025-10-22 23:07:19,329 [RULES] Initial load rule oss_double_slash_domain_bypass summary: group=URL_BYPASS message=URL bypass using repeated slashes/backslashes/encoded-slashes before domain (e.g. //example.com, /%2f%2fexample.com, \\example.com)
+2025-10-22 23:07:19,329 [RULES] Initial load rule oss_encoded_or_malformed_scheme summary: group=URL_BYPASS message=Encoded or malformed HTTP(S) scheme used to hide external target (hex-encoded http://, http:/, https:/// etc.)
+2025-10-22 23:07:19,329 [RULES] Initial load rule oss_open_redirect_param_bypass summary: group=OPEN_REDIRECT message=Open-redirect parameter contains absolute/escaped/encoded external target (e.g. ?url=//example.com, ?redirect=/\/example.com, ?url=Https://example.com)
+2025-10-22 23:07:19,329 [RULES] Initial load rule oss_traversal_with_domain_or_encoded_dots summary: group=PATH_TRAVERSAL message=Path traversal or encoded '..' combined with domain/path (e.g. /example.com/%2e%2e, ////example.com/%2e%2e%2f)
+2025-10-22 23:07:19,329 [RULES] Initial load rule oss_control_unicode_separator_bypass summary: group=URL_BYPASS_MISC message=Control/unicode/null/tab or exotic separator bypass attempts (null/tab/unicode dots, \;@, <> , etc.) used to hide external redirect/SSRF
+2025-10-22 23:07:19,330 [RULES] Initial load rule oss_leading_dot_domain summary: group=URL_BYPASS message=Leading-dot domain in path (e.g. /.example.com) — likely SSRF/redirect obfuscation
+2025-10-22 23:07:19,330 [RULES] Initial load rule hpp_duplicate_param_backref summary: group=HPP_ATTACK message=Duplicate HTTP parameter name detected (possible HPP) — same parameter appears multiple times in query string
+2025-10-22 23:07:19,330 [RULES] Initial load rule hpp_array_param_duplicate summary: group=HPP_ATTACK message=Duplicate array-style parameter detected (param[]=... repeated) — possible HPP/parameter smuggling
+2025-10-22 23:07:19,330 [RULES] Initial load rule hpp_encoded_ampersand_in_value summary: group=HPP_ATTACK message=Encoded ampersand/semicolon (%26 / %3B) inside parameter value that may create additional params when decoded — possible HPP/parameter smuggling
+2025-10-22 23:07:19,330 [RULES] Initial load rule hpp_null_byte_in_param summary: group=HPP_ATTACK message=Null byte detected in request (encoded or literal) — may be used to bypass parsing/validation (HPP or other injection)
+2025-10-22 23:07:19,330 [RULES] Initial load rule hpp_semicolon_param_smuggling summary: group=HPP_ATTACK message=Semicolon used inside query parameter values to inject additional key=value pairs — possible parameter smuggling / HPP
+2025-10-22 23:07:19,330 [RULES] Initial load rule hpp_double_encoded_param_name summary: group=HPP_ATTACK message=Double-encoded parameter name pattern detected (attempt to hide duplicate param names) — likely HPP evasion
+2025-10-22 23:07:19,331 [RULES] Initial load rule hpp_leading_dot_path_param_combo summary: group=HPP_ATTACK message=Leading-dot domain in path combined with duplicate parameter name — obfuscated exploit pattern (HPP + redirect/SSRF obfuscation)
+2025-10-22 23:07:19,331 [RULES] Initial load rule hpp_multiple_repeats_suspect summary: group=HPP_ATTACK message=Three or more parameters in short query string segment — suspicious repetition/packing which can indicate HPP or param-smuggling attempts
+2025-10-22 23:07:19,331 [RULES] Initial load rule host_multiple_header_raw summary: group=HOST_HEADER message=Multiple Host headers detected in raw request (RFC violation) — possible header injection/request smuggling
+2025-10-22 23:07:19,331 [RULES] Initial load rule host_null_crlf_percent_encoding summary: group=HOST_HEADER message=Host header contains CRLF/null byte/percent-encoded newline — possible header injection / CRLF attack
+2025-10-22 23:07:19,331 [RULES] Initial load rule host_contains_path_or_at_symbol summary: group=HOST_HEADER message=Host header contains path component or '@' userinfo which is suspicious — possible host header manipulation
+2025-10-22 23:07:19,331 [RULES] Initial load rule host_leading_dot_or_ip_with_port summary: group=HOST_HEADER message=Host header starts with a leading dot or IP:port — suspicious or may indicate obfuscation
+2025-10-22 23:07:19,332 [RULES] Initial load rule host_not_in_whitelist summary: group=HOST_HEADER message=Host header not matching configured whitelist for this service — potential host header injection
+2025-10-22 23:07:19,332 [RULES] Initial load rule xml_non_xml_content_scan summary: group=GENERAL message=XML/DTD/XSLT signatures found in request body (scan regardless of Content-Type)
+2025-10-22 23:07:19,332 [RULES] Initial load rule xxe_doctype_decl summary: group=XXE_DETECTION message=XXE: DOCTYPE declaration found — potential XXE initialization
+2025-10-22 23:07:19,332 [RULES] Initial load rule xxe_doctype_percent_encoded summary: group=XXE_DETECTION message=XXE: Encoded DOCTYPE pattern detected — possible obfuscation
+2025-10-22 23:07:19,332 [RULES] Initial load rule xxe_param_entity_decl summary: group=XXE_DETECTION message=XXE: Parameter ENTITY (%name SYSTEM '...') declaration — critical
+2025-10-22 23:07:19,332 [RULES] Initial load rule xxe_param_entity_ref summary: group=XXE_DETECTION message=XXE: Parameter entity reference (%name;) detected — likely external DTD usage
+2025-10-22 23:07:19,332 [RULES] Initial load rule xxe_entity_system_any_scheme summary: group=XXE_DETECTION message=XXE: ENTITY SYSTEM references a URI (file/http/php/data...) — possible XXE or SSRF
+2025-10-22 23:07:19,333 [RULES] Initial load rule xxe_entity_system_encoded_uri summary: group=XXE_DETECTION message=XXE: Encoded URI scheme detected (file/http/php) — obfuscation attempt
+2025-10-22 23:07:19,333 [RULES] Initial load rule xxe_entity_system_relative summary: group=XXE_DETECTION message=XXE: ENTITY SYSTEM references local/relative file — file inclusion attempt
+2025-10-22 23:07:19,333 [RULES] Initial load rule xxe_entity_system_php_filter summary: group=XXE_DETECTION message=XXE: ENTITY SYSTEM using php://filter — exfiltration attempt
+2025-10-22 23:07:19,333 [RULES] Initial load rule xxe_entity_system_data_base64 summary: group=XXE_DETECTION message=XXE: ENTITY SYSTEM uses base64-encoded data URI — obfuscated XXE
+2025-10-22 23:07:19,333 [RULES] Initial load rule xxe_many_entity_decls summary: group=XXE_DETECTION message=XXE: Multiple ENTITY declarations — potential Billion Laughs attack
+2025-10-22 23:07:19,333 [RULES] Initial load rule xxe_entity_value_recursion summary: group=XXE_DETECTION message=XXE: ENTITY recursively referencing others — exponential expansion vector
+2025-10-22 23:07:19,334 [RULES] Initial load rule xxe_many_entity_refs summary: group=XXE_DETECTION message=XXE: excessive entity references in body — post-expansion DoS attempt
+2025-10-22 23:07:19,334 [RULES] Initial load rule xsl_document_function summary: group=XSLT_DETECTION message=XSLT stylesheet or document() function detected — possible file/remote inclusion
+2025-10-22 23:07:19,334 [RULES] Initial load rule xsl_php_function_call summary: group=XSLT_DETECTION message=XSLT php:function() usage detected — potential RCE or data exfiltration
+2025-10-22 23:07:19,334 [RULES] Initial load rule xml_cdata_script_xss summary: group=XML_XSS message=XML/CDATA block contains script — possible XSS injection
+2025-10-22 23:07:19,335 [RULES] Initialized rules map: 222 rules

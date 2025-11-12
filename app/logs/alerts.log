@@ -6794,3 +6794,552 @@ hexdump:
 00000320  77 6f 72 64 3d 31 32 33 71 77 65 25 32 31 25 34   word=123qwe%21%4
 00000330  30 25 32 33                                       0%23
 
+2025-11-12 14:13:12,027 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:37916->127.0.0.1:80 variant=REGEX_raw entropy=4.728
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 20 48   GET /.htaccess H
+00000010  54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c   TTP/1.1..Host: l
+00000020  6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41   ocalhost..User-A
+00000030  67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30   gent: curl/8.5.0
+00000040  0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d   ..Accept: */*...
+00000050  0a                                                .
+
+2025-11-12 14:14:26,742 [ALERT] ALERT [http-sqli-boolean-or-001] Possible SQL injection: boolean OR / comment-based injection | proto=TCP 127.0.0.1:53736->127.0.0.1:80 variant=REGEX_raw entropy=5.539
+hexdump:
+00000000  47 45 54 20 2f 66 61 76 69 63 6f 6e 2e 69 63 6f   GET /favicon.ico
+00000010  20 48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a    HTTP/1.1..Host:
+00000020  20 6c 6f 63 61 6c 68 6f 73 74 0d 0a 43 6f 6e 6e    localhost..Conn
+00000030  65 63 74 69 6f 6e 3a 20 6b 65 65 70 2d 61 6c 69   ection: keep-ali
+00000040  76 65 0d 0a 73 65 63 2d 63 68 2d 75 61 2d 70 6c   ve..sec-ch-ua-pl
+00000050  61 74 66 6f 72 6d 3a 20 22 4c 69 6e 75 78 22 0d   atform: "Linux".
+00000060  0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 4d 6f 7a   .User-Agent: Moz
+00000070  69 6c 6c 61 2f 35 2e 30 20 28 58 31 31 3b 20 4c   illa/5.0 (X11; L
+00000080  69 6e 75 78 20 78 38 36 5f 36 34 29 20 41 70 70   inux x86_64) App
+00000090  6c 65 57 65 62 4b 69 74 2f 35 33 37 2e 33 36 20   leWebKit/537.36 
+000000a0  28 4b 48 54 4d 4c 2c 20 6c 69 6b 65 20 47 65 63   (KHTML, like Gec
+000000b0  6b 6f 29 20 43 68 72 6f 6d 65 2f 31 34 32 2e 30   ko) Chrome/142.0
+000000c0  2e 30 2e 30 20 53 61 66 61 72 69 2f 35 33 37 2e   .0.0 Safari/537.
+000000d0  33 36 0d 0a 73 65 63 2d 63 68 2d 75 61 3a 20 22   36..sec-ch-ua: "
+000000e0  43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34 32   Chromium";v="142
+000000f0  22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f 6d   ", "Google Chrom
+00000100  65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f 74   e";v="142", "Not
+00000110  5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39 22   _A Brand";v="99"
+00000120  0d 0a 73 65 63 2d 63 68 2d 75 61 2d 6d 6f 62 69   ..sec-ch-ua-mobi
+00000130  6c 65 3a 20 3f 30 0d 0a 41 63 63 65 70 74 3a 20   le: ?0..Accept: 
+00000140  69 6d 61 67 65 2f 61 76 69 66 2c 69 6d 61 67 65   image/avif,image
+00000150  2f 77 65 62 70 2c 69 6d 61 67 65 2f 61 70 6e 67   /webp,image/apng
+00000160  2c 69 6d 61 67 65 2f 73 76 67 2b 78 6d 6c 2c 69   ,image/svg+xml,i
+00000170  6d 61 67 65 2f 2a 2c 2a 2f 2a 3b 71 3d 30 2e 38   mage/*,*/*;q=0.8
+00000180  0d 0a 53 65 63 2d 46 65 74 63 68 2d 53 69 74 65   ..Sec-Fetch-Site
+00000190  3a 20 73 61 6d 65 2d 6f 72 69 67 69 6e 0d 0a 53   : same-origin..S
+000001a0  65 63 2d 46 65 74 63 68 2d 4d 6f 64 65 3a 20 6e   ec-Fetch-Mode: n
+000001b0  6f 2d 63 6f 72 73 0d 0a 53 65 63 2d 46 65 74 63   o-cors..Sec-Fetc
+000001c0  68 2d 44 65 73 74 3a 20 69 6d 61 67 65 0d 0a 52   h-Dest: image..R
+000001d0  65 66 65 72 65 72 3a 20 68 74 74 70 3a 2f 2f 6c   eferer: http://l
+000001e0  6f 63 61 6c 68 6f 73 74 2f 0d 0a 41 63 63 65 70   ocalhost/..Accep
+000001f0  74 2d 45 6e 63 6f 64 69 6e 67 3a 20 67 7a 69 70   t-Encoding: gzip
+00000200  2c 20 64 65 66 6c 61 74 65 2c 20 62 72 2c 20 7a   , deflate, br, z
+00000210  73 74 64 0d 0a 41 63 63 65 70 74 2d 4c 61 6e 67   std..Accept-Lang
+00000220  75 61 67 65 3a 20 65 6e 2d 55 53 2c 65 6e 3b 71   uage: en-US,en;q
+00000230  3d 30 2e 39 2c 76 69 3b 71 3d 30 2e 38 0d 0a 43   =0.9,vi;q=0.8..C
+00000240  6f 6f 6b 69 65 3a 20 61 6a 73 5f 61 6e 6f 6e 79   ookie: ajs_anony
+00000250  6d 6f 75 73 5f 69 64 3d 31 31 63 65 36 39 38 39   mous_id=11ce6989
+00000260  2d 35 63 33 38 2d 34 37 62 64 2d 38 62 61 39 2d   -5c38-47bd-8ba9-
+00000270  61 65 31 65 35 38 65 64 66 37 61 61 0d 0a 0d 0a   ae1e58edf7aa....
+
+2025-11-12 14:15:46,252 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:50586->127.0.0.1:80 variant=REGEX_raw entropy=4.728
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 20 48   GET /.htaccess H
+00000010  54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c   TTP/1.1..Host: l
+00000020  6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41   ocalhost..User-A
+00000030  67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30   gent: curl/8.5.0
+00000040  0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d   ..Accept: */*...
+00000050  0a                                                .
+
+2025-11-12 14:15:52,977 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:33468->127.0.0.1:80 variant=REGEX_raw entropy=4.728
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 20 48   GET /.htaccess H
+00000010  54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c   TTP/1.1..Host: l
+00000020  6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41   ocalhost..User-A
+00000030  67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30   gent: curl/8.5.0
+00000040  0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d   ..Accept: */*...
+00000050  0a                                                .
+
+2025-11-12 14:17:53,242 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:33258->127.0.0.1:80 variant=REGEX_raw entropy=4.728
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 20 48   GET /.htaccess H
+00000010  54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c   TTP/1.1..Host: l
+00000020  6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41   ocalhost..User-A
+00000030  67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30   gent: curl/8.5.0
+00000040  0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d   ..Accept: */*...
+00000050  0a                                                .
+
+2025-11-12 14:19:00,305 [ALERT] ALERT [f1a2b3c4-9a1b-11ef-9cba-0242ac120002] Possible LFI probe - /etc/passwd variants detected | proto=TCP 127.0.0.1:41460->127.0.0.1:80 variant=REGEX_raw entropy=5.439
+hexdump:
+00000000  50 4f 53 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f   POST /project_co
+00000010  75 72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 75   urse/index.php?u
+00000020  73 65 72 3d 61 6c 69 63 65 26 72 65 66 3d 25 32   ser=alice&ref=%2
+00000030  45 74 65 73 74 20 48 54 54 50 2f 31 2e 31 0d 0a   Etest HTTP/1.1..
+00000040  48 6f 73 74 3a 20 6c 6f 63 61 6c 68 6f 73 74 0d   Host: localhost.
+00000050  0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 4d 6f 7a   .User-Agent: Moz
+00000060  69 6c 6c 61 2f 35 2e 30 20 28 58 31 31 3b 20 4c   illa/5.0 (X11; L
+00000070  69 6e 75 78 20 78 38 36 5f 36 34 29 20 41 70 70   inux x86_64) App
+00000080  6c 65 57 65 62 4b 69 74 2f 35 33 37 2e 33 36 20   leWebKit/537.36 
+00000090  28 4b 48 54 4d 4c 2c 20 6c 69 6b 65 20 47 65 63   (KHTML, like Gec
+000000a0  6b 6f 29 20 43 68 72 6f 6d 65 2f 39 39 39 2e 30   ko) Chrome/999.0
+000000b0  2e 30 2e 30 20 53 61 66 61 72 69 2f 35 33 37 2e   .0.0 Safari/537.
+000000c0  33 36 0d 0a 41 63 63 65 70 74 3a 20 74 65 78 74   36..Accept: text
+000000d0  2f 68 74 6d 6c 2c 61 70 70 6c 69 63 61 74 69 6f   /html,applicatio
+000000e0  6e 2f 78 68 74 6d 6c 2b 78 6d 6c 2c 61 70 70 6c   n/xhtml+xml,appl
+000000f0  69 63 61 74 69 6f 6e 2f 78 6d 6c 3b 71 3d 30 2e   ication/xml;q=0.
+00000100  39 2c 2a 2f 2a 3b 71 3d 30 2e 38 0d 0a 58 2d 46   9,*/*;q=0.8..X-F
+00000110  6f 72 77 61 72 64 65 64 2d 46 6f 72 3a 20 32 30   orwarded-For: 20
+00000120  33 2e 30 2e 31 31 33 2e 34 35 0d 0a 58 2d 4e 6f   3.0.113.45..X-No
+00000130  74 65 3a 20 63 6f 6e 74 61 69 6e 73 20 2e 68 74   te: contains .ht
+00000140  61 63 63 65 73 73 20 69 6e 20 68 65 61 64 65 72   access in header
+00000150  20 62 75 74 20 6e 6f 74 20 69 6e 20 70 61 74 68    but not in path
+00000160  3a 20 2f 2e 68 74 61 63 63 65 73 73 0d 0a 58 2d   : /.htaccess..X-
+00000170  4d 61 6c 69 63 69 6f 75 73 2d 54 65 73 74 3a 20   Malicious-Test: 
+00000180  72 75 6e 3b 20 6c 73 20 2d 6c 61 20 2f 3b 20 68   run; ls -la /; h
+00000190  61 64 75 63 6b 69 65 6e 0d 0a 43 6f 6e 74 65 6e   aduckien..Conten
+000001a0  74 2d 54 79 70 65 3a 20 61 70 70 6c 69 63 61 74   t-Type: applicat
+000001b0  69 6f 6e 2f 78 2d 77 77 77 2d 66 6f 72 6d 2d 75   ion/x-www-form-u
+000001c0  72 6c 65 6e 63 6f 64 65 64 0d 0a 43 6f 6e 74 65   rlencoded..Conte
+000001d0  6e 74 2d 4c 65 6e 67 74 68 3a 20 32 31 30 0d 0a   nt-Length: 210..
+000001e0  0d 0a 75 73 65 72 6e 61 6d 65 3d 61 6c 69 63 65   ..username=alice
+000001f0  26 70 61 73 73 77 6f 72 64 3d 73 75 70 65 72 73   &password=supers
+00000200  65 63 72 65 74 31 32 33 26 63 6d 64 3d 77 68 6f   ecret123&cmd=who
+00000210  61 6d 69 26 65 78 70 6c 6f 69 74 3d 26 62 69 6f   ami&exploit=&bio
+00000220  3d 25 33 43 73 63 72 69 70 74 25 33 45 61 6c 65   =%3Cscript%3Eale
+00000230  72 74 25 32 38 25 32 37 78 73 73 25 32 37 25 32   rt%28%27xss%27%2
+00000240  39 25 33 43 25 32 46 73 63 72 69 70 74 25 33 45   9%3C%2Fscript%3E
+00000250  26 6e 6f 74 65 73 3d 63 6f 6e 74 61 69 6e 73 2b   &notes=contains+
+00000260  70 65 72 63 65 6e 74 2b 25 32 35 32 65 68 74 61   percent+%252ehta
+00000270  63 63 65 73 73 2b 61 6e 64 2b 65 6e 63 6f 64 65   ccess+and+encode
+00000280  64 25 32 35 32 30 73 70 61 63 65 2b 61 6e 64 2b   d%2520space+and+
+00000290  6f 74 68 65 72 2b 74 6f 6b 65 6e 73 2b 25 33 42   other+tokens+%3B
+000002a0  2b 63 61 74 2b 25 32 46 65 74 63 25 32 46 70 61   +cat+%2Fetc%2Fpa
+000002b0  73 73 77 64                                       sswd
+
+2025-11-12 14:19:17,178 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:37502->127.0.0.1:80 variant=REGEX_raw entropy=4.935
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 3f 63   GET /.htaccess?c
+00000010  6d 64 3d 6c 73 25 32 30 2d 61 6c 20 48 54 54 50   md=ls%20-al HTTP
+00000020  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61   /1.1..Host: loca
+00000030  6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67 65 6e   lhost..User-Agen
+00000040  74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a 41   t: curl/8.5.0..A
+00000050  63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a         ccept: */*....
+
+2025-11-12 14:20:05,711 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:34910->127.0.0.1:80 variant=REGEX_raw entropy=4.935
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 3f 63   GET /.htaccess?c
+00000010  6d 64 3d 6c 73 25 32 30 2d 61 6c 20 48 54 54 50   md=ls%20-al HTTP
+00000020  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61   /1.1..Host: loca
+00000030  6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67 65 6e   lhost..User-Agen
+00000040  74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a 41   t: curl/8.5.0..A
+00000050  63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a         ccept: */*....
+
+2025-11-12 14:20:34,853 [ALERT] ALERT [http-dothtaccess-encoded-cmd-002] Possible remote command attempt via encoded .htaccess (cmd param) — HTTP request-line matched | proto=TCP 127.0.0.1:34248->127.0.0.1:80 variant=REGEX_raw entropy=4.935
+hexdump:
+00000000  47 45 54 20 2f 2e 68 74 61 63 63 65 73 73 3f 63   GET /.htaccess?c
+00000010  6d 64 3d 6c 73 25 32 30 2d 61 6c 20 48 54 54 50   md=ls%20-al HTTP
+00000020  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61   /1.1..Host: loca
+00000030  6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67 65 6e   lhost..User-Agen
+00000040  74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a 41   t: curl/8.5.0..A
+00000050  63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a         ccept: */*....
+
+2025-11-12 14:21:40,452 [ALERT] ALERT [lfi_media_002] Possible malicious media upload (media file contains embedded script tags or PHP) | proto=TCP 127.0.0.1:35578->127.0.0.1:80 variant=REGEX_url entropy=5.509
+hexdump:
+00000000  50 4f 53 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f   POST /project_co
+00000010  75 72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 72   urse/index.php?r
+00000020  65 66 3d 25 32 45 74 65 73 74 26 6d 6f 64 65 3d   ef=%2Etest&mode=
+00000030  63 6d 64 20 48 54 54 50 2f 31 2e 31 0d 0a 48 6f   cmd HTTP/1.1..Ho
+00000040  73 74 3a 20 6c 6f 63 61 6c 68 6f 73 74 0d 0a 55   st: localhost..U
+00000050  73 65 72 2d 41 67 65 6e 74 3a 20 4d 6f 7a 69 6c   ser-Agent: Mozil
+00000060  6c 61 2f 35 2e 30 20 28 58 31 31 3b 20 4c 69 6e   la/5.0 (X11; Lin
+00000070  75 78 20 78 38 36 5f 36 34 29 20 41 70 70 6c 65   ux x86_64) Apple
+00000080  57 65 62 4b 69 74 2f 35 33 37 2e 33 36 20 28 4b   WebKit/537.36 (K
+00000090  48 54 4d 4c 2c 20 6c 69 6b 65 20 47 65 63 6b 6f   HTML, like Gecko
+000000a0  29 20 43 68 72 6f 6d 65 2f 39 39 39 2e 30 2e 30   ) Chrome/999.0.0
+000000b0  2e 30 20 53 61 66 61 72 69 2f 35 33 37 2e 33 36   .0 Safari/537.36
+000000c0  0d 0a 41 63 63 65 70 74 3a 20 74 65 78 74 2f 68   ..Accept: text/h
+000000d0  74 6d 6c 2c 61 70 70 6c 69 63 61 74 69 6f 6e 2f   tml,application/
+000000e0  78 68 74 6d 6c 2b 78 6d 6c 2c 61 70 70 6c 69 63   xhtml+xml,applic
+000000f0  61 74 69 6f 6e 2f 78 6d 6c 3b 71 3d 30 2e 39 2c   ation/xml;q=0.9,
+00000100  2a 2f 2a 3b 71 3d 30 2e 38 0d 0a 58 2d 46 6f 72   */*;q=0.8..X-For
+00000110  77 61 72 64 65 64 2d 46 6f 72 3a 20 32 30 33 2e   warded-For: 203.
+00000120  30 2e 31 31 33 2e 34 35 0d 0a 58 2d 43 75 73 74   0.113.45..X-Cust
+00000130  6f 6d 2d 48 65 61 64 65 72 3a 20 74 65 73 74 20   om-Header: test 
+00000140  2e 68 74 61 63 63 65 73 73 20 74 65 78 74 20 69   .htaccess text i
+00000150  6e 73 69 64 65 20 68 65 61 64 65 72 0d 0a 43 6f   nside header..Co
+00000160  6e 74 65 6e 74 2d 54 79 70 65 3a 20 61 70 70 6c   ntent-Type: appl
+00000170  69 63 61 74 69 6f 6e 2f 78 2d 77 77 77 2d 66 6f   ication/x-www-fo
+00000180  72 6d 2d 75 72 6c 65 6e 63 6f 64 65 64 0d 0a 43   rm-urlencoded..C
+00000190  6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20 31   ontent-Length: 1
+000001a0  39 37 0d 0a 0d 0a 75 73 65 72 6e 61 6d 65 3d 61   97....username=a
+000001b0  6c 69 63 65 26 70 61 73 73 77 6f 72 64 3d 73 65   lice&password=se
+000001c0  63 72 65 74 31 32 33 26 62 69 6f 3d 25 33 43 73   cret123&bio=%3Cs
+000001d0  63 72 69 70 74 25 33 45 61 6c 65 72 74 25 32 38   cript%3Ealert%28
+000001e0  25 32 37 78 73 73 25 32 37 25 32 39 25 33 43 25   %27xss%27%29%3C%
+000001f0  32 46 73 63 72 69 70 74 25 33 45 26 6e 6f 74 65   2Fscript%3E&note
+00000200  73 3d 72 75 6e 25 33 42 2b 6c 73 2b 2d 6c 61 2b   s=run%3B+ls+-la+
+00000210  25 32 46 74 6d 70 25 33 42 2b 68 61 64 75 63 6b   %2Ftmp%3B+haduck
+00000220  69 65 6e 26 63 6f 6d 6d 65 6e 74 3d 54 68 69 73   ien&comment=This
+00000230  2b 69 73 2b 61 2b 6e 6f 72 6d 61 6c 2b 63 6f 6d   +is+a+normal+com
+00000240  6d 65 6e 74 2b 62 75 74 2b 63 6f 6e 74 61 69 6e   ment+but+contain
+00000250  73 2b 63 6d 64 25 33 44 68 65 6c 6c 6f 2b 61 6e   s+cmd%3Dhello+an
+00000260  64 2b 25 32 35 32 45 74 65 73 74                  d+%252Etest
+
+2025-11-12 14:46:17,724 [ALERT] ALERT [69ce2f3e-15c4-4e95-ae5f-f04da634819a] Common command names in parameter values (log only) — param context | proto=TCP 127.0.0.1:38970->127.0.0.1:80 variant=REGEX_raw entropy=5.076
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 75 73   rse/index.php?us
+00000020  65 72 3d 61 6c 69 63 65 26 69 64 3d 31 32 33 20   er=alice&id=123 
+00000030  48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20   HTTP/1.1..Host: 
+00000040  6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d   localhost..User-
+00000050  41 67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e   Agent: curl/8.5.
+00000060  30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a   0..Accept: */*..
+00000070  0d 0a                                             ..
+
+2025-11-12 14:47:01,641 [ALERT] ALERT [69ce2f3e-15c4-4e95-ae5f-f04da634819a] Common command names in parameter values (log only) — param context | proto=TCP 127.0.0.1:55004->127.0.0.1:80 variant=REGEX_raw entropy=5.076
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 75 73   rse/index.php?us
+00000020  65 72 3d 61 6c 69 63 65 26 69 64 3d 31 32 33 20   er=alice&id=123 
+00000030  48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20   HTTP/1.1..Host: 
+00000040  6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d   localhost..User-
+00000050  41 67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e   Agent: curl/8.5.
+00000060  30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a   0..Accept: */*..
+00000070  0d 0a                                             ..
+
+2025-11-12 14:50:53,192 [ALERT] ALERT [http-sqli-boolean-or-001] Possible SQL injection: boolean OR / comment-based injection | proto=TCP 127.0.0.1:42372->127.0.0.1:80 variant=REGEX_raw entropy=5.093
+hexdump:
+00000000  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000010  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 47 50 69 78 6f 51   ----------GPixoQ
+00000020  38 78 6c 63 51 4a 65 44 35 74 79 61 45 56 47 7a   8xlcQJeD5tyaEVGz
+00000030  0d 0a 43 6f 6e 74 65 6e 74 2d 44 69 73 70 6f 73   ..Content-Dispos
+00000040  69 74 69 6f 6e 3a 20 66 6f 72 6d 2d 64 61 74 61   ition: form-data
+00000050  3b 20 6e 61 6d 65 3d 22 66 69 6c 65 22 3b 20 66   ; name="file"; f
+00000060  69 6c 65 6e 61 6d 65 3d 22 68 6f 73 74 73 22 0d   ilename="hosts".
+00000070  0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65 3a 20 61   .Content-Type: a
+00000080  70 70 6c 69 63 61 74 69 6f 6e 2f 6f 63 74 65 74   pplication/octet
+00000090  2d 73 74 72 65 61 6d 0d 0a 0d 0a 31 32 37 2e 30   -stream....127.0
+000000a0  2e 30 2e 31 20 6c 6f 63 61 6c 68 6f 73 74 0a 31   .0.1 localhost.1
+000000b0  32 37 2e 30 2e 31 2e 31 20 68 61 64 75 63 6b 69   27.0.1.1 haducki
+000000c0  65 6e 2d 56 69 76 6f 62 6f 6f 6b 2d 41 53 55 53   en-Vivobook-ASUS
+000000d0  4c 61 70 74 6f 70 2d 4b 33 35 30 34 56 41 2d 53   Laptop-K3504VA-S
+000000e0  33 35 30 34 56 41 0a 0a 23 20 54 68 65 20 66 6f   3504VA..# The fo
+000000f0  6c 6c 6f 77 69 6e 67 20 6c 69 6e 65 73 20 61 72   llowing lines ar
+00000100  65 20 64 65 73 69 72 61 62 6c 65 20 66 6f 72 20   e desirable for 
+00000110  49 50 76 36 20 63 61 70 61 62 6c 65 20 68 6f 73   IPv6 capable hos
+00000120  74 73 0a 3a 3a 31 20 20 20 20 20 69 70 36 2d 6c   ts.::1     ip6-l
+00000130  6f 63 61 6c 68 6f 73 74 20 69 70 36 2d 6c 6f 6f   ocalhost ip6-loo
+00000140  70 62 61 63 6b 0a 66 65 30 30 3a 3a 30 20 69 70   pback.fe00::0 ip
+00000150  36 2d 6c 6f 63 61 6c 6e 65 74 0a 66 66 30 30 3a   6-localnet.ff00:
+00000160  3a 30 20 69 70 36 2d 6d 63 61 73 74 70 72 65 66   :0 ip6-mcastpref
+00000170  69 78 0a 66 66 30 32 3a 3a 31 20 69 70 36 2d 61   ix.ff02::1 ip6-a
+00000180  6c 6c 6e 6f 64 65 73 0a 66 66 30 32 3a 3a 32 20   llnodes.ff02::2 
+00000190  69 70 36 2d 61 6c 6c 72 6f 75 74 65 72 73 0a 23   ip6-allrouters.#
+000001a0  20 41 64 64 65 64 20 62 79 20 44 6f 63 6b 65 72    Added by Docker
+000001b0  20 44 65 73 6b 74 6f 70 0a 23 20 54 6f 20 61 6c    Desktop.# To al
+000001c0  6c 6f 77 20 74 68 65 20 73 61 6d 65 20 6b 75 62   low the same kub
+000001d0  65 20 63 6f 6e 74 65 78 74 20 74 6f 20 77 6f 72   e context to wor
+000001e0  6b 20 6f 6e 20 74 68 65 20 68 6f 73 74 20 61 6e   k on the host an
+000001f0  64 20 74 68 65 20 63 6f 6e 74 61 69 6e 65 72 3a   d the container:
+00000200  0a 31 32 37 2e 30 2e 30 2e 31 09 6b 75 62 65 72   .127.0.0.1.kuber
+00000210  6e 65 74 65 73 2e 64 6f 63 6b 65 72 2e 69 6e 74   netes.docker.int
+00000220  65 72 6e 61 6c 0a 23 20 45 6e 64 20 6f 66 20 73   ernal.# End of s
+00000230  65 63 74 69 6f 6e 0a 0d 0a 2d 2d 2d 2d 2d 2d 2d   ection...-------
+00000240  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000250  2d 2d 2d 47 50 69 78 6f 51 38 78 6c 63 51 4a 65   ---GPixoQ8xlcQJe
+00000260  44 35 74 79 61 45 56 47 7a 2d 2d 0d 0a            D5tyaEVGz--..
+
+2025-11-12 14:52:11,806 [ALERT] ALERT [http-sqli-boolean-or-001] Possible SQL injection: boolean OR / comment-based injection | proto=TCP 127.0.0.1:59286->127.0.0.1:80 variant=REGEX_raw entropy=5.084
+hexdump:
+00000000  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000010  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 39 73 67 55 42 36   ----------9sgUB6
+00000020  72 46 74 61 43 66 4a 6e 36 63 75 68 68 71 4c 42   rFtaCfJn6cuhhqLB
+00000030  0d 0a 43 6f 6e 74 65 6e 74 2d 44 69 73 70 6f 73   ..Content-Dispos
+00000040  69 74 69 6f 6e 3a 20 66 6f 72 6d 2d 64 61 74 61   ition: form-data
+00000050  3b 20 6e 61 6d 65 3d 22 66 69 6c 65 22 3b 20 66   ; name="file"; f
+00000060  69 6c 65 6e 61 6d 65 3d 22 68 6f 73 74 73 22 0d   ilename="hosts".
+00000070  0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65 3a 20 61   .Content-Type: a
+00000080  70 70 6c 69 63 61 74 69 6f 6e 2f 6f 63 74 65 74   pplication/octet
+00000090  2d 73 74 72 65 61 6d 0d 0a 0d 0a 31 32 37 2e 30   -stream....127.0
+000000a0  2e 30 2e 31 20 6c 6f 63 61 6c 68 6f 73 74 0a 31   .0.1 localhost.1
+000000b0  32 37 2e 30 2e 31 2e 31 20 68 61 64 75 63 6b 69   27.0.1.1 haducki
+000000c0  65 6e 2d 56 69 76 6f 62 6f 6f 6b 2d 41 53 55 53   en-Vivobook-ASUS
+000000d0  4c 61 70 74 6f 70 2d 4b 33 35 30 34 56 41 2d 53   Laptop-K3504VA-S
+000000e0  33 35 30 34 56 41 0a 0a 23 20 54 68 65 20 66 6f   3504VA..# The fo
+000000f0  6c 6c 6f 77 69 6e 67 20 6c 69 6e 65 73 20 61 72   llowing lines ar
+00000100  65 20 64 65 73 69 72 61 62 6c 65 20 66 6f 72 20   e desirable for 
+00000110  49 50 76 36 20 63 61 70 61 62 6c 65 20 68 6f 73   IPv6 capable hos
+00000120  74 73 0a 3a 3a 31 20 20 20 20 20 69 70 36 2d 6c   ts.::1     ip6-l
+00000130  6f 63 61 6c 68 6f 73 74 20 69 70 36 2d 6c 6f 6f   ocalhost ip6-loo
+00000140  70 62 61 63 6b 0a 66 65 30 30 3a 3a 30 20 69 70   pback.fe00::0 ip
+00000150  36 2d 6c 6f 63 61 6c 6e 65 74 0a 66 66 30 30 3a   6-localnet.ff00:
+00000160  3a 30 20 69 70 36 2d 6d 63 61 73 74 70 72 65 66   :0 ip6-mcastpref
+00000170  69 78 0a 66 66 30 32 3a 3a 31 20 69 70 36 2d 61   ix.ff02::1 ip6-a
+00000180  6c 6c 6e 6f 64 65 73 0a 66 66 30 32 3a 3a 32 20   llnodes.ff02::2 
+00000190  69 70 36 2d 61 6c 6c 72 6f 75 74 65 72 73 0a 23   ip6-allrouters.#
+000001a0  20 41 64 64 65 64 20 62 79 20 44 6f 63 6b 65 72    Added by Docker
+000001b0  20 44 65 73 6b 74 6f 70 0a 23 20 54 6f 20 61 6c    Desktop.# To al
+000001c0  6c 6f 77 20 74 68 65 20 73 61 6d 65 20 6b 75 62   low the same kub
+000001d0  65 20 63 6f 6e 74 65 78 74 20 74 6f 20 77 6f 72   e context to wor
+000001e0  6b 20 6f 6e 20 74 68 65 20 68 6f 73 74 20 61 6e   k on the host an
+000001f0  64 20 74 68 65 20 63 6f 6e 74 61 69 6e 65 72 3a   d the container:
+00000200  0a 31 32 37 2e 30 2e 30 2e 31 09 6b 75 62 65 72   .127.0.0.1.kuber
+00000210  6e 65 74 65 73 2e 64 6f 63 6b 65 72 2e 69 6e 74   netes.docker.int
+00000220  65 72 6e 61 6c 0a 23 20 45 6e 64 20 6f 66 20 73   ernal.# End of s
+00000230  65 63 74 69 6f 6e 0a 0d 0a 2d 2d 2d 2d 2d 2d 2d   ection...-------
+00000240  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000250  2d 2d 2d 39 73 67 55 42 36 72 46 74 61 43 66 4a   ---9sgUB6rFtaCfJ
+00000260  6e 36 63 75 68 68 71 4c 42 2d 2d 0d 0a            n6cuhhqLB--..
+
+2025-11-12 14:53:09,886 [ALERT] ALERT [f2a2b3c4-9a1b-11ef-9cba-0242ac120002] Directory traversal attempt detected in URI or query param (2+ ../ or encoded ../ sequences) | proto=TCP 127.0.0.1:55940->127.0.0.1:80 variant=REGEX_url entropy=4.961
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 70 61   rse/index.php?pa
+00000020  67 65 3d 25 32 65 25 32 65 2f 25 32 65 25 32 65   ge=%2e%2e/%2e%2e
+00000030  2f 25 32 65 25 32 65 2f 65 74 63 2f 70 61 73 73   /%2e%2e/etc/pass
+00000040  77 64 20 48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73   wd HTTP/1.1..Hos
+00000050  74 3a 20 6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73   t: localhost..Us
+00000060  65 72 2d 41 67 65 6e 74 3a 20 63 75 72 6c 2f 38   er-Agent: curl/8
+00000070  2e 35 2e 30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f   .5.0..Accept: */
+00000080  2a 0d 0a 0d 0a                                    *....
+
+2025-11-12 14:53:30,970 [ALERT] ALERT [f3a2b3c4-9a1b-11ef-9cba-0242ac120002] Null byte encoded in URI or query param — possible LFI/null-byte poisoning | proto=TCP 127.0.0.1:44396->127.0.0.1:80 variant=REGEX_raw entropy=5.021
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 70 61   rse/index.php?pa
+00000020  67 65 3d 68 6f 6d 65 2e 70 68 70 25 30 30 20 48   ge=home.php%00 H
+00000030  54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c   TTP/1.1..Host: l
+00000040  6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41   ocalhost..User-A
+00000050  67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30   gent: curl/8.5.0
+00000060  0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d   ..Accept: */*...
+00000070  0a                                                .
+
+2025-11-12 14:53:39,802 [ALERT] ALERT [f6a2b3c4-9a1b-11ef-9cba-0242ac120002] Encoded or double-encoded slash/overlong sequences detected in URI or query param — possible LFI evasion | proto=TCP 127.0.0.1:47510->127.0.0.1:80 variant=REGEX_raw entropy=5.094
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 70 61   rse/index.php?pa
+00000020  67 65 3d 25 63 30 25 61 66 65 74 63 25 32 66 70   ge=%c0%afetc%2fp
+00000030  61 73 73 77 64 20 48 54 54 50 2f 31 2e 31 0d 0a   asswd HTTP/1.1..
+00000040  48 6f 73 74 3a 20 6c 6f 63 61 6c 68 6f 73 74 0d   Host: localhost.
+00000050  0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 63 75 72   .User-Agent: cur
+00000060  6c 2f 38 2e 35 2e 30 0d 0a 41 63 63 65 70 74 3a   l/8.5.0..Accept:
+00000070  20 2a 2f 2a 0d 0a 0d 0a                            */*....
+
+2025-11-12 14:53:48,001 [ALERT] ALERT [f5a2b3c4-9a1b-11ef-9cba-0242ac120002] Probe for webserver config/log files in URI or query param | proto=TCP 127.0.0.1:47512->127.0.0.1:80 variant=REGEX_raw entropy=4.953
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 70 61   rse/index.php?pa
+00000020  67 65 3d 61 63 63 65 73 73 5f 6c 6f 67 20 48 54   ge=access_log HT
+00000030  54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f   TP/1.1..Host: lo
+00000040  63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67   calhost..User-Ag
+00000050  65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d   ent: curl/8.5.0.
+00000060  0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a   .Accept: */*....
+
+2025-11-12 14:54:13,755 [ALERT] ALERT [rce-phpcode-003] Uploaded content contains PHP tags | proto=TCP 127.0.0.1:42590->127.0.0.1:80 variant=REGEX_raw entropy=4.577
+hexdump:
+00000000  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000010  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 56 32 63 4c 65 77   ----------V2cLew
+00000020  32 38 32 63 5a 72 63 47 76 68 54 36 67 61 37 44   282cZrcGvhT6ga7D
+00000030  0d 0a 43 6f 6e 74 65 6e 74 2d 44 69 73 70 6f 73   ..Content-Dispos
+00000040  69 74 69 6f 6e 3a 20 66 6f 72 6d 2d 64 61 74 61   ition: form-data
+00000050  3b 20 6e 61 6d 65 3d 22 66 69 6c 65 22 3b 20 66   ; name="file"; f
+00000060  69 6c 65 6e 61 6d 65 3d 22 74 65 73 74 2e 70 68   ilename="test.ph
+00000070  70 22 0d 0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65   p"..Content-Type
+00000080  3a 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 6f 63   : application/oc
+00000090  74 65 74 2d 73 74 72 65 61 6d 0d 0a 0d 0a 3c 3f   tet-stream....<?
+000000a0  70 68 70 20 70 68 70 69 6e 66 6f 28 29 3b 0a 0d   php phpinfo();..
+000000b0  0a 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   .---------------
+000000c0  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 56 32 63 4c 65   -----------V2cLe
+000000d0  77 32 38 32 63 5a 72 63 47 76 68 54 36 67 61 37   w282cZrcGvhT6ga7
+000000e0  44 2d 2d 0d 0a                                    D--..
+
+2025-11-12 14:54:31,487 [ALERT] ALERT [aa123456-8a1b-11ef-9cba-0242ac120002] Suspicious command-injection-like characters in HTTP parameter value | proto=TCP 127.0.0.1:33428->127.0.0.1:80 variant=REGEX_raw entropy=5.085
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 63 6d   rse/index.php?cm
+00000020  64 3d 6c 73 3b 77 68 6f 61 6d 69 20 48 54 54 50   d=ls;whoami HTTP
+00000030  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61   /1.1..Host: loca
+00000040  6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67 65 6e   lhost..User-Agen
+00000050  74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a 41   t: curl/8.5.0..A
+00000060  63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a         ccept: */*....
+
+2025-11-12 14:56:28,655 [ALERT] ALERT [http-sqli-boolean-or-001] Possible SQL injection: boolean OR / comment-based injection | proto=TCP 127.0.0.1:34722->127.0.0.1:80 variant=REGEX_raw entropy=5.124
+hexdump:
+00000000  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000010  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 62 51 34 55 33 56   ----------bQ4U3V
+00000020  52 54 46 54 6c 54 44 37 69 51 42 7a 6b 66 43 4e   RTFTlTD7iQBzkfCN
+00000030  0d 0a 43 6f 6e 74 65 6e 74 2d 44 69 73 70 6f 73   ..Content-Dispos
+00000040  69 74 69 6f 6e 3a 20 66 6f 72 6d 2d 64 61 74 61   ition: form-data
+00000050  3b 20 6e 61 6d 65 3d 22 66 69 6c 65 22 3b 20 66   ; name="file"; f
+00000060  69 6c 65 6e 61 6d 65 3d 22 68 6f 73 74 73 22 0d   ilename="hosts".
+00000070  0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65 3a 20 61   .Content-Type: a
+00000080  70 70 6c 69 63 61 74 69 6f 6e 2f 6f 63 74 65 74   pplication/octet
+00000090  2d 73 74 72 65 61 6d 0d 0a 0d 0a 31 32 37 2e 30   -stream....127.0
+000000a0  2e 30 2e 31 20 6c 6f 63 61 6c 68 6f 73 74 0a 31   .0.1 localhost.1
+000000b0  32 37 2e 30 2e 31 2e 31 20 68 61 64 75 63 6b 69   27.0.1.1 haducki
+000000c0  65 6e 2d 56 69 76 6f 62 6f 6f 6b 2d 41 53 55 53   en-Vivobook-ASUS
+000000d0  4c 61 70 74 6f 70 2d 4b 33 35 30 34 56 41 2d 53   Laptop-K3504VA-S
+000000e0  33 35 30 34 56 41 0a 0a 23 20 54 68 65 20 66 6f   3504VA..# The fo
+000000f0  6c 6c 6f 77 69 6e 67 20 6c 69 6e 65 73 20 61 72   llowing lines ar
+00000100  65 20 64 65 73 69 72 61 62 6c 65 20 66 6f 72 20   e desirable for 
+00000110  49 50 76 36 20 63 61 70 61 62 6c 65 20 68 6f 73   IPv6 capable hos
+00000120  74 73 0a 3a 3a 31 20 20 20 20 20 69 70 36 2d 6c   ts.::1     ip6-l
+00000130  6f 63 61 6c 68 6f 73 74 20 69 70 36 2d 6c 6f 6f   ocalhost ip6-loo
+00000140  70 62 61 63 6b 0a 66 65 30 30 3a 3a 30 20 69 70   pback.fe00::0 ip
+00000150  36 2d 6c 6f 63 61 6c 6e 65 74 0a 66 66 30 30 3a   6-localnet.ff00:
+00000160  3a 30 20 69 70 36 2d 6d 63 61 73 74 70 72 65 66   :0 ip6-mcastpref
+00000170  69 78 0a 66 66 30 32 3a 3a 31 20 69 70 36 2d 61   ix.ff02::1 ip6-a
+00000180  6c 6c 6e 6f 64 65 73 0a 66 66 30 32 3a 3a 32 20   llnodes.ff02::2 
+00000190  69 70 36 2d 61 6c 6c 72 6f 75 74 65 72 73 0a 23   ip6-allrouters.#
+000001a0  20 41 64 64 65 64 20 62 79 20 44 6f 63 6b 65 72    Added by Docker
+000001b0  20 44 65 73 6b 74 6f 70 0a 23 20 54 6f 20 61 6c    Desktop.# To al
+000001c0  6c 6f 77 20 74 68 65 20 73 61 6d 65 20 6b 75 62   low the same kub
+000001d0  65 20 63 6f 6e 74 65 78 74 20 74 6f 20 77 6f 72   e context to wor
+000001e0  6b 20 6f 6e 20 74 68 65 20 68 6f 73 74 20 61 6e   k on the host an
+000001f0  64 20 74 68 65 20 63 6f 6e 74 61 69 6e 65 72 3a   d the container:
+00000200  0a 31 32 37 2e 30 2e 30 2e 31 09 6b 75 62 65 72   .127.0.0.1.kuber
+00000210  6e 65 74 65 73 2e 64 6f 63 6b 65 72 2e 69 6e 74   netes.docker.int
+00000220  65 72 6e 61 6c 0a 23 20 45 6e 64 20 6f 66 20 73   ernal.# End of s
+00000230  65 63 74 69 6f 6e 0a 0d 0a 2d 2d 2d 2d 2d 2d 2d   ection...-------
+00000240  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000250  2d 2d 2d 62 51 34 55 33 56 52 54 46 54 6c 54 44   ---bQ4U3VRTFTlTD
+00000260  37 69 51 42 7a 6b 66 43 4e 2d 2d 0d 0a            7iQBzkfCN--..
+
+2025-11-12 15:00:37,062 [ALERT] ALERT [aa123456-8a1b-11ef-9cba-0242ac120002] Suspicious command-injection-like characters in HTTP parameter value | proto=TCP 127.0.0.1:52814->127.0.0.1:80 variant=REGEX_raw entropy=5.085
+hexdump:
+00000000  47 45 54 20 2f 70 72 6f 6a 65 63 74 5f 63 6f 75   GET /project_cou
+00000010  72 73 65 2f 69 6e 64 65 78 2e 70 68 70 3f 63 6d   rse/index.php?cm
+00000020  64 3d 6c 73 3b 77 68 6f 61 6d 69 20 48 54 54 50   d=ls;whoami HTTP
+00000030  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61   /1.1..Host: loca
+00000040  6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67 65 6e   lhost..User-Agen
+00000050  74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a 41   t: curl/8.5.0..A
+00000060  63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a         ccept: */*....
+
+2025-11-12 15:08:28,411 [ALERT] ALERT [SQLI_C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:57814->127.0.0.1:80 variant=REGEX_url entropy=5.183
+hexdump:
+00000000  47 45 54 20 2f 69 6e 64 65 78 2e 70 68 70 3f 69   GET /index.php?i
+00000010  64 3d 31 25 32 37 25 32 30 4f 52 25 32 30 25 32   d=1%27%20OR%20%2
+00000020  37 31 25 32 37 25 33 44 25 32 37 31 20 48 54 54   71%27%3D%271 HTT
+00000030  50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63   P/1.1..Host: loc
+00000040  61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d 41 67 65   alhost..User-Age
+00000050  6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a   nt: curl/8.5.0..
+00000060  41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a      Accept: */*....
+
+2025-11-12 15:10:30,635 [ALERT] ALERT [SQLI_C-TIMEBASED-001] [SQLi-C] Time-based SQLi function detected (SLEEP, WAITFOR, BENCHMARK) | proto=TCP 127.0.0.1:56772->127.0.0.1:80 variant=REGEX_raw entropy=5.215
+hexdump:
+00000000  50 4f 53 54 20 2f 69 6e 64 65 78 2e 70 68 70 20   POST /index.php 
+00000010  48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20   HTTP/1.1..Host: 
+00000020  6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d   localhost..User-
+00000030  41 67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e   Agent: curl/8.5.
+00000040  30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a   0..Accept: */*..
+00000050  43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20   Content-Length: 
+00000060  32 30 0d 0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65   20..Content-Type
+00000070  3a 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d   : application/x-
+00000080  77 77 77 2d 66 6f 72 6d 2d 75 72 6c 65 6e 63 6f   www-form-urlenco
+00000090  64 65 64 0d 0a 0d 0a 69 64 3d 31 20 41 4e 44 20   ded....id=1 AND 
+000000a0  53 4c 45 45 50 28 35 29 2d 2d 20                  SLEEP(5)-- 
+
+2025-11-12 15:11:11,289 [ALERT] ALERT [SQLI_C-TIMEBASED-001] [SQLi-C] Time-based SQLi function detected (SLEEP, WAITFOR, BENCHMARK) | proto=TCP 127.0.0.1:43198->127.0.0.1:80 variant=REGEX_url entropy=5.311
+hexdump:
+00000000  47 45 54 20 2f 69 6e 64 65 78 2e 70 68 70 3f 69   GET /index.php?i
+00000010  64 3d 31 25 32 30 41 4e 44 25 32 30 53 4c 45 45   d=1%20AND%20SLEE
+00000020  50 28 33 29 2d 2d 25 32 30 20 48 54 54 50 2f 31   P(3)--%20 HTTP/1
+00000030  2e 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61 6c 68   .1..Host: localh
+00000040  6f 73 74 0d 0a 55 73 65 72 2d 41 67 65 6e 74 3a   ost..User-Agent:
+00000050  20 63 75 72 6c 2f 38 2e 35 2e 30 0d 0a 41 63 63    curl/8.5.0..Acc
+00000060  65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a               ept: */*....
+
+2025-11-12 15:12:44,637 [ALERT] ALERT [SQLI_C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:45312->127.0.0.1:80 variant=REGEX_raw entropy=5.181
+hexdump:
+00000000  50 4f 53 54 20 2f 6c 6f 67 69 6e 2e 70 68 70 20   POST /login.php 
+00000010  48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20   HTTP/1.1..Host: 
+00000020  6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d   localhost..User-
+00000030  41 67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e   Agent: curl/8.5.
+00000040  30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a   0..Accept: */*..
+00000050  43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20   Content-Length: 
+00000060  34 33 0d 0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65   43..Content-Type
+00000070  3a 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d   : application/x-
+00000080  77 77 77 2d 66 6f 72 6d 2d 75 72 6c 65 6e 63 6f   www-form-urlenco
+00000090  64 65 64 0d 0a 0d 0a 75 73 65 72 6e 61 6d 65 3d   ded....username=
+000000a0  61 64 6d 69 6e 27 20 4f 52 20 27 31 27 3d 27 31   admin' OR '1'='1
+000000b0  26 70 61 73 73 77 6f 72 64 3d 61 6e 79 74 68 69   &password=anythi
+000000c0  6e 67                                             ng
+
+2025-11-12 15:12:58,355 [ALERT] ALERT [SQLI_C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:34158->127.0.0.1:80 variant=REGEX_url entropy=5.298
+hexdump:
+00000000  50 4f 53 54 20 2f 6c 6f 67 69 6e 2e 70 68 70 20   POST /login.php 
+00000010  48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20   HTTP/1.1..Host: 
+00000020  6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d   localhost..User-
+00000030  41 67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e   Agent: curl/8.5.
+00000040  30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a   0..Accept: */*..
+00000050  43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20   Content-Length: 
+00000060  35 32 0d 0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65   52..Content-Type
+00000070  3a 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d   : application/x-
+00000080  77 77 77 2d 66 6f 72 6d 2d 75 72 6c 65 6e 63 6f   www-form-urlenco
+00000090  64 65 64 0d 0a 0d 0a 75 73 65 72 6e 61 6d 65 3d   ded....username=
+000000a0  61 64 6d 69 6e 25 32 37 25 32 30 4f 52 25 32 30   admin%27%20OR%20
+000000b0  25 32 37 31 25 32 37 25 33 44 25 32 37 31 26 70   %271%27%3D%271&p
+000000c0  61 73 73 77 6f 72 64 3d 78 78 78                  assword=xxx
+
+2025-11-12 15:13:01,906 [ALERT] ALERT [SQLI_C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:43406->127.0.0.1:80 variant=REGEX_url entropy=5.298
+hexdump:
+00000000  50 4f 53 54 20 2f 6c 6f 67 69 6e 2e 70 68 70 20   POST /login.php 
+00000010  48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a 20   HTTP/1.1..Host: 
+00000020  6c 6f 63 61 6c 68 6f 73 74 0d 0a 55 73 65 72 2d   localhost..User-
+00000030  41 67 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e   Agent: curl/8.5.
+00000040  30 0d 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a   0..Accept: */*..
+00000050  43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20   Content-Length: 
+00000060  35 32 0d 0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65   52..Content-Type
+00000070  3a 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d   : application/x-
+00000080  77 77 77 2d 66 6f 72 6d 2d 75 72 6c 65 6e 63 6f   www-form-urlenco
+00000090  64 65 64 0d 0a 0d 0a 75 73 65 72 6e 61 6d 65 3d   ded....username=
+000000a0  61 64 6d 69 6e 25 32 37 25 32 30 4f 52 25 32 30   admin%27%20OR%20
+000000b0  25 32 37 31 25 32 37 25 33 44 25 32 37 31 26 70   %271%27%3D%271&p
+000000c0  61 73 73 77 6f 72 64 3d 78 78 78                  assword=xxx
+
+2025-11-12 16:19:42,711 [ALERT] ALERT [http-sqli-boolean-or-001] Possible SQL injection: boolean OR / comment-based injection | proto=TCP 127.0.0.1:36944->127.0.0.1:80 variant=REGEX_raw entropy=5.103
+hexdump:
+00000000  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000010  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 35 75 61 43 38 6e   ----------5uaC8n
+00000020  43 72 51 46 6c 51 51 6a 50 31 6e 45 46 48 53 64   CrQFlQQjP1nEFHSd
+00000030  0d 0a 43 6f 6e 74 65 6e 74 2d 44 69 73 70 6f 73   ..Content-Dispos
+00000040  69 74 69 6f 6e 3a 20 66 6f 72 6d 2d 64 61 74 61   ition: form-data
+00000050  3b 20 6e 61 6d 65 3d 22 66 69 6c 65 22 3b 20 66   ; name="file"; f
+00000060  69 6c 65 6e 61 6d 65 3d 22 68 6f 73 74 73 22 0d   ilename="hosts".
+00000070  0a 43 6f 6e 74 65 6e 74 2d 54 79 70 65 3a 20 61   .Content-Type: a
+00000080  70 70 6c 69 63 61 74 69 6f 6e 2f 6f 63 74 65 74   pplication/octet
+00000090  2d 73 74 72 65 61 6d 0d 0a 0d 0a 31 32 37 2e 30   -stream....127.0
+000000a0  2e 30 2e 31 20 6c 6f 63 61 6c 68 6f 73 74 0a 31   .0.1 localhost.1
+000000b0  32 37 2e 30 2e 31 2e 31 20 68 61 64 75 63 6b 69   27.0.1.1 haducki
+000000c0  65 6e 2d 56 69 76 6f 62 6f 6f 6b 2d 41 53 55 53   en-Vivobook-ASUS
+000000d0  4c 61 70 74 6f 70 2d 4b 33 35 30 34 56 41 2d 53   Laptop-K3504VA-S
+000000e0  33 35 30 34 56 41 0a 0a 23 20 54 68 65 20 66 6f   3504VA..# The fo
+000000f0  6c 6c 6f 77 69 6e 67 20 6c 69 6e 65 73 20 61 72   llowing lines ar
+00000100  65 20 64 65 73 69 72 61 62 6c 65 20 66 6f 72 20   e desirable for 
+00000110  49 50 76 36 20 63 61 70 61 62 6c 65 20 68 6f 73   IPv6 capable hos
+00000120  74 73 0a 3a 3a 31 20 20 20 20 20 69 70 36 2d 6c   ts.::1     ip6-l
+00000130  6f 63 61 6c 68 6f 73 74 20 69 70 36 2d 6c 6f 6f   ocalhost ip6-loo
+00000140  70 62 61 63 6b 0a 66 65 30 30 3a 3a 30 20 69 70   pback.fe00::0 ip
+00000150  36 2d 6c 6f 63 61 6c 6e 65 74 0a 66 66 30 30 3a   6-localnet.ff00:
+00000160  3a 30 20 69 70 36 2d 6d 63 61 73 74 70 72 65 66   :0 ip6-mcastpref
+00000170  69 78 0a 66 66 30 32 3a 3a 31 20 69 70 36 2d 61   ix.ff02::1 ip6-a
+00000180  6c 6c 6e 6f 64 65 73 0a 66 66 30 32 3a 3a 32 20   llnodes.ff02::2 
+00000190  69 70 36 2d 61 6c 6c 72 6f 75 74 65 72 73 0a 23   ip6-allrouters.#
+000001a0  20 41 64 64 65 64 20 62 79 20 44 6f 63 6b 65 72    Added by Docker
+000001b0  20 44 65 73 6b 74 6f 70 0a 23 20 54 6f 20 61 6c    Desktop.# To al
+000001c0  6c 6f 77 20 74 68 65 20 73 61 6d 65 20 6b 75 62   low the same kub
+000001d0  65 20 63 6f 6e 74 65 78 74 20 74 6f 20 77 6f 72   e context to wor
+000001e0  6b 20 6f 6e 20 74 68 65 20 68 6f 73 74 20 61 6e   k on the host an
+000001f0  64 20 74 68 65 20 63 6f 6e 74 61 69 6e 65 72 3a   d the container:
+00000200  0a 31 32 37 2e 30 2e 30 2e 31 09 6b 75 62 65 72   .127.0.0.1.kuber
+00000210  6e 65 74 65 73 2e 64 6f 63 6b 65 72 2e 69 6e 74   netes.docker.int
+00000220  65 72 6e 61 6c 0a 23 20 45 6e 64 20 6f 66 20 73   ernal.# End of s
+00000230  65 63 74 69 6f 6e 0a 0d 0a 2d 2d 2d 2d 2d 2d 2d   ection...-------
+00000240  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00000250  2d 2d 2d 35 75 61 43 38 6e 43 72 51 46 6c 51 51   ---5uaC8nCrQFlQQ
+00000260  6a 50 31 6e 45 46 48 53 64 2d 2d 0d 0a            jP1nEFHSd--..
+

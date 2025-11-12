@@ -1,0 +1,64 @@
+#!/bin/bash
+
+TARGET="http://localhost/project_course"
+
+echo "===== TEST NORMAL REQUESTS ====="
+# 1. Normal short request
+curl -v "$TARGET/index.php"
+
+# 2. Normal GET with query
+curl -v "$TARGET/index.php?user=alice&id=123"
+
+# 3. Normal POST form
+curl -v -X POST -d "name=Alice&email=alice@example.com" "$TARGET/index.php"
+
+# 4. Normal long GET (long query string)
+curl -v "$TARGET/index.php?search=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 500)"
+
+# 5. Normal POST multipart file (benign)
+curl -v -X POST -F "file=@/etc/hosts" "$TARGET/upload.php" x false positive
+
+echo "===== TEST LFI / DIRECTORY TRAVERSAL ====="
+# 6. LFI /etc/passwd
+curl -v "$TARGET/index.php?page=/etc/passwd"
+
+# 7. Directory traversal (encoded)
+curl -v "$TARGET/index.php?page=%2e%2e/%2e%2e/%2e%2e/etc/passwd"
+
+# 8. Null byte attempt
+curl -v "$TARGET/index.php?page=home.php%00"
+
+echo "===== TEST ENCODED SLASH / EVASION ====="
+# 9. Overlong / double-encoded slash
+curl -v "$TARGET/index.php?page=%c0%afetc%2fpasswd"
+
+echo "===== TEST HTTPD LOG / CONFIG PROBE ====="
+# 10. Access Apache logs
+curl -v "$TARGET/index.php?page=access_log"
+
+echo "===== TEST MEDIA EXPLOIT ====="
+# 11. Malicious media upload (RIFF/AVI signature)
+curl -v -X POST -F "file=@./test_avi.avi" "$TARGET/upload.php"
+
+# 12. Malicious media upload with PHP tag
+echo "<?php phpinfo();" > test.php
+curl -v -X POST -F "file=@./test.php" "$TARGET/upload.php"
+rm test.php
+
+echo "===== TEST COMMAND INJECTION ====="
+# 13. Command injection via param
+curl -v "$TARGET/index.php?cmd=ls;whoami"
+
+# 14. Command injection in POST body
+curl -v -X POST -d "cmd=cat /etc/passwd" "$TARGET/index.php" x 
+
+echo "===== TEST COMMON NORMAL LONG REQUEST ====="
+# 15. Long GET request with benign data
+curl -v "$TARGET/index.php?data=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 1000)"
+
+# 16. Long POST form benign
+curl -v -X POST -d "notes=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 2000)" "$TARGET/index.php"
+
+echo "===== TEST EDGE CASES ====="
+# 17. Special chars but benign
+curl -v "$TARGET/index.php?param=!@#$%^&*()_+-=[]{}|;:',.<>/?`~"

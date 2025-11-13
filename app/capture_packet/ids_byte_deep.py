@@ -28,6 +28,10 @@ from typing import Dict, Any, Tuple, List, Optional
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import requests
+from typing import Deque
+from collections import deque
+import sys
+import threading
 
 
 from app.workers.blocker import enqueue_block
@@ -219,110 +223,298 @@ def generate_decodes(payload: bytes, enable_decode: bool) -> List[Tuple[str,str]
         pass
     return variants
 
-# ----------------- IP Defragmenter -----------------
-class IPDefragmenter:
-    def __init__(self, timeout: int = 30):
-        self.buckets: Dict[Tuple, Dict[str, Any]] = {}
-        self.timeout = timeout
-        self.lock = threading.Lock()
+BUFID = Tuple[str, str, int, int]  # (src_ip, dst_ip, src_port, dst_port)
 
-    def push(self, ip_pkt) -> Optional[Dict[str, Any]]:
-        if getattr(ip_pkt, "flags", 0) == 0 and getattr(ip_pkt, "frag", 0) == 0:
-            proto_val = ip_pkt.proto
-            if proto_val == 6:
-                proto_name = "TCP"
-            elif proto_val == 17:
-                proto_name = "UDP"
+class TCPReassembly:
+    def __init__(self):
+        # buffer[BUFID] = {
+        #   'hdl': [ {'first': int_seq, 'last': int_seq}, ... ],
+        #   ack_num (int): {
+        #       'ind': [indexes],
+        #       'isn': int,    # initial sequence number for this ack-buffer
+        #       'len': int,    # current length of raw
+        #       'raw': bytearray,
+        #   }, ...
+        # }
+        self._buffer: Dict[BUFID, Dict] = {}
+        # produced datagrams (list of dict)
+        self._datagrams: List[Dict[str, Any]] = []
+
+    # ---------- public helpers ----------
+    def process_packet(self, pkt, index: Optional[int] = None):
+        """Process a Scapy packet for reassembly. Call this for each captured packet."""
+        if not pkt.haslayer(IP) or not pkt.haslayer(TCP):
+            return
+
+        ip = pkt[IP]
+        tcp = pkt[TCP]
+        if tcp.dport != 80:
+            return
+        
+        payload = bytes(tcp.payload)
+        has_payload = len(payload) > 0
+
+        BUFID = (ip.src, ip.dst, int(tcp.sport), int(tcp.dport))
+        DSN = int(tcp.seq)
+        ACK = int(tcp.ack)
+        SYN = bool(tcp.flags & 0x02)
+        FIN = bool(tcp.flags & 0x01)
+        RST = bool(tcp.flags & 0x04)
+        FIRST = DSN
+        LAST = DSN + len(payload)
+
+        # If SYN and an existing buffer exists => flush previous and delete
+        if SYN and BUFID in self._buffer:
+            self._submit_and_delete(BUFID, reason='syn_reset')
+
+        # If buffer not exist, create new one
+        if BUFID not in self._buffer:
+            # Create HDL such that after first received fragment, missing region starts at DSN+len(payload)
+            # We initialize HDL as wide open; we'll update after inserting fragment
+            self._buffer[BUFID] = {
+                'hdl': [],  # will set when first fragment arrives
+            }
+
+        # If no payload, still record ACK entry (to keep indices) and flush on FIN/RST if present
+        if not has_payload:
+            # ensure an ACK entry exists
+            if ACK not in self._buffer[BUFID]:
+                self._buffer[BUFID][ACK] = {
+                    'ind': [index] if index is not None else [],
+                    'isn': DSN,
+                    'len': 0,
+                    'raw': bytearray(),
+                }
             else:
-                proto_name = str(proto_val)
-            return {"assembled_bytes": bytes(ip_pkt.payload),
-                    "src": ip_pkt.src, "dst": ip_pkt.dst,
-                    "proto": proto_name,
-                    "sport": getattr(ip_pkt.payload, "sport", None),
-                    "dport": getattr(ip_pkt.payload, "dport", None)}
-        key = (ip_pkt.src, ip_pkt.dst, ip_pkt.id, ip_pkt.proto)
-        with self.lock:
-            b = self.buckets.get(key)
-            if b is None:
-                b = {"frags": {}, "seen_last": False, "t": time.time(), "l4meta": None}
-                self.buckets[key] = b
-            offset = ip_pkt.frag * 8
-            b["frags"][offset] = bytes(ip_pkt.payload)
-            if ip_pkt.frag == 0:
-                try:
-                    l4 = ip_pkt.payload
-                    b["l4meta"] = {"sport": getattr(l4, "sport", None),
-                                   "dport": getattr(l4, "dport", None),
-                                   "proto": ip_pkt.proto}
-                except Exception:
-                    b["l4meta"] = None
-            if (ip_pkt.flags & 1) == 0:
-                b["seen_last"] = True
-            if b["seen_last"]:
-                offsets = sorted(b["frags"].keys())
-                if offsets and offsets[0] == 0:
-                    parts = []
-                    expected = 0
-                    for off in offsets:
-                        if off != expected:
-                            return None
-                        parts.append(b["frags"][off])
-                        expected += len(b["frags"][off])
-                    assembled_payload = b"".join(parts)
-                    l4meta = b.get("l4meta")
-                    del self.buckets[key]
-                    return {"assembled_bytes": assembled_payload,
-                            "src": ip_pkt.src, "dst": ip_pkt.dst,
-                            "proto": ip_pkt.proto,
-                            "sport": l4meta.get("sport") if l4meta else None,
-                            "dport": l4meta.get("dport") if l4meta else None}
-            self._cleanup()
-            return None
+                if index is not None:
+                    self._buffer[BUFID][ACK]['ind'].append(index)
+            if FIN or RST:
+                self._submit_and_delete(BUFID, reason='fin_or_rst_no_payload')
+            return
 
-    def _cleanup(self):
-        now = time.time()
-        for k in list(self.buckets.keys()):
-            if now - self.buckets[k]["t"] > self.timeout:
-                del self.buckets[k]
+        # Insert payload into ACK-specific block
+        if ACK not in self._buffer[BUFID]:
+            # create new block; set ISN to DSN and raw to payload
+            self._buffer[BUFID][ACK] = {
+                'ind': [index] if index is not None else [],
+                'isn': DSN,
+                'len': len(payload),
+                'raw': bytearray(payload),
+            }
+            # If we just created first block in this session, initialize HDL to indicate missing after this fragment
+            if not self._buffer[BUFID].get('hdl'):
+                # Hole starts at LAST (next wanted seq) and is unbounded to the right
+                self._buffer[BUFID]['hdl'] = [{'first': LAST, 'last': sys.maxsize}]
+        else:
+            # append index
+            if index is not None:
+                self._buffer[BUFID][ACK]['ind'].append(index)
 
-# ----------------- TCP Reassembler -----------------
+            # merge fragment into existing raw
+            block = self._buffer[BUFID][ACK]
+            ISN = block['isn']
+            RAW = block['raw']
+
+            if DSN >= ISN:
+                # fragment starts at or after ISN
+                offset = DSN - ISN
+                needed = offset + len(payload)
+                if offset >= len(RAW):
+                    # append gap (zeros) then payload
+                    gap = offset - len(RAW)
+                    if gap > 0:
+                        RAW.extend(b'\x00' * gap)
+                    RAW.extend(payload)
+                else:
+                    # overlapping or replacing bytes
+                    endpos = offset + len(payload)
+                    if endpos > len(RAW):
+                        # extend to fit
+                        RAW[offset:endpos] = payload
+                    else:
+                        RAW[offset:endpos] = payload
+            else:
+                # fragment starts before ISN -> need to prepend or overlap-left
+                # compute overlap / gap relative to ISN
+                delta = ISN - DSN  # bytes that fragment extends left of ISN
+                if delta >= len(payload):
+                    # fragment entirely before current RAW with gap
+                    gap = delta - len(payload)
+                    RAW = bytearray(payload + (b'\x00' * gap) + RAW)
+                    block['isn'] = DSN
+                else:
+                    # partial overlap: prefix from payload that is before ISN, then remainder overlaps existing RAW
+                    prefix = payload[:delta]
+                    overlap = payload[delta:]
+                    RAW = bytearray(prefix + RAW)
+                    # now write overlap into RAW starting at position len(prefix)
+                    pos = len(prefix)
+                    need = pos + len(overlap)
+                    if need > len(RAW):
+                        RAW.extend(b'\x00' * (need - len(RAW)))
+                    RAW[pos:pos + len(overlap)] = overlap
+                    block['isn'] = DSN
+            block['raw'] = RAW
+            block['len'] = len(block['raw'])
+
+        # Update HDL using RFC-815 like logic: holes described in absolute seq numbers
+        HDL = self._buffer[BUFID].get('hdl', [])
+        # If HDL empty, we can set a fresh hole starting after this block (LAST) if not set
+        if not HDL:
+            HDL = [{'first': LAST, 'last': sys.maxsize}]
+            self._buffer[BUFID]['hdl'] = HDL
+
+        # Find a hole that overlaps with [FIRST, LAST)
+        for idx, hole in enumerate(list(HDL)):
+            # If fragment entirely after this hole -> continue
+            if FIRST > hole['last']:
+                continue
+            # If fragment entirely before this hole -> continue
+            if LAST < hole['first']:
+                continue
+            # Overlap: remove current hole
+            try:
+                HDL.pop(idx)
+            except Exception:
+                # safe fallback: rebuild without this hole
+                HDL = [h for h in HDL if h is not hole]
+            # left leftover
+            if FIRST > hole['first']:
+                left = {'first': hole['first'], 'last': FIRST - 1}
+                HDL.insert(idx, left)
+                idx += 1
+            # right leftover (only create if fragment does not finalize and not FIN/RST)
+            if (LAST < hole['last']) and (not FIN) and (not RST):
+                right = {'first': LAST + 1, 'last': hole['last']}
+                HDL.insert(idx, right)
+            break
+        # store HDL back
+        self._buffer[BUFID]['hdl'] = HDL
+
+        # If FIN or RST present, flush session
+        if FIN or RST:
+            self._submit_and_delete(BUFID, reason='fin_or_rst')
+
+    def _submit_and_delete(self, bufid: BUFID, reason: str = 'flush'):
+        """Build datagrams from buffer[bufid] and remove the buffer."""
+        if bufid not in self._buffer:
+            return
+        buf = self._buffer[bufid]
+        HDL = buf.get('hdl', [])
+        # iterate all ack-keys in buf (ints)
+        for key, block in list(buf.items()):
+            if key == 'hdl':
+                continue
+            if not isinstance(key, int):
+                continue
+            raw = block.get('raw', None)
+            if not raw:
+                continue
+            payload_bytes = bytes(raw)
+            datagram = {
+                'NotImplemented': (len(HDL) != 0),  # True if holes remain
+                'id': {
+                    'src': (bufid[0], bufid[2]),
+                    'dst': (bufid[1], bufid[3]),
+                    'ack': key,
+                },
+                'index': tuple(block.get('ind', [])),
+                'payload': payload_bytes,
+                'packets': None,
+                'flush_reason': reason,
+            }
+            self._datagrams.append(datagram)
+        # finally delete buffer
+        try:
+            del self._buffer[bufid]
+        except KeyError:
+            pass
+
+    def get_datagrams(self) -> List[Dict[str, Any]]:
+        """Return list of produced datagrams (and keep them)."""
+        return list(self._datagrams)
+
+    def clear_datagrams(self):
+        """Clear stored datagrams."""
+        self._datagrams.clear()
+
+    def flush_all(self):
+        """Flush all active buffers (force produce datagrams) and clear buffers."""
+        bufids = list(self._buffer.keys())
+        for b in bufids:
+            self._submit_and_delete(b, reason='manual_flush')
+
+    def get_buffer_snapshot(self) -> Dict:
+        """Debug helper: snapshot of current buffers and HDL."""
+        snap = {}
+        for k, v in self._buffer.items():
+            snap[k] = {
+                'hdl': v.get('hdl'),
+                'acks': [x for x in v.keys() if isinstance(x, int)],
+            }
+        return snap
+
+# ---------- Wrapper to expose feed(ip_pkt) API ----------
 class TCPReassembler:
+    """
+    Wrapper around TCPReassembly that exposes `feed(ip_pkt)` returning either
+    (assembled_bytes, (src, dst, sport, dport)) or None.
+    It buffers multiple produced datagrams internally and returns one per call.
+    """
     def __init__(self, timeout: int = 120):
-        self.conns: Dict[Tuple[str,str,int,int], Dict[str, Any]] = {}
-        self.timeout = timeout
+        self.reasm = TCPReassembly()
         self.lock = threading.Lock()
+        self._outq: Deque[Tuple[bytes, Tuple[str,str,int,int]]] = deque()
+        # optional timeout attribute kept for compatibility with old class
+        self.timeout = timeout
 
     def feed(self, ip_pkt) -> Optional[Tuple[bytes, Tuple[str,str,int,int]]]:
-        if TCP not in ip_pkt:
-            return None
-        t = ip_pkt[TCP]
-        key = (ip_pkt[IP].src, ip_pkt[IP].dst, t.sport, t.dport)
-        seq = int(t.seq)
-        data = bytes(t.payload) if Raw in t and bytes(t.payload) else b""
+        # return any queued assembled datagram first
         with self.lock:
-            st = self.conns.get(key)
-            if st is None:
-                st = {"segments": {}, "next_seq": None, "t": time.time()}
-                self.conns[key] = st
-            if data:
-                st["segments"][seq] = data
-            if st["next_seq"] is None and st["segments"]:
-                st["next_seq"] = min(st["segments"].keys())
-            out = []
-            while st["next_seq"] in st["segments"]:
-                out.append(st["segments"].pop(st["next_seq"]))
-                st["next_seq"] += len(out[-1])
-            st["t"] = time.time()
-            self._cleanup()
-            if out:
-                return b"".join(out), key
+            if self._outq:
+                return self._outq.popleft()
+
+            # process incoming packet via standard reassembly
+            try:
+                self.reasm.process_packet(ip_pkt)
+            except Exception:
+                # avoid blowing up worker loop on unexpected pkt shapes
+                # log if needed, but keep behavior silent here
+                pass
+
+            datagrams = self.reasm.get_datagrams()
+            if not datagrams:
+                return None
+
+            # push all datagrams into outq (as (payload, key)), then clear
+            for d in datagrams:
+                payload = d.get('payload', b'')
+                # datagram id: 'src': (ip, port), 'dst': (ip, port)
+                idinfo = d.get('id', {})
+                src = idinfo.get('src', (None, None))
+                dst = idinfo.get('dst', (None, None))
+                try:
+                    key = (str(src[0]), str(dst[0]), int(src[1]), int(dst[1]) if dst[1] is not None else None)
+                except Exception:
+                    # fallback to values from packet if id formatting unexpected
+                    try:
+                        t = ip_pkt[TCP]
+                        key = (str(ip_pkt[IP].src), str(ip_pkt[IP].dst), int(t.sport), int(t.dport))
+                    except Exception:
+                        key = (None, None, None, None)
+                self._outq.append((payload, key))
+
+            # clear datagrams stored in TCPReassembly to avoid duplication
+            self.reasm.clear_datagrams()
+
+            if self._outq:
+                return self._outq.popleft()
             return None
 
     def _cleanup(self):
-        now = time.time()
-        for k in list(self.conns.keys()):
-            if now - self.conns[k]["t"] > self.timeout:
-                del self.conns[k]
+        # kept for API parity; reassembly uses internal cleanup via sys.maxsize holes,
+        # you can implement timed connection culling here if needed.
+        pass
 
 def dict_diff(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Tuple[Any, Any]]:
     """
@@ -347,7 +539,7 @@ class IDS:
         self.aho = build_aho(self.rules_raw)
         self.enable_decode = enable_decode
         self.payload_bytes = int(payload_bytes)
-        self.defr = IPDefragmenter()
+        # self.defr = IPDefragmenter()
         self.reasm = TCPReassembler()
         self.last_alerts: Dict[str,float] = {}
         self.alert_throttle = 2.0
@@ -421,11 +613,11 @@ class IDS:
                     "severity": severity
                 }
 
-                # response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=5)
-                # if response.status_code == 201:
-                #     console_logger.info("Alert sent to API successfully: %s", response.json())
-                # else:
-                #     console_logger.error("Failed to send alert to API: %s - %s", response.status_code, response.text)
+                response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=5)
+                if response.status_code == 201:
+                    console_logger.info("Alert sent to API successfully: %s", response.json())
+                else:
+                    console_logger.error("Failed to send alert to API: %s - %s", response.status_code, response.text)
             except requests.exceptions.RequestException as e:
                 console_logger.error("Error sending alert to API: %s", e)
                 # Handle specific request exceptions if needed
@@ -663,15 +855,15 @@ class IDS:
                     action = meta["action"]
                     severity = meta["severity"]
                     self.log_alert(meta, p, rid, message, variant, action, severity)
-
-                    # if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
-                    #     src_ip = meta.get("src")
-                    #     if src_ip:
-                    #         try:
-                    #             enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
-                    #             console_logger.info("Enqueued block for %s", src_ip)
-                    #         except Exception:
-                    #             console_logger.exception("enqueue_block error")
+#fix:
+                    if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
+                        src_ip = meta.get("src")
+                        if src_ip:
+                            try:
+                                enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
+                                console_logger.info("Enqueued block for %s", src_ip)
+                            except Exception:
+                                console_logger.exception("enqueue_block error")
                 except Exception:
                     console_logger.exception("log_alert error")
         else:
@@ -716,10 +908,10 @@ def worker_loop(ids: IDS, stop_event: threading.Event):
                 continue
             ip_pkt = pkt[IP]
             # fragment
-            res = ids.defr.push(ip_pkt)
-            if res:
-                if res.get("dport") in allowed_ports:
-                    ids.match_payload(res["assembled_bytes"], res)
+            # res = ids.defr.push(ip_pkt)
+            # if res:
+            #     if res.get("dport") in allowed_ports:
+            #         ids.match_payload(res["assembled_bytes"], res)
             # TCP
             if TCP in ip_pkt:
                 out = ids.reasm.feed(ip_pkt)
@@ -735,13 +927,6 @@ def worker_loop(ids: IDS, stop_event: threading.Event):
                         meta = {"src": ip_pkt.src, "dst": ip_pkt.dst,
                                 "sport": t.sport, "dport": t.dport, "proto": "TCP"}
                         ids.match_payload(raw_payload, meta)
-            elif UDP in ip_pkt:
-                u = ip_pkt[UDP]
-                raw_payload = bytes(u.payload) if Raw in u and bytes(u.payload) else b""
-                if raw_payload:
-                    meta = {"src": ip_pkt.src, "dst": ip_pkt.dst,
-                            "sport": u.sport, "dport": u.dport, "proto": "UDP"}
-                    ids.match_payload(raw_payload, meta)
         except Exception:
             console_logger.exception("Worker loop exception")
         finally:

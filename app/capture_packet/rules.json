@@ -27,7 +27,7 @@
     "pattern_regex_bytes": "(?is)\\b(?:SLEEP|PG_SLEEP|WAITFOR\\s+DELAY|BENCHMARK)\\b\\s*\\([\\s\\S]{1,100}\\)",
     "message": "[SQLi-C] Time-based SQLi function detected (SLEEP, WAITFOR, BENCHMARK)",
     "severity": "critical",
-    "action": "block"
+    "action": "alert"
   },
   {
     "uuid": "SQLI_C-CMDEXEC-001",
@@ -37,7 +37,7 @@
     "pattern_regex_bytes": "(?is)\\b(?:xp_cmdshell|sp_executesql|sp_addlogin|sp_addsrvrolemember|xp_reg)\\b",
     "message": "[SQLi-C] Dangerous Stored Procedure execution (xp_cmdshell, sp_...)",
     "severity": "critical",
-    "action": "block"
+    "action": "alert"
   },
   {
     "uuid": "SQLI_C-FILEOPS-001",
@@ -47,7 +47,7 @@
     "pattern_regex_bytes": "(?is)\\b(?:LOAD_FILE|LOAD\\s+DATA|INTO\\s+(?:OUTFILE|DUMPFILE)|BULK\\s+INSERT|COPY\\b[\\s\\S]{1,50}?\\bFROM|BACKUP\\s+DATABASE[\\s\\S]{1,50}?\\bTO\\b)",
     "message": "[SQLi-C] File Access/Exfiltration attempt (LOAD_FILE, OUTFILE, BULK INSERT, COPY)",
     "severity": "critical",
-    "action": "block"
+    "action": "alert"
   },
   {
     "uuid": "SQLI_C-INFO-001",
@@ -77,7 +77,7 @@
     "pattern_regex_bytes": "(?is)\\b(?:DROP\\s+(?:TABLE|DATABASE)|CREATE\\s+(?:USER|ROLE)|ALTER\\s+USER|GRANT\\b\\s+(?:CONNECT|RESOURCE|DBA))\\b",
     "message": "[SQLi-C] Destructive DDL or Privilege Escalation (DROP, CREATE USER, GRANT)",
     "severity": "critical",
-    "action": "block"
+    "action": "alert"
   },
   {
     "uuid": "SQLI_C-AUTH_BYPASS-001",
@@ -220,7 +220,7 @@
     "message": "Probe for webserver config/log files in URI or query param",
     "severity": "high",
     "action": "alert",
-    "notes": "Check only URI/request-line and query params; changed from block to alert."
+    "notes": "Check only URI/request-line and query params; changed from alert to alert."
   },
   {
     "uuid": "lfi_media_001",
@@ -243,8 +243,8 @@
     "use_aho": false,
     "message": "Uploaded file contains embedded script/PHP patterns — only check multipart uploads",
     "severity": "critical",
-    "action": "block",
-    "notes": "Block only when pattern appears inside multipart file parts."
+    "action": "alert",
+    "notes": "alert only when pattern appears inside multipart file parts."
   },
   {
     "uuid": "b871c676-8949-4d25-b665-2cde15fd02e2",
@@ -304,7 +304,7 @@
     "use_aho": false,
     "message": "PHP code detected inside uploaded file",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null
   },
@@ -369,7 +369,7 @@
     "use_aho": false,
     "message": "Uploaded content contains PHP tags",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null
   },
@@ -447,7 +447,7 @@
     "use_aho": false,
     "message": "PHP code detected in uploaded content",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null
   },
@@ -759,7 +759,7 @@
     "use_aho": false,
     "message": "SSI #exec payload attempting to run shell commands (cat /etc/passwd, id, ls, netstat, ...)",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -772,7 +772,7 @@
     "use_aho": false,
     "message": "Inline shell separators, pipes or backticks with common command names (id, ls, cat, netstat)",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -785,7 +785,7 @@
     "use_aho": false,
     "message": "Use of runtime execution functions (system/exec/popen/...) with suspicious command strings",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -798,7 +798,7 @@
     "use_aho": false,
     "message": "Percent-encoded or literal newline followed by suspicious command (cat /etc/passwd, id, ls, ping, netstat)",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -811,7 +811,7 @@
     "use_aho": false,
     "message": "Ping/netstat usage attempts (possible recon/long-run command injection)",
     "severity": "medium",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -824,7 +824,7 @@
     "use_aho": false,
     "message": "Patterns containing pipes/vertical-bars around 'id' or '/usr/bin/id' (common in injected payloads)",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -837,7 +837,7 @@
     "use_aho": false,
     "message": "Semicolon-wrapped 'id' variants and common payload fragments (e.g. a);id )",
     "severity": "medium",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -850,7 +850,7 @@
     "use_aho": false,
     "message": "Shellshock-style payload or immediate command substitution/download following '() { :; };' pattern",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -863,7 +863,7 @@
     "use_aho": false,
     "message": "Command substitution / backticks / ${...} containing common commands (id, ls, cat, curl, wget, nc, phpinfo, ...)",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -876,7 +876,7 @@
     "use_aho": false,
     "message": "Command chaining operators (|, ||, &, &&, ;) or encoded newlines followed by suspicious commands",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -889,7 +889,7 @@
     "use_aho": false,
     "message": "Runtime eval/exec/system or PHP tags / echo write-to-file / template-injection (phpinfo/sleep/get_user_file etc.)",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -902,7 +902,7 @@
     "use_aho": false,
     "message": "Download/reverse-shell (curl/wget/nc), perl flood, Windows RCE/admin commands, reconnaissance commands (whoami/which/etc.)",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -915,7 +915,7 @@
     "use_aho": false,
     "message": "URL bypass using repeated slashes/backslashes/encoded-slashes before domain (e.g. //example.com, /%2f%2fexample.com, \\\\example.com)",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -928,7 +928,7 @@
     "use_aho": false,
     "message": "Encoded or malformed HTTP(S) scheme used to hide external target (hex-encoded http://, http:/, https:/// etc.)",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -941,7 +941,7 @@
     "use_aho": false,
     "message": "Open-redirect parameter contains absolute/escaped/encoded external target (e.g. ?url=//example.com, ?redirect=/\\/example.com, ?url=Https://example.com)",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -954,7 +954,7 @@
     "use_aho": false,
     "message": "Path traversal or encoded '..' combined with domain/path (e.g. /example.com/%2e%2e, ////example.com/%2e%2e%2f)",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -967,7 +967,7 @@
     "use_aho": false,
     "message": "Control/unicode/null/tab or exotic separator bypass attempts (null/tab/unicode dots, \\;@, <> , etc.) used to hide external redirect/SSRF",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -980,7 +980,7 @@
     "use_aho": false,
     "message": "Leading-dot domain in path (e.g. /.example.com) — likely SSRF/redirect obfuscation",
     "severity": "high",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1032,7 +1032,7 @@
     "use_aho": false,
     "message": "Null byte detected in query string or urlencoded body — possible HPP or injection attempt",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1058,7 +1058,7 @@
     "use_aho": false,
     "message": "Multiple Host headers detected — possible header injection/request smuggling",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1071,7 +1071,7 @@
     "use_aho": false,
     "message": "Host header contains CRLF/null byte/percent-encoded newline — possible header injection/CRLF attack",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1149,7 +1149,7 @@
     "use_aho": false,
     "message": "XXE: Parameter ENTITY (%name SYSTEM '...') declaration detected",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1162,7 +1162,7 @@
     "use_aho": false,
     "message": "XXE: ENTITY SYSTEM references external URI — high-risk",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1175,7 +1175,7 @@
     "use_aho": false,
     "message": "XXE: Multiple ENTITY declarations — potential Billion Laughs attack",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1188,7 +1188,7 @@
     "use_aho": false,
     "message": "XXE: ENTITY recursively referencing others — exponential expansion vector",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1201,7 +1201,7 @@
     "use_aho": false,
     "message": "XSLT stylesheet or document() function detected — possible file/remote inclusion",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1214,7 +1214,7 @@
     "use_aho": false,
     "message": "XSLT php:function() usage detected — potential RCE or data exfiltration",
     "severity": "critical",
-    "action": "block",
+    "action": "alert",
     "pattern_bytes": null,
     "pattern_hex": null,
     "dst_port": null
@@ -1225,7 +1225,7 @@
     "proto": "LOCAL",
     "pattern_regex_bytes": "(?is)<!\\[CDATA\\[.*?(<script|javascript:|onerror|onload).*?\\]\\]>",
     "use_aho": false,
-    "message": "XML/CDATA block contains script — possible XSS injection (alert only on user-supplied XML)",
+    "message": "XML/CDATA alert contains script — possible XSS injection (alert only on user-supplied XML)",
     "severity": "high",
     "action": "alert",
     "pattern_bytes": null,

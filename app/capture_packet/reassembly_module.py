@@ -1,20 +1,33 @@
-"""
-Minimal Scapy-based TCP reassembly (realtime)
-
-- Reassembles TCP payloads per session BUFID = (src, dst, sport, dport)
-- Maintains HDL (hole descriptor list) in absolute sequence number space
-- Handles SYN (reset previous session), and FIN/RST (flush session -> produce datagram)
-- API:
-    r = TCPReassembly()
-    r.process_packet(pkt, index=frame_no)   # call for each captured packet
-    datagrams = r.get_datagrams()            # reassembled datagrams produced so far
-    r.clear_datagrams()
-    r.flush_all()                            # flush and produce for all buffers
-"""
-from scapy.all import sniff, IP, TCP
-from scapy.utils import hexdump 
+from __future__ import annotations
 import sys
-from typing import Dict, Tuple, List, Any, Optional
+import os
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+import argparse
+import threading
+import queue
+import time
+import logging
+import re
+import binascii
+import math
+import base64
+from collections import Counter
+from scapy.all import sniff, IP, TCP, UDP, Raw
+from pathlib import Path
+import json
+import hashlib
+from urllib.parse import unquote_plus
+from typing import Dict, Any, Tuple, List, Optional
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import requests
+from typing import Deque
+from collections import deque
+import sys
+import threading
+from app.capture_packet.flowtracker_module import FlowTracker
 
 BUFID = Tuple[str, str, int, int]  # (src_ip, dst_ip, src_port, dst_port)
 
@@ -32,6 +45,8 @@ class TCPReassembly:
         self._buffer: Dict[BUFID, Dict] = {}
         # produced datagrams (list of dict)
         self._datagrams: List[Dict[str, Any]] = []
+        #Flow tracker can be added here if needed for advanced state tracking
+        self.flow_tracker = FlowTracker()
 
     # ---------- public helpers ----------
     def process_packet(self, pkt, index: Optional[int] = None):
@@ -47,7 +62,8 @@ class TCPReassembly:
         payload = bytes(tcp.payload)
         has_payload = len(payload) > 0
 
-        BUFID = (ip.src, ip.dst, int(tcp.sport), int(tcp.dport))
+        BUFID = (str(ip.src), str(ip.dst), int(tcp.sport), int(tcp.dport))
+        self.flow_tracker.update(BUFID, tcp, ip)
         DSN = int(tcp.seq)
         ACK = int(tcp.ack)
         SYN = bool(tcp.flags & 0x02)
@@ -55,6 +71,11 @@ class TCPReassembly:
         RST = bool(tcp.flags & 0x04)
         FIRST = DSN
         LAST = DSN + len(payload)
+
+        try: 
+            self.flow_tracker.update(BUFID, tcp, ip)
+        except Exception:
+            pass
 
         # If SYN and an existing buffer exists => flush previous and delete
         if SYN and BUFID in self._buffer:
@@ -194,6 +215,10 @@ class TCPReassembly:
             return
         buf = self._buffer[bufid]
         HDL = buf.get('hdl', [])
+        # fetch all fragments (acks) and produce datagrams
+        # pass pkt tuple None for now; can be extended if needed
+        flow_info = self.flow_tracker.get_flow_safe(bufid, pkt=None)
+
         # iterate all ack-keys in buf (ints)
         for key, block in list(buf.items()):
             if key == 'hdl':
@@ -205,6 +230,7 @@ class TCPReassembly:
                 continue
             payload_bytes = bytes(raw)
             datagram = {
+                'flow': flow_info,
                 'NotImplemented': (len(HDL) != 0),  # True if holes remain
                 'id': {
                     'src': (bufid[0], bufid[2]),
@@ -247,53 +273,64 @@ class TCPReassembly:
             }
         return snap
 
-# ---------- Example runtime snippet ----------
-def run_realtime(iface: str, bpf_filter: str = "tcp", timeout: Optional[int] = None):
-    """Start sniffing on iface and reassemble TCP streams in realtime."""
-    reasm = TCPReassembly()
-    def handler(pkt):
-        try:
-            reasm.process_packet(pkt)
-        except Exception:
-            pass
-    sniff(iface=iface, filter="tcp port 80", prn=handler, store=False, timeout=timeout)
-    # After sniff finishes (or interrupted), you can get datagrams
-    return reasm
+# ---------- Wrapper to expose feed(ip_pkt) API ----------
+class TCPReassembler:
+    """
+    Wrapper around TCPReassembly that exposes `feed(ip_pkt)` returning either
+    (assembled_bytes, (src, dst, sport, dport)) or None.
+    It buffers multiple produced datagrams internally and returns one per call.
+    """
+    def __init__(self, timeout: int = 120):
+        self.reasm = TCPReassembly()
+        self.lock = threading.Lock()
+        self._outq: Deque[Tuple[bytes, Tuple[str,str,int,int]]] = deque()
+        # optional timeout attribute kept for compatibility with old class
+        self.timeout = timeout
 
-# # If module executed directly, run quick example (requires root)
-# if __name__ == "__main__":
-#     import argparse, json, os
+    def feed(self, ip_pkt) -> Optional[Tuple[bytes, Tuple[str,str,int,int]]]:
+        # return any queued assembled datagram first
+        with self.lock:
+            if self._outq:
+                return self._outq.popleft()
 
-#     parser = argparse.ArgumentParser(description="Realtime TCP reassembly (Scapy).")
-#     parser.add_argument("-i", "--iface", required=True, help="interface to sniff on (e.g. eth0)")
-#     parser.add_argument("-t", "--timeout", type=int, default=None, help="sniff timeout seconds (optional)")
-#     parser.add_argument("-o", "--output", default="example.log", help="log file path")
-#     args = parser.parse_args()
+            # process incoming packet via standard reassembly
+            try:
+                self.reasm.process_packet(ip_pkt)
+            except Exception:
+                # avoid blowing up worker loop on unexpected pkt shapes
+                # log if needed, but keep behavior silent here
+                pass
 
-#     log_file = args.output
-#     # ensure log folder exists
-#     os.makedirs(os.path.dirname(log_file) or ".", exist_ok=True)
+            datagrams = self.reasm.get_datagrams()
+            if not datagrams:
+                return None
 
-#     r = run_realtime(args.iface, timeout=args.timeout)
+            # push all datagrams into outq (as (payload, key)), then clear
+            for d in datagrams:
+                payload = d.get('payload', b'')
+                # datagram id: 'src': (ip, port), 'dst': (ip, port)
+                idinfo = d.get('id', {})
+                src = idinfo.get('src', (None, None))
+                dst = idinfo.get('dst', (None, None))
+                try:
+                    key = (str(src[0]), str(dst[0]), int(src[1]), int(dst[1]) if dst[1] is not None else None)
+                except Exception:
+                    # fallback to values from packet if id formatting unexpected
+                    try:
+                        t = ip_pkt[TCP]
+                        key = (str(ip_pkt[IP].src), str(ip_pkt[IP].dst), int(t.sport), int(t.dport))
+                    except Exception:
+                        key = (None, None, None, None)
+                self._outq.append((payload, key))
 
-#     # with open(log_file, "w", encoding="utf-8") as f:
-#     #     for d in r.get_datagrams():
-#     #         entry = {
-#     #             'id': d['id'],
-#     #             'len': len(d['payload']),
-#     #             'NotImplemented': d['NotImplemented'],
-#     #             'reason': d.get('flush_reason'),
-#     #             'payload_preview': d['payload'].decode('utf-8', errors='replace')  # chỉ ghi 200 byte đầu tiên, tránh quá dài
-#     #         }
-#     #         f.write(json.dumps(entry) + "\n")
-#     #         # cũng in ra console
-#     #         print("Logged:", entry)
-#     for d in r.get_datagrams():
-#         payload = d['payload']
-#         if payload:
-#             print(f"--- Datagram {d['id']} ---")
-#             # in hexdump
-#             hexdump(payload)
-#             # in raw bytes nếu muốn
-#             print("Raw bytes:", payload)
-#             print()
+            # clear datagrams stored in TCPReassembly to avoid duplication
+            self.reasm.clear_datagrams()
+
+            if self._outq:
+                return self._outq.popleft()
+            return None
+
+    def _cleanup(self):
+        # kept for API parity; reassembly uses internal cleanup via sys.maxsize holes,
+        # you can implement timed connection culling here if needed.
+        pass

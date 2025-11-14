@@ -917,13 +917,16 @@ def worker_loop(ids: IDS, stop_event: threading.Event):
                 out = ids.reasm.feed(ip_pkt)
                 if out:
                     assembled_bytes, conn_key = out
-                    meta = {"src": conn_key[0], "dst": conn_key[1],
-                            "sport": conn_key[2], "dport": conn_key[3], "proto": "TCP"}
+                    src, dst, sport, dport = conn_key
+                    if dport not in allowed_ports:
+                        continue
+                    meta = {"src": src, "dst": dst,
+                            "sport": sport, "dport": dport, "proto": "TCP"}
                     ids.match_payload(assembled_bytes, meta)
                 else:
                     t = ip_pkt[TCP]
                     raw_payload = bytes(t.payload) if Raw in t and bytes(t.payload) else b""
-                    if raw_payload:
+                    if raw_payload and t.dport in allowed_ports:
                         meta = {"src": ip_pkt.src, "dst": ip_pkt.dst,
                                 "sport": t.sport, "dport": t.dport, "proto": "TCP"}
                         ids.match_payload(raw_payload, meta)

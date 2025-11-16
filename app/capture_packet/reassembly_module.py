@@ -48,6 +48,14 @@ class TCPReassembly:
         self._datagrams: List[Dict[str, Any]] = []
         #Flow tracker can be added here if needed for advanced state tracking
         self.flow_tracker = FlowTracker()
+        #------------------------------#
+        # NEW: memory / timeout controls
+        self.memcap = 200 * 1024 * 1024  # 200MB total reassembly memcap (tuneable)
+        self.idle_timeout = 120          # seconds to keep idle flows (tuneable)
+        self.max_ack_blocks_per_flow = 50
+        self.max_holes_per_flow = 64
+        self.max_flow_raw_bytes = 2 * 1024 * 1024  # 2MB per ack-block (tuneable)
+        #------------------------------#
 
     # ---------- public helpers ----------
     def process_packet(self, pkt, index: Optional[int] = None):
@@ -89,6 +97,9 @@ class TCPReassembly:
             self._buffer[BUFID] = {
                 'hdl': [],  # will set when first fragment arrives
             }
+            #--------------------#
+            self._buffer[BUFID]['last_seen'] = time.time() #New : timestamp of last activity
+            #--------------------#
 
         # If no payload, still record ACK entry (to keep indices) and flush on FIN/RST if present
         if not has_payload:
@@ -205,6 +216,26 @@ class TCPReassembly:
             break
         # store HDL back
         self._buffer[BUFID]['hdl'] = HDL
+        #------------------------------#
+        # NEW: update last activity timestamp after processing fragment
+        self._buffer[BUFID]['last_seen'] = time.time()
+
+        # NEW: defensive limits: avoid unbounded growth per-flow
+        # limit number of ACK blocks kept per flow
+        ack_blocks = [k for k in self._buffer[BUFID].keys() if isinstance(k, int)]
+        if len(ack_blocks) > 50:  # <-- tuneable threshold
+            # too many ACK blocks -> flush oldest to free memory
+            # choose oldest by their 'isn' or just flush this buffer
+            self._submit_and_delete(BUFID, reason='too_many_ack_blocks')
+            return
+
+        # limit hole-list growth
+        if len(HDL) > 64:  # <-- tuneable threshold
+            # compress to single open hole (keeps algorithm but prevents explosion)
+            self._buffer[BUFID]['hdl'] = [{'first': HDL[0]['first'] if HDL else LAST, 'last': sys.maxsize}]
+            # update last_seen again
+            self._buffer[BUFID]['last_seen'] = time.time()
+        #------------------------------#    
 
         # If FIN or RST present, flush session
         if FIN or RST:

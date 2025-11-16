@@ -60,24 +60,49 @@
         "message": "WEBAPP SQL Injection union select attempt (in URL)"
     },
     {
-        "uuid": "sid-1677-WEB-Optimized",
-        "group_id": "sql_injection-attempt",
-        "proto": "TCP",
-        "dst_port": 80,
-        "pcre": "(?is)\\bwhere\\b.{1,50}?\\blike\\b.{1,50}?['\"].*?%",
-        "field": ["http_uri", "http_client_body"],
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "content": [
-            "like"
-        ],
-        "fast_pattern": "",
-        "action": "alert",
-        "severty": "high",
-        "message": "WEBAPP SQL Injection like '%%' attempt"
-    },
+    "uuid": "sid-1677-WEB-Optimized",
+    "group_id": "sql_injection-attempt",
+    "proto": "TCP",
+    "dst_port": 80,
+    "field": [
+        "http_uri",
+        "http_client_body"
+    ],
+    "flow": [
+        "to_server",
+        "established"
+    ],
+
+    "content": [
+        {
+            "pattern": "where",
+            "nocase": true,
+            "fast_pattern": true
+        },
+        {
+            "pattern": "like",
+            "nocase": true,
+            "distance": 1,
+            "within": 50
+        },
+        {
+            "pattern": "'",
+            "distance": 0,
+            "within": 40
+        },
+        {
+            "pattern": "%",
+            "distance": 0,
+            "within": 20
+        }
+    ],
+
+    "pcre": "(?is)\\bwhere\\b.{1,50}?\\blike\\b.{1,50}?['\"]\\w{0,30}%",
+
+    "action": "alert",
+    "severity": "high",
+    "message": "WEBAPP SQL Injection LIKE '%%' attempt"
+},
     {
         "uuid": "sid-1692-WEB-Optimized",
         "group_id": "sql_injection-destructive",
@@ -146,5 +171,229 @@
         "action": "alert",
         "severity": "high",
         "message": "[SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE)"
+    },
+    {
+
+        "uuid": "XSS-001",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)User-Agent:\\s*<script>",
+        "message": "SERVER-WEBAPP JavaScript tag in User-Agent header (possible XSS attempt)",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["User-Agent|3A| <script>"],
+        "field": ["http_header"]
+    },
+
+    {
+        "uuid": "XSS-002",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "/misc\\.php\\?v=.{0,12}&js=js/",
+        "message": "SERVER-WEBAPP vBulletin XSS redirect attempt",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["/misc.php?v=...&js=js"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-003",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "Alert\\(%22XSS_BY_C37HUN%22\\)",
+        "message": "XSS attempt (encoded script injection)",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["Alert(%22XSS_BY_C37HUN%22)"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-004",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "Alert%281%29",
+        "message": "XSS attempt alert(1)",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["Alert%281%29"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-005",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "Alert\\(document\\.cookie\\)",
+        "message": "XSS attempt (cookie theft)",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["Alert(document.cookie)"],
+        "field": ["http_uri"]
+    },
+    {
+        "uuid": "XSS-006",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)<script\\b[^>]*>",
+        "message": "[NEW] Detect raw <script> tag injection",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["<script"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-007",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)%3Cscript",
+        "message": "[NEW] Detect URL-encoded <script> (%3Cscript)",
+        "severity": "medium",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["%3Cscript"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-008",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)javascript\\s*:",
+        "message": "[NEW] Detect javascript: URI injection",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["javascript:"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-009",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)on\\w+\\s*=",
+        "message": "[NEW] Detect HTML event handler injection (onload, onclick, onerror)",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["onload=", "onclick=", "onerror="],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-010",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)<svg[^>]*onload=",
+        "message": "[NEW] Detect <svg/onload> XSS payload",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["<svg"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-011",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)alert\\s*\\(",
+        "message": "[NEW] Detect generic alert(...) payload",
+        "severity": "medium",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["alert("],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-012",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)prompt\\s*\\(",
+        "message": "[NEW] Detect prompt(...) XSS payload",
+        "severity": "medium",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["prompt("],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-013",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)document\\.cookie",
+        "message": "[NEW] Detect cookie-stealing payload",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["document.cookie"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-014",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)<iframe[^>]*src=javascript:",
+        "message": "[NEW] Detect iframe JavaScript XSS",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["<iframe"],
+        "field": ["http_uri"]
+    },
+
+    {
+        "uuid": "XSS-015",
+        "group_id": "XSS_CONSOLIDATED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)<img[^>]*onerror=",
+        "message": "[NEW] Detect <img onerror=alert()> XSS",
+        "severity": "high",
+        "action": "alert",
+        "fast_pattern": "only",
+        "content": ["<img"],
+        "field": ["http_uri"]
     }
 ]

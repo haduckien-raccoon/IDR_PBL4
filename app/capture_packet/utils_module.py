@@ -32,6 +32,7 @@ import threading
 BASE_DIR = Path("app")
 LOG_DIR = BASE_DIR / "logs"
 RULES_PATH = Path("app/capture_packet/rules.json")
+RULES_FIX_PATH = Path("app/capture_packet/rules_fix.json")
 API_ALERT_ENDPOINT = "http://127.0.0.1:8000/api/alerts/raw"
 TRAFFIC_LOG = LOG_DIR / "traffic.log"
 ALERTS_LOG = LOG_DIR / "alerts.log"
@@ -72,51 +73,105 @@ def rule_id(r: Dict[str, Any]) -> str:
 def load_rules(path: Path) -> List[Dict[str, Any]]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        console_logger.warning("Rules file not found: %s", path)
-        return []
     except Exception as e:
-        console_logger.error("Failed to load rules.json: %s", e)
+        console_logger.error("Failed to load rules: %s", e)
         return []
 
-    rules = []
+    rules: List[Dict[str, Any]] = []
     for r in raw:
         rr = dict(r)
-        rr["proto"] = (rr.get("proto") or "ANY").upper()
+
+        # normalize protocol
+        rr["proto"] = rr.get("proto", "ANY").upper()
         for p in ("dst_port", "src_port"):
             try:
                 rr[p] = int(rr[p]) if rr.get(p) is not None else None
             except Exception:
                 rr[p] = None
-        if rr.get("pattern_bytes") and isinstance(rr["pattern_bytes"], str):
-            rr["pattern_bytes"] = rr["pattern_bytes"].encode("latin1")
-        if rr.get("pattern_regex_bytes") and isinstance(rr["pattern_regex_bytes"], str):
-            rr["pattern_regex_bytes"] = rr["pattern_regex_bytes"]
-        if rr.get("pattern_hex") and not rr.get("pattern_bytes"):
-            try:
-                rr["pattern_bytes"] = binascii.unhexlify(rr["pattern_hex"])
-            except Exception:
-                rr["pattern_bytes"] = None
+
+        # normalize content list (support string or dict)
+        norm_contents = []
+        for c in rr.get("content", []):
+            if isinstance(c, str):
+                norm_contents.append({"pattern": c, "nocase": False, "fast_pattern": False})
+            elif isinstance(c, dict):
+                norm_contents.append({
+                    "pattern": c.get("pattern") or c.get("value") or "",
+                    "nocase": bool(c.get("nocase")),
+                    "fast_pattern": bool(c.get("fast_pattern"))
+                })
+        rr["content"] = norm_contents
+
+        # pcre optional
+        rr["pcre"] = rr.get("pcre")
+
+        # fields to check (e.g., http_uri, http_client_body)
+        rr["field"] = rr.get("field", [])
+
+        # flow (to_server, established,...)
+        rr["flow"] = rr.get("flow", [])
+
         rules.append(rr)
+
     console_logger.info("Loaded %d rules", len(rules))
     return rules
 
 def compile_rules(raw_rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    compiled = []
+    """
+    Compile raw JSON rules thành byte-level + regex + PCRE,
+    chuẩn bị cho pipeline AHO/content/PCRE match.
+    """
+    compiled: List[Dict[str, Any]] = []
+
     for r in raw_rules:
         ent: Dict[str, Any] = {"rule": r}
-        ent["pattern_bytes"] = r.get("pattern_bytes") if isinstance(r.get("pattern_bytes"), (bytes, bytearray)) else b""
-        pr = r.get("pattern_regex_bytes")
-        if pr:
+
+        # ---- Compile content ----
+        compiled_contents = []
+        for c in r.get("content", []):
+            # Chuẩn hóa dict
+            if isinstance(c, str):
+                content_dict = {"pattern": c, "nocase": False, "fast_pattern": False}
+            else:
+                content_dict = {
+                    "pattern": c.get("pattern") or c.get("value") or "",
+                    "nocase": bool(c.get("nocase")),
+                    "fast_pattern": bool(c.get("fast_pattern", False))
+                }
+
+            # Bytes-level
+            pattern_bytes = content_dict["pattern"].encode("latin1", "ignore")
+
+            # Regex-level
+            flags = re.IGNORECASE if content_dict["nocase"] else 0
             try:
-                ent["pattern_regex_compiled"] = re.compile(pr, flags=re.DOTALL | re.IGNORECASE)
-            except Exception as e:
-                console_logger.warning("Regex compile failed for %s: %s", rule_id(r), e)
-                ent["pattern_regex_compiled"] = None
+                regex = re.compile(re.escape(content_dict["pattern"]), flags)
+            except re.error:
+                regex = None
+
+            compiled_contents.append({
+                "raw": content_dict,
+                "pattern_bytes": pattern_bytes,
+                "regex": regex,
+                "fast_pattern": content_dict["fast_pattern"]
+            })
+
+        ent["contents"] = compiled_contents
+
+        # ---- Compile PCRE ----
+        pcre = r.get("pcre")
+        if pcre:
+            try:
+                ent["pcre_compiled"] = re.compile(pcre, re.DOTALL | re.IGNORECASE)
+            except re.error:
+                ent["pcre_compiled"] = None
         else:
-            ent["pattern_regex_compiled"] = None
+            ent["pcre_compiled"] = None
+
         compiled.append(ent)
+
     return compiled
+
 
 # ----------------- Aho automaton (optional) -----------------
 try:
@@ -125,29 +180,90 @@ try:
 except ImportError:
     AHO_AVAILABLE = False
 
-def build_aho(raw_rules: List[Dict[str, Any]]) -> Optional[Any]:
+# def build_aho(compiled_rules: List[Dict[str, Any]]) -> Optional[ahocorasick.Automaton]:
+#     """
+#     Tạo Aho-Corasick automaton từ compiled_rules.
+#     Mỗi pattern bytes trong rule sẽ được thêm vào.
+#     """
+#     try:
+#         aho = ahocorasick.Automaton()
+#         idx = 0
+
+#         for r in compiled_rules:
+#             for c in r.get("contents", []):
+#                 pattern_bytes: bytes = c.get("pattern_bytes")
+#                 if not pattern_bytes:
+#                     continue
+#                 # key = bytes → decode latin1 để dùng AhoC python (hỗ trợ byte-safe)
+#                 key = pattern_bytes.decode("latin1", "ignore")
+#                 # value lưu index + rule_id + message
+#                 aho.add_word(key, (idx, rule_id(r["rule"]), r["rule"].get("message")))
+#                 idx += 1
+
+#         if idx > 0:
+#             aho.make_automaton()
+#             console_logger.info("Built Aho-Corasick automaton with %d patterns", idx)
+#             return aho, None
+#         else:
+#             return None, None
+#     except Exception as e:
+#         console_logger.warning("Failed building Aho-Corasick automaton: %s", e)
+#         return None, None
+def build_aho(compiled_rules: list):
+    """
+    Build a Snort-like Aho-Corasick automaton from compiled_rules.
+    Each automaton key = fast pattern string, value = list of (rule_index, content_index)
+    
+    Returns:
+        aho: pyahocorasick.Automaton
+        aho_map: Dict[str, List[Tuple[int,int]]], mapping fast pattern → candidate rules
+    """
     if not AHO_AVAILABLE:
-        return None
+        console_logger.info("Aho-Corasick not available, skipping automaton build")
+        return None, {}
+
     try:
         aho = ahocorasick.Automaton()
-        idx = 0
-        for r in raw_rules:
-            if r.get("use_aho") and r.get("pattern_bytes"):
-                pat = r["pattern_bytes"]
-                try:
-                    key = pat.decode("latin1")
-                except Exception:
-                    key = str(pat)
-                aho.add_word(key, (idx, rule_id(r), r.get("message")))
-                idx += 1
-        if idx > 0:
-            aho.make_automaton()
-            console_logger.info("AHO automaton built with %d patterns", idx)
-            return aho
-    except Exception as e:
-        console_logger.warning("Failed building AHO: %s", e)
-    return None
+        aho_map = {}  # key: pattern string -> list of (rule_idx, content_idx)
 
+        for r_idx, ent in enumerate(compiled_rules):
+            contents = ent.get("contents", [])
+            if not contents:
+                continue
+
+            # Chọn fast_pattern(s), nếu không có thì dùng content[0]
+            fp_indices = [i for i, c in enumerate(contents) if c.get("fast_pattern")]
+            if not fp_indices:
+                fp_indices = [0]
+
+            for ci in fp_indices:
+                c = contents[ci]
+                pb: bytes = c.get("pattern_bytes") or b""
+                if not pb:
+                    continue
+
+                # Latin1 decode để map 1:1 byte -> char
+                key = pb.decode("latin1", "ignore")
+
+                # Thêm vào external map để chứa tất cả candidate
+                if key not in aho_map:
+                    aho_map[key] = []
+                aho_map[key].append((r_idx, ci))
+
+                # Thêm vào Aho automaton
+                # Vì pyahocorasick overwrite nếu add_word trùng, nên chỉ add 1 lần
+                if key not in aho:
+                    aho.add_word(key, key)
+
+        # Finalize automaton
+        aho.make_automaton()
+        console_logger.info("AHO automaton built with patterns (compiled_rules count=%d)", len(compiled_rules))
+        return aho, aho_map
+
+    except Exception as e:
+        console_logger.warning("Failed building AHO automaton: %s", e)
+        return None, {}
+    
 # ----------------- Payload decoding helpers -----------------
 def try_base64_decode(s: str) -> Optional[str]:
     candidate = "".join(s.strip().split())
@@ -207,3 +323,31 @@ def dict_diff(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Tuple[Any, 
         if o != n:
             diffs[k] = (o, n)
     return diffs
+
+def serialize_compiled_bytes(r):
+    r_copy = dict(r)
+    contents = []
+    for c in r_copy.get("contents", []):
+        c_copy = dict(c)
+        if "pattern_bytes" in c_copy:
+            c_copy["pattern_bytes"] = c_copy["pattern_bytes"].hex()
+        # bỏ regex object vì không serialize được
+        c_copy["regex"] = None
+        contents.append(c_copy)
+    r_copy["contents"] = contents
+
+    # bỏ PCRE object
+    r_copy["pcre_compiled"] = None
+    return r_copy
+
+# # viết hàm main để test load_rules:
+# def main():
+#     rules = load_rules(RULES_FIX_PATH)
+#     compiled = compile_rules(rules)
+#     aho, aho_map = build_aho(compiled)
+#     print(f"Loaded {len(rules)} rules, compiled {len(compiled)} rules, AHO: {aho is not None}")
+#     #in ra từng cái để check:
+#     for i, r in enumerate(compiled):
+#         print(f"Rule {i}: {serialize_compiled_bytes(r)}")
+# if __name__ == "__main__":
+#     main()

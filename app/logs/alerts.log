@@ -14846,3 +14846,47 @@ hexdump:
 000002d0  37 62 64 2d 38 62 61 39 2d 61 65 31 65 35 38 65   7bd-8ba9-ae1e58e
 000002e0  64 66 37 61 61 0d 0a 0d 0a                        df7aa....
 
+2025-11-14 20:11:36,238 [ALERT] ALERT [http-sqli-boolean-or-001] Possible SQL injection: boolean OR / comment-based injection | proto=TCP 127.0.0.1:46528->127.0.0.1:80 variant=REGEX_raw entropy=5.534
+hexdump:
+00000000  47 45 54 20 2f 66 61 76 69 63 6f 6e 2e 69 63 6f   GET /favicon.ico
+00000010  20 48 54 54 50 2f 31 2e 31 0d 0a 48 6f 73 74 3a    HTTP/1.1..Host:
+00000020  20 6c 6f 63 61 6c 68 6f 73 74 0d 0a 43 6f 6e 6e    localhost..Conn
+00000030  65 63 74 69 6f 6e 3a 20 6b 65 65 70 2d 61 6c 69   ection: keep-ali
+00000040  76 65 0d 0a 73 65 63 2d 63 68 2d 75 61 2d 70 6c   ve..sec-ch-ua-pl
+00000050  61 74 66 6f 72 6d 3a 20 22 4c 69 6e 75 78 22 0d   atform: "Linux".
+00000060  0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 4d 6f 7a   .User-Agent: Moz
+00000070  69 6c 6c 61 2f 35 2e 30 20 28 58 31 31 3b 20 4c   illa/5.0 (X11; L
+00000080  69 6e 75 78 20 78 38 36 5f 36 34 29 20 41 70 70   inux x86_64) App
+00000090  6c 65 57 65 62 4b 69 74 2f 35 33 37 2e 33 36 20   leWebKit/537.36 
+000000a0  28 4b 48 54 4d 4c 2c 20 6c 69 6b 65 20 47 65 63   (KHTML, like Gec
+000000b0  6b 6f 29 20 43 68 72 6f 6d 65 2f 31 34 32 2e 30   ko) Chrome/142.0
+000000c0  2e 30 2e 30 20 53 61 66 61 72 69 2f 35 33 37 2e   .0.0 Safari/537.
+000000d0  33 36 0d 0a 73 65 63 2d 63 68 2d 75 61 3a 20 22   36..sec-ch-ua: "
+000000e0  43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34 32   Chromium";v="142
+000000f0  22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f 6d   ", "Google Chrom
+00000100  65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f 74   e";v="142", "Not
+00000110  5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39 22   _A Brand";v="99"
+00000120  0d 0a 73 65 63 2d 63 68 2d 75 61 2d 6d 6f 62 69   ..sec-ch-ua-mobi
+00000130  6c 65 3a 20 3f 30 0d 0a 41 63 63 65 70 74 3a 20   le: ?0..Accept: 
+00000140  69 6d 61 67 65 2f 61 76 69 66 2c 69 6d 61 67 65   image/avif,image
+00000150  2f 77 65 62 70 2c 69 6d 61 67 65 2f 61 70 6e 67   /webp,image/apng
+00000160  2c 69 6d 61 67 65 2f 73 76 67 2b 78 6d 6c 2c 69   ,image/svg+xml,i
+00000170  6d 61 67 65 2f 2a 2c 2a 2f 2a 3b 71 3d 30 2e 38   mage/*,*/*;q=0.8
+00000180  0d 0a 53 65 63 2d 46 65 74 63 68 2d 53 69 74 65   ..Sec-Fetch-Site
+00000190  3a 20 73 61 6d 65 2d 6f 72 69 67 69 6e 0d 0a 53   : same-origin..S
+000001a0  65 63 2d 46 65 74 63 68 2d 4d 6f 64 65 3a 20 6e   ec-Fetch-Mode: n
+000001b0  6f 2d 63 6f 72 73 0d 0a 53 65 63 2d 46 65 74 63   o-cors..Sec-Fetc
+000001c0  68 2d 44 65 73 74 3a 20 69 6d 61 67 65 0d 0a 52   h-Dest: image..R
+000001d0  65 66 65 72 65 72 3a 20 68 74 74 70 3a 2f 2f 6c   eferer: http://l
+000001e0  6f 63 61 6c 68 6f 73 74 2f 61 70 69 2f 72 75 6c   ocalhost/api/rul
+000001f0  65 73 2f 0d 0a 41 63 63 65 70 74 2d 45 6e 63 6f   es/..Accept-Enco
+00000200  64 69 6e 67 3a 20 67 7a 69 70 2c 20 64 65 66 6c   ding: gzip, defl
+00000210  61 74 65 2c 20 62 72 2c 20 7a 73 74 64 0d 0a 41   ate, br, zstd..A
+00000220  63 63 65 70 74 2d 4c 61 6e 67 75 61 67 65 3a 20   ccept-Language: 
+00000230  65 6e 2d 55 53 2c 65 6e 3b 71 3d 30 2e 39 2c 76   en-US,en;q=0.9,v
+00000240  69 3b 71 3d 30 2e 38 0d 0a 43 6f 6f 6b 69 65 3a   i;q=0.8..Cookie:
+00000250  20 61 6a 73 5f 61 6e 6f 6e 79 6d 6f 75 73 5f 69    ajs_anonymous_i
+00000260  64 3d 31 31 63 65 36 39 38 39 2d 35 63 33 38 2d   d=11ce6989-5c38-
+00000270  34 37 62 64 2d 38 62 61 39 2d 61 65 31 65 35 38   47bd-8ba9-ae1e58
+00000280  65 64 66 37 61 61 0d 0a 0d 0a                     edf7aa....
+

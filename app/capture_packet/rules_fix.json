@@ -1,0 +1,150 @@
+[
+    {
+        "uuid": "sid-WEB-ORA-1674-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bUNION\\b.{1,100}?\\bSELECT\\b.{1,100}?\\bFROM\\b.{1,100}?\\bv\\$version\\b",
+        "field": ["http_uri", "http_client_body"],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "v$version"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "high",
+        "message": "WEBAPP SQL Injection Oracle version detection attempt (v$version)"
+    },
+    {
+        "uuid": "sid-WEB-ORA-1673-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\butl_http\\b.{1,50}?\\brequest\\b",
+        "field": ["http_uri", "http_client_body"],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "utl_http"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection Oracle RCE attempt (UTL_HTTP)"
+    },
+    {
+        "uuid": "sid-1676-WEB-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bUNION\\b(?:[\\s+]{1,20}|%20|%2b){1,20}(?:ALL(?:[\\s+]{1,20}|%20|%2b){1,20})?\\bSELECT\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "union"
+        ], 
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection union select attempt (in URL)"
+    },
+    {
+        "uuid": "sid-1677-WEB-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bwhere\\b.{1,50}?\\blike\\b.{1,50}?['\"].*?%",
+        "field": ["http_uri", "http_client_body"],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "like"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "high",
+        "message": "WEBAPP SQL Injection like '%%' attempt"
+    },
+    {
+        "uuid": "sid-1692-WEB-Optimized",
+        "group_id": "sql_injection-destructive",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bdrop\\b[\\s+%20%2b]{1,20}\\btable\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "drop"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection drop table attempt"
+    },
+    {
+        "uuid": "sid-1697-WEB-Optimized",
+        "group_id": "sql_injection-destructive",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\balter\\b[\\s+%20%2b]{1,20}\\bdatabase\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "alter"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection alter database attempt"
+    },
+
+
+    {
+        "uuid": "SQLI-C-TAUTOLOGY-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:\\b(?:AND|OR)\\b|['\"`\\u2019])(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}(?:'?\"?1'?\"?\\s*[=<>]{1,2}\\s*'?\"?1|'?\"?\\w{1,5}'?\"?\\s*[=<>]{1,2}\\s*'?\"?\\w{1,5}|\\bTRUE\\b)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "1=1",
+            "true"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE)"
+    }
+]

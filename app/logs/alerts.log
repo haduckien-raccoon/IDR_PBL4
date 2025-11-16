@@ -14890,3 +14890,47 @@ hexdump:
 00000270  34 37 62 64 2d 38 62 61 39 2d 61 65 31 65 35 38   47bd-8ba9-ae1e58
 00000280  65 64 66 37 61 61 0d 0a 0d 0a                     edf7aa....
 
+2025-11-16 22:04:12,404 [ALERT] ALERT [SQLI-C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:46922->127.0.0.1:80 variant=AHO_raw entropy=5.106
+hexdump:
+00000000  47 45 54 20 2f 74 65 73 74 2e 70 68 70 3f 69 64   GET /test.php?id
+00000010  3d 31 3d 31 25 32 30 41 4e 44 25 32 30 31 3d 31   =1=1%20AND%201=1
+00000020  2f 2a 78 2a 2f 25 32 30 54 52 55 45 26 63 68 65   /*x*/%20TRUE&che
+00000030  63 6b 3d 74 72 75 65 20 48 54 54 50 2f 31 2e 31   ck=true HTTP/1.1
+00000040  0d 0a 48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e   ..Host: 127.0.0.
+00000050  31 0d 0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 63   1..User-Agent: c
+00000060  75 72 6c 2f 38 2e 35 2e 30 0d 0a 41 63 63 65 70   url/8.5.0..Accep
+00000070  74 3a 20 2a 2f 2a 0d 0a 0d 0a                     t: */*....
+
+2025-11-16 22:04:12,435 [ALERT] ALERT [SQLI-C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:46922->127.0.0.1:80 variant=AHO_http_uri entropy=5.106
+hexdump:
+00000000  47 45 54 20 2f 74 65 73 74 2e 70 68 70 3f 69 64   GET /test.php?id
+00000010  3d 31 3d 31 25 32 30 41 4e 44 25 32 30 31 3d 31   =1=1%20AND%201=1
+00000020  2f 2a 78 2a 2f 25 32 30 54 52 55 45 26 63 68 65   /*x*/%20TRUE&che
+00000030  63 6b 3d 74 72 75 65 20 48 54 54 50 2f 31 2e 31   ck=true HTTP/1.1
+00000040  0d 0a 48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e   ..Host: 127.0.0.
+00000050  31 0d 0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 63   1..User-Agent: c
+00000060  75 72 6c 2f 38 2e 35 2e 30 0d 0a 41 63 63 65 70   url/8.5.0..Accep
+00000070  74 3a 20 2a 2f 2a 0d 0a 0d 0a                     t: */*....
+
+2025-11-16 22:09:33,589 [ALERT] ALERT [SQLI-C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:37232->127.0.0.1:80 variant=AHO_raw entropy=5.106
+hexdump:
+00000000  47 45 54 20 2f 74 65 73 74 2e 70 68 70 3f 69 64   GET /test.php?id
+00000010  3d 31 3d 31 25 32 30 41 4e 44 25 32 30 31 3d 31   =1=1%20AND%201=1
+00000020  2f 2a 78 2a 2f 25 32 30 54 52 55 45 26 63 68 65   /*x*/%20TRUE&che
+00000030  63 6b 3d 74 72 75 65 20 48 54 54 50 2f 31 2e 31   ck=true HTTP/1.1
+00000040  0d 0a 48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e   ..Host: 127.0.0.
+00000050  31 0d 0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 63   1..User-Agent: c
+00000060  75 72 6c 2f 38 2e 35 2e 30 0d 0a 41 63 63 65 70   url/8.5.0..Accep
+00000070  74 3a 20 2a 2f 2a 0d 0a 0d 0a                     t: */*....
+
+2025-11-16 22:09:58,248 [ALERT] ALERT [SQLI-C-TAUTOLOGY-001] [SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE) | proto=TCP 127.0.0.1:44516->127.0.0.1:80 variant=AHO_raw entropy=5.106
+hexdump:
+00000000  47 45 54 20 2f 74 65 73 74 2e 70 68 70 3f 69 64   GET /test.php?id
+00000010  3d 31 3d 31 25 32 30 41 4e 44 25 32 30 31 3d 31   =1=1%20AND%201=1
+00000020  2f 2a 78 2a 2f 25 32 30 54 52 55 45 26 63 68 65   /*x*/%20TRUE&che
+00000030  63 6b 3d 74 72 75 65 20 48 54 54 50 2f 31 2e 31   ck=true HTTP/1.1
+00000040  0d 0a 48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e   ..Host: 127.0.0.
+00000050  31 0d 0a 55 73 65 72 2d 41 67 65 6e 74 3a 20 63   1..User-Agent: c
+00000060  75 72 6c 2f 38 2e 35 2e 30 0d 0a 41 63 63 65 70   url/8.5.0..Accep
+00000070  74 3a 20 2a 2f 2a 0d 0a 0d 0a                     t: */*....
+

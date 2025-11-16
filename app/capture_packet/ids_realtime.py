@@ -32,9 +32,10 @@ from typing import Deque
 from collections import deque
 import sys
 import threading
-
-
 from app.workers.blocker import enqueue_block
+from app.capture_packet.http_parser import HTTPParser, HTTPParseResult
+import pcre2 
+
 # ----------------- IDS Engine -----------------
 from app.capture_packet.reassembly_module import TCPReassembler
 from app.capture_packet.utils_module import (
@@ -51,7 +52,7 @@ from app.capture_packet.utils_module import (
 # ----------------- Config paths -----------------
 BASE_DIR = Path("app")
 LOG_DIR = BASE_DIR / "logs"
-RULES_PATH = Path("app/capture_packet/rules.json")
+RULES_PATH = Path("app/capture_packet/rules_fix.json")
 API_ALERT_ENDPOINT = "http://127.0.0.1:8000/api/alerts/raw"
 TRAFFIC_LOG = LOG_DIR / "traffic.log"
 ALERTS_LOG = LOG_DIR / "alerts.log"
@@ -86,24 +87,78 @@ fh_alerts.setLevel(logging.INFO)
 fh_alerts.setFormatter(logging.Formatter("%(asctime)s [ALERT] %(message)s"))
 alerts_logger.addHandler(fh_alerts)
 
+# def compile_single_rule(r: Dict[str, Any]) -> Dict[str, Any]:
+#     ent: Dict[str, Any] = {"rule": r}
+#     ent["pattern_bytes"] = r.get("pattern_bytes") if isinstance(r.get("pattern_bytes"), (bytes, bytearray)) else b""
+#     pr = r.get("pattern_regex_bytes")
+#     if pr:
+#         try:
+#             ent["pattern_regex_compiled"] = re.compile(pr, flags=re.DOTALL | re.IGNORECASE)
+#         except Exception as e:
+#             console_logger.warning("Regex compile failed for %s: %s", r.get("uuid"), e)
+#             ent["pattern_regex_compiled"] = None
+#     else:
+#         ent["pattern_regex_compiled"] = None
+#     return ent
+#fix:
+
+def compile_single_rule(r: Dict[str, Any]) -> Dict[str, Any]:
+    ent: Dict[str, Any] = {"rule": r}
+    compiled_contents = []
+    for c in r.get("content", []):
+        if isinstance(c, str):
+            content_dict = {"pattern": c, "nocase": False, "fast_pattern": False}
+        else:
+            content_dict = {
+                "pattern": c.get("pattern") or c.get("value") or "",
+                "nocase": bool(c.get("nocase")),
+                "fast_pattern": bool(c.get("fast_pattern", False)),
+            }
+        pattern_bytes = content_dict["pattern"].encode("latin1", "ignore")
+        compiled_contents.append({
+            "raw": content_dict,
+            "pattern_bytes": pattern_bytes,
+            "fast_pattern": content_dict["fast_pattern"]
+        })
+    ent["contents"] = compiled_contents
+
+    pcre_pattern = r.get("pcre")
+    if pcre_pattern:
+        try:
+            flags = pcre2.DOTALL
+            if any(c.get("nocase", False) for c in r.get("content", [])):
+                flags |= pcre2.IGNORECASE
+            ent["pcre_compiled"] = pcre2.compile(pcre_pattern.encode("latin1"), flags=flags)
+        except Exception:
+            ent["pcre_compiled"] = None
+    else:
+        ent["pcre_compiled"] = None
+    return ent
+
+
 class IDS:
-    def __init__(self, rules_path: Path, enable_decode: bool = True, payload_bytes: int = 4096):
+    def __init__(self, rules_path: Path, enable_decode: bool = False, payload_bytes: int = 4096):
         self._last_rules_event_time = 0
+        self.rules_path = rules_path
         self.rules_raw = load_rules(rules_path)
+        # compile rules into byte-level structures
         self.compiled = compile_rules(self.rules_raw)
-        self.aho = build_aho(self.rules_raw)
-        self.enable_decode = enable_decode
+        # build aho from compiled rules (fast patterns)
+        self.aho, self.aho_map = build_aho(self.compiled)
+        self.enable_decode = enable_decode  # default False for Snort-like pipeline
         self.payload_bytes = int(payload_bytes)
-        # self.defr = IPDefragmenter()
         self.reasm = TCPReassembler()
-        self.last_alerts: Dict[str,float] = {}
+        self.last_alerts: Dict[str, float] = {}
         self.alert_throttle = 2.0
         self.logged_payloads = set()
-        self.rules: Dict[str, Dict[str, Any]] = {rule_id(r): r for r in self.rules_raw}
         self.logged_payloads_cleanup_interval = 60
         self._last_cleanup = time.time()
-        self.rules_path = rules_path
+        self.rules: Dict[str, Dict[str, Any]] = {rule_id(r): r for r in self.rules_raw}
+        self.rules_map = { (r.get("uuid") or rule_id(r)): r for r in self.rules_raw }
+        self.compiled_map = {}  # filled by incremental loader if used
         self._start_rules_watcher()
+        # http parser instance
+        self.http_parser = HTTPParser()
 
     def log_traffic(self, meta: Dict[str, Any], payload: bytes):
         """
@@ -193,106 +248,53 @@ class IDS:
         try:
             new_raw = load_rules(self.rules_path)
             new_compiled = compile_rules(new_raw)
-            new_aho = build_aho(new_raw)
+            new_aho, _ = build_aho(new_compiled)
             self.rules_raw = new_raw
             self.compiled = new_compiled
             self.aho = new_aho
+            self.rules = {rule_id(r): r for r in new_raw}
             console_logger.info("Rules reloaded: %d rules", len(self.rules_raw))
         except Exception as e:
             console_logger.error("Failed to reload rules: %s", e)
     def reload_rules_incremental(self):
         """
-        Incremental reload of rules.json based on UUID.
-        Detailed logging of added/updated/removed rules.
+        Incremental reload: use compile_single_rule for changed rules.
         """
         rules_logger.info("Starting incremental reload from %s", self.rules_path)
         try:
             new_raw = load_rules(self.rules_path)
-            # ensure compile_single_rule exists in file (you have it)
-            if not hasattr(self, "rules_map"):
-                # First time initialization
-                self.rules_map = {}
-                self.compiled_map = {}
-                for r in new_raw:
-                    rid = r.get("uuid") or rule_id(r)
-                    try:
-                        compiled_entry = compile_single_rule(r)
-                    except Exception as e:
-                        rules_logger.error("Compile error for new rule %s: %s", rid, e)
-                        compiled_entry = {"rule": r, "pattern_bytes": b"", "pattern_regex_compiled": None}
-                    self.rules_map[rid] = r
-                    self.compiled_map[rid] = compiled_entry
-                    rules_logger.info("Initial load rule %s summary: group=%s message=%s", rid, r.get("group_id"), r.get("message"))
-                self.rules_raw = new_raw
-                self.compiled = list(self.compiled_map.values())
-                self.aho = build_aho(new_raw)
-                rules_logger.info("Initialized rules map: %d rules", len(new_raw))
-                return
+            new_map = {}
+            new_compiled_map = {}
 
-            old_uuids = set(self.rules_map.keys())
-            new_uuids = set()
-            added = []
-            removed = []
-            updated = []
-
-            # Process new / updated
+            # load/compile all into maps
             for r in new_raw:
                 rid = r.get("uuid") or rule_id(r)
-                new_uuids.add(rid)
-                old_rule = self.rules_map.get(rid)
-                if old_rule is None:
-                    # new rule
-                    try:
-                        compiled_entry = compile_single_rule(r)
-                    except Exception as e:
-                        rules_logger.error("Compile error for added rule %s: %s", rid, e)
-                        compiled_entry = {"rule": r, "pattern_bytes": b"", "pattern_regex_compiled": None}
-                    self.rules_map[rid] = r
-                    self.compiled_map[rid] = compiled_entry
-                    added.append(rid)
-                    rules_logger.info("Added rule %s summary: group=%s message=%s", rid, r.get("group_id"), r.get("message"))
-                else:
-                    if r != old_rule:
-                        # updated rule
-                        diffs = dict_diff(old_rule, r)
-                        try:
-                            compiled_entry = compile_single_rule(r)
-                        except Exception as e:
-                            rules_logger.error("Compile error for updated rule %s: %s", rid, e)
-                            compiled_entry = {"rule": r, "pattern_bytes": b"", "pattern_regex_compiled": None}
-                        self.rules_map[rid] = r
-                        self.compiled_map[rid] = compiled_entry
-                        updated.append((rid, diffs))
-                        rules_logger.info("Updated rule %s summary: group=%s message=%s changed_fields=%s",
-                                        rid, r.get("group_id"), r.get("message"), ", ".join(diffs.keys()))
-                        # log detail of changed fields
-                        for k, (ov, nv) in diffs.items():
-                            rules_logger.info("  - %s: %r -> %r", k, ov, nv)
+                new_map[rid] = r
+                try:
+                    new_compiled_map[rid] = compile_single_rule(r)
+                except Exception as e:
+                    rules_logger.error("Compile single rule failed %s: %s", rid, e)
+                    new_compiled_map[rid] = {"rule": r, "contents": [], "pcre_compiled": None}
 
-            # Removed
-            for rid in list(old_uuids):
-                if rid not in new_uuids:
-                    removed.append(rid)
-                    # capture some info from old rule for human-readable log
-                    oldr = self.rules_map.get(rid)
-                    rules_logger.info("Removed rule %s summary: group=%s message=%s", rid, (oldr.get("group_id") if oldr else None), (oldr.get("message") if oldr else None))
-                    # actually remove
-                    self.rules_map.pop(rid, None)
-                    self.compiled_map.pop(rid, None)
+            # determine added/updated/removed
+            old_ids = set(self.rules_map.keys()) if hasattr(self, "rules_map") else set()
+            new_ids = set(new_map.keys())
+            added = new_ids - old_ids
+            removed = old_ids - new_ids
+            updated = set(i for i in new_ids & old_ids if new_map[i] != self.rules_map.get(i))
 
-            # Finalize compiled list and Aho
-            self.compiled = list(self.compiled_map.values())
+            # apply
+            self.rules_map = new_map
+            # rebuild compiled list from compiled_map values
+            self.compiled_map = new_compiled_map
+            self.compiled = list(new_compiled_map.values())
+            # rebuild aho
+            self.aho, _ = build_aho(self.compiled)
             self.rules_raw = new_raw
-            self.aho = build_aho(new_raw)
 
-            # summary
-            rules_logger.info("Incremental reload finished: total=%d added=%d updated=%d removed=%d",
-                            len(self.rules_raw), len(added), len(updated), len(removed))
-            # also echo to console
+            rules_logger.info("Incremental reload done: total=%d added=%d updated=%d removed=%d",
+                              len(self.rules_raw), len(added), len(updated), len(removed))
             console_logger.info("Rules reload: +%d ~%d -%d (total=%d)", len(added), len(updated), len(removed), len(self.rules_raw))
-            if not (added or updated or removed):
-                rules_logger.info("No rule changes detected.")
-
         except Exception as e:
             rules_logger.exception("Failed incremental reload: %s", e)
 
@@ -350,49 +352,171 @@ class IDS:
         observer.daemon = True
         observer.start()
         rules_logger.info("Started file watcher for %s", self.rules_path)
-        
-    def match_payload(self, payload: bytes, meta: Dict[str, Any]):
-        p = payload[: self.payload_bytes]
-        variants = generate_decodes(p, self.enable_decode)
-        hits: List[Tuple[str,str,str]] = []
 
+    def match_payload(self, payload: bytes, meta: Dict[str, Any]):
+        """
+        Full Snort-like payload matching pipeline
+        1. Build multi-buffer from HTTP fields (uses HTTPParseResult.regions)
+        2. Fast pattern Aho-Corasick (latin1 mapping) — supports two build styles:
+        - self.aho is dict[str, Automaton] (per-buffer automata)
+        - self.aho is Automaton and self.aho_map maps key->list[(rule_idx, content_idx)]
+        3. Full content match with offset/depth/distance/within
+        4. PCRE match on decoded variants if required
+        5. Alert logging + optional block
+        """
+
+        # --- 0. truncate payload if needed ---
+        p = payload[: self.payload_bytes]
+
+        # --- 1. build buffers (multi-buffer like Snort) ---
+        buffers: Dict[str, bytes] = {"raw": p}
+
+        try:
+            parsed: HTTPParseResult = self.http_parser.parse(p, client_side=True)
+
+            # Merge regions from parser (Snort-style). parsed.regions is Dict[str, bytes].
+            # Only accept bytes values (type-safe).
+            for region_name, region_value in parsed.regions.items():
+                if isinstance(region_value, (bytes, bytearray)):
+                    buffers[region_name] = bytes(region_value)
+
+            # NOTE:
+            # --- DO NOT call undefined some_mapping.update(...) here ---
+            # We don't need to update any external mapping at this point.
+            # Buffers are ready and type-safe: Dict[str, bytes].
+        except Exception:
+            console_logger.debug("HTTP parse error", exc_info=True)
+
+        # --- prepare hits list ---
+        hits: List[Tuple[str, str, str]] = []
+
+        # --- 2. Fast pattern Aho-Corasick (bytes -> latin1) ---
         if self.aho:
             try:
-                s_raw = p.decode('latin1', errors='ignore')
-                for end_index, (idx, rid, message) in self.aho.iter(s_raw):
-                    hits.append((rid, message, "AHO_raw"))
+                # Case A: self.aho is a dict of automata per region (e.g., {"raw": automaton, "http_uri": automaton, ...})
+                if isinstance(self.aho, dict):
+                    for buf_name, buf_bytes in buffers.items():
+                        aho_automaton = self.aho.get(buf_name)
+                        if not aho_automaton:
+                            continue
+                        s = buf_bytes.decode("latin1", "ignore")
+                        for end_index, val in aho_automaton.iter(s):
+                            # if automaton stores value as (rule_idx, content_idx) directly adjust accordingly
+                            # we assume val is the pattern key or stored payload; map to rule indices if needed
+                            # Best-effort: accept either (rule_idx, content_idx) or key -> lookup in aho_map
+                            if isinstance(val, tuple) and len(val) == 2 and isinstance(val[0], int):
+                                rule_idx, content_idx = val
+                                r = self.compiled[rule_idx]["rule"]
+                                hits.append((rule_id(r), r.get("message"), f"AHO_{buf_name}"))
+                            else:
+                                # val is likely the key string -> use self.aho_map if present
+                                key = val
+                                if getattr(self, "aho_map", None):
+                                    for rule_idx, _ in self.aho_map.get(key, []):
+                                        r = self.compiled[rule_idx]["rule"]
+                                        hits.append((rule_id(r), r.get("message"), f"AHO_{buf_name}"))
+                                else:
+                                    # fallback: can't map -> still record the key match as generic
+                                    hits.append((f"AHO_KEY:{key}", f"AHO matched key {key}", f"AHO_{buf_name}"))
+                else:
+                    # Case B: self.aho is a single Automaton and self.aho_map maps key->list[(rule_idx, content_idx)]
+                    automaton = self.aho
+                    aho_map = getattr(self, "aho_map", {}) or {}
+                    for buf_name, buf_bytes in buffers.items():
+                        s = buf_bytes.decode("latin1", "ignore")
+                        for end_index, val in automaton.iter(s):
+                            # val is the key string (that's how build_aho added words)
+                            key = val
+                            for rule_idx, _ in aho_map.get(key, []):
+                                r = self.compiled[rule_idx]["rule"]
+                                hits.append((rule_id(r), r.get("message"), f"AHO_{buf_name}"))
             except Exception:
                 console_logger.debug("AHO error", exc_info=True)
 
+        # --- 3. Full content + match-position with offset/depth/distance/within ---
         for entry in self.compiled:
             r = entry["rule"]
+
+            # --- 3a. early proto/port filtering ---
             rule_proto = (r.get("proto") or "ANY").upper()
             if rule_proto != "ANY" and str(meta.get("proto") or "").upper() != rule_proto:
                 continue
 
-            dst_port_rule = r.get("dst_port")
-            dst_port_meta = meta.get("dport")
-            if dst_port_rule is not None and dst_port_meta is not None and dst_port_rule != dst_port_meta:
+            if r.get("dst_port") is not None and meta.get("dport") is not None:
+                if r["dst_port"] != meta["dport"]:
+                    continue
+            if r.get("src_port") is not None and meta.get("sport") is not None:
+                if r["src_port"] != meta["sport"]:
+                    continue
+
+            # --- 3b. Full content match ---
+            contents = entry.get("contents", [])
+            last_end = 0
+            rule_matched = True
+
+            for idx, c in enumerate(contents):
+                # choose buffer per content (multi-buffer)
+                buf_name = c["raw"].get("field", "raw")
+                buf = buffers.get(buf_name, buffers["raw"])
+
+                pat = c["pattern_bytes"]
+                nocase = c["raw"].get("nocase", False)
+
+                # choose haystack according to nocase
+                hs = buf.lower() if nocase else buf
+                needle = pat.lower() if nocase else pat
+
+                # --- content #1: offset + depth ---
+                if idx == 0:
+                    start = c["raw"].get("offset", 0) or 0
+                    start = max(0, start)
+                    depth = c["raw"].get("depth", None)
+                    end = start + depth if (depth is not None and depth >= 0) else len(buf)
+                # --- content 2+: distance + within ---
+                else:
+                    distance = c["raw"].get("distance", 0) or 0
+                    start = last_end + distance
+                    within = c["raw"].get("within", None)
+                    end = last_end + within if (within is not None and within >= 0) else len(buf)
+
+                start = max(0, int(start))
+                end = min(len(buf), int(end))
+                if start > end:
+                    rule_matched = False
+                    break
+
+                pos = hs.find(needle, start, end)
+                if pos < 0:
+                    rule_matched = False
+                    break
+
+                last_end = pos + len(needle)
+
+            if not rule_matched:
                 continue
 
-            src_port_rule = r.get("src_port")
-            src_port_meta = meta.get("sport")
-            if src_port_rule is not None and src_port_meta is not None and src_port_rule != src_port_meta:
-                continue
-
-            pb = entry.get("pattern_bytes")
-            if pb and pb in p:
-                hits.append((rule_id(r), r.get("message"), "BYTES_raw"))
-                continue
-
-            regex = entry.get("pattern_regex_compiled")
-            if regex:
+            # --- 3c. PCRE matching (Snort-like) ---
+            pcre = entry.get("pcre_compiled")
+            if pcre:
+                variants = generate_decodes(buf, enable_decode=self.enable_decode)
+                matched_pcre = False
                 for label, txt in variants:
-                    if regex.search(txt):
-                        hits.append((rule_id(r), r.get("message"), f"REGEX_{label}"))
-                        break
+                    # convert bytes -> latin1 string 1:1
+                    if isinstance(txt, bytes):
+                        txt = txt.decode("latin1", "ignore")
+                    try:
+                        if pcre.match(txt) or pcre.search(txt):
+                            matched_pcre = True
+                            break
+                    except Exception:
+                        continue
+                if not matched_pcre:
+                    continue
 
-        # Nếu match rule, log vào ALERTS, không log vào TRAFFIC
+            # --- 3d. Matched rule ---
+            hits.append((rule_id(r), r.get("message"), f"FULL_{buf_name}"))
+
+        # --- 4. Log alerts or traffic ---
         if hits:
             for rid, message, variant in hits:
                 h = hashlib.sha1(f"{rid}|{meta.get('src')}|{meta.get('dst')}|{variant}|{len(p)}".encode()).hexdigest()[:12]
@@ -400,7 +524,7 @@ class IDS:
                     console_logger.debug("throttled alert %s", h)
                     continue
                 try:
-                    #lấy thêm action trong rules chứa alerts để biết mức độ nghiêm trọng của alert
+                    # add action + severity
                     if rid in self.rules:
                         meta["action"] = self.rules[rid].get("action", "unknown")
                         meta["severity"] = self.rules[rid].get("severity", "medium")
@@ -410,37 +534,23 @@ class IDS:
                     action = meta["action"]
                     severity = meta["severity"]
                     self.log_alert(meta, p, rid, message, variant, action, severity)
-#fix:
-                    if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
-                        src_ip = meta.get("src")
-                        if src_ip:
-                            try:
-                                enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
-                                console_logger.info("Enqueued block for %s", src_ip)
-                            except Exception:
-                                console_logger.exception("enqueue_block error")
+
+                    # Block if requested
+                    # if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
+                    #     src_ip = meta.get("src")
+                    #     if src_ip:
+                    #         try:
+                    #             enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
+                    #             console_logger.info("Enqueued block for %s", src_ip)
+                    #         except Exception:
+                    #             console_logger.exception("enqueue_block error")
                 except Exception:
                     console_logger.exception("log_alert error")
         else:
-            # Nếu không match rule, mới log traffic
             try:
                 self.log_traffic(meta, payload)
             except Exception:
                 console_logger.exception("log_traffic error")
-
-def compile_single_rule(r: Dict[str, Any]) -> Dict[str, Any]:
-    ent: Dict[str, Any] = {"rule": r}
-    ent["pattern_bytes"] = r.get("pattern_bytes") if isinstance(r.get("pattern_bytes"), (bytes, bytearray)) else b""
-    pr = r.get("pattern_regex_bytes")
-    if pr:
-        try:
-            ent["pattern_regex_compiled"] = re.compile(pr, flags=re.DOTALL | re.IGNORECASE)
-        except Exception as e:
-            console_logger.warning("Regex compile failed for %s: %s", r.get("uuid"), e)
-            ent["pattern_regex_compiled"] = None
-    else:
-        ent["pattern_regex_compiled"] = None
-    return ent
 
 # ----------------- Packet queue & worker -----------------
 pkt_queue: "queue.Queue[Any]" = queue.Queue(maxsize=20000)
@@ -522,3 +632,82 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ----------------- Old simple match_payload (byte + regex only) -----------------
+        
+#     def match_payload(self, payload: bytes, meta: Dict[str, Any]):
+#         p = payload[: self.payload_bytes]
+#         variants = generate_decodes(p, self.enable_decode)
+#         hits: List[Tuple[str,str,str]] = []
+
+#         if self.aho:
+#             try:
+#                 s_raw = p.decode('latin1', errors='ignore')
+#                 for end_index, (idx, rid, message) in self.aho.iter(s_raw):
+#                     hits.append((rid, message, "AHO_raw"))
+#             except Exception:
+#                 console_logger.debug("AHO error", exc_info=True)
+
+#         for entry in self.compiled:
+#             r = entry["rule"]
+#             rule_proto = (r.get("proto") or "ANY").upper()
+#             if rule_proto != "ANY" and str(meta.get("proto") or "").upper() != rule_proto:
+#                 continue
+
+#             dst_port_rule = r.get("dst_port")
+#             dst_port_meta = meta.get("dport")
+#             if dst_port_rule is not None and dst_port_meta is not None and dst_port_rule != dst_port_meta:
+#                 continue
+
+#             src_port_rule = r.get("src_port")
+#             src_port_meta = meta.get("sport")
+#             if src_port_rule is not None and src_port_meta is not None and src_port_rule != src_port_meta:
+#                 continue
+
+#             pb = entry.get("pattern_bytes")
+#             if pb and pb in p:
+#                 hits.append((rule_id(r), r.get("message"), "BYTES_raw"))
+#                 continue
+
+#             regex = entry.get("pattern_regex_compiled")
+#             if regex:
+#                 for label, txt in variants:
+#                     if regex.search(txt):
+#                         hits.append((rule_id(r), r.get("message"), f"REGEX_{label}"))
+#                         break
+
+#         # Nếu match rule, log vào ALERTS, không log vào TRAFFIC
+#         if hits:
+#             for rid, message, variant in hits:
+#                 h = hashlib.sha1(f"{rid}|{meta.get('src')}|{meta.get('dst')}|{variant}|{len(p)}".encode()).hexdigest()[:12]
+#                 if self.should_throttle(h):
+#                     console_logger.debug("throttled alert %s", h)
+#                     continue
+#                 try:
+#                     #lấy thêm action trong rules chứa alerts để biết mức độ nghiêm trọng của alert
+#                     if rid in self.rules:
+#                         meta["action"] = self.rules[rid].get("action", "unknown")
+#                         meta["severity"] = self.rules[rid].get("severity", "medium")
+#                     else:
+#                         meta["action"] = "unknown"
+#                         meta["severity"] = "medium"
+#                     action = meta["action"]
+#                     severity = meta["severity"]
+#                     self.log_alert(meta, p, rid, message, variant, action, severity)
+# #fix:
+#                     if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
+#                         src_ip = meta.get("src")
+#                         if src_ip:
+#                             try:
+#                                 enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
+#                                 console_logger.info("Enqueued block for %s", src_ip)
+#                             except Exception:
+#                                 console_logger.exception("enqueue_block error")
+#                 except Exception:
+#                     console_logger.exception("log_alert error")
+#         else:
+#             # Nếu không match rule, mới log traffic
+#             try:
+#                 self.log_traffic(meta, payload)
+#             except Exception:
+#                 console_logger.exception("log_traffic error")

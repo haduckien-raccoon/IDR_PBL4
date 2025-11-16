@@ -47,7 +47,6 @@ class HTTPParseResult:
         self.body: bytes = b""
         self.regions: Dict[str, bytes] = {}
 
-
 class HTTPParser:
     CRLF = b"\r\n"
     HEADER_RE = re.compile(rb"^(?P<name>[^:]+):[ \t]*(?P<value>.+)$")
@@ -121,6 +120,12 @@ class HTTPParser:
             else:
                 result.regions["http_server_body"] = result.body
 
+            # ---- HTTP Cookie region ----
+            cookie_header = result.headers.get("cookie")
+            if cookie_header:
+                # Snort lưu cookies tách riêng
+                result.regions["http_cookie"] = cookie_header.encode("latin1")
+
         except Exception:
             pass
 
@@ -152,16 +157,7 @@ class HTTPParser:
 
 #     http = parser.parse(payload, client_side=client_side)
 
-#     print("===== HTTP PARSE RESULT =====")
-#     print("Method:", http.method)
-#     print("URI:", http.uri)
-#     print("Headers:", http.headers)
-#     print("Body length:", len(http.body))
-
-#     print("\n===== SNORT REGIONS =====")
-#     for k, v in http.regions.items():
-#         print(f"\n--- {k} ---")
-#         print(v)
+#     print(http)
 
 
 # def main():

@@ -1,3 +1,4 @@
+#RFC 793 + RFC 815 = suritaca
 from __future__ import annotations
 import sys
 import os
@@ -23,7 +24,7 @@ from typing import Dict, Any, Tuple, List, Optional
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import requests
-from typing import Deque
+from typing import Deque, Tuple, Dict, Any, List, Optional
 from collections import deque
 import sys
 import threading
@@ -242,11 +243,21 @@ class TCPReassembly:
                 'packets': None,
                 'flush_reason': reason,
             }
+            
             self._datagrams.append(datagram)
         # finally delete buffer
         try:
             del self._buffer[bufid]
         except KeyError:
+            pass
+        
+        #Flow cleanup 
+        try:
+            f = self.flow_tracker.get_flow(bufid)
+            #get_flow tra none neu khong co flow
+            if f and f.get('state') == 'teardown':
+                self.flow_tracker.delete_flow(bufid)
+        except Exception:
             pass
 
     def get_datagrams(self) -> List[Dict[str, Any]]:
@@ -329,8 +340,63 @@ class TCPReassembler:
             if self._outq:
                 return self._outq.popleft()
             return None
+        
 
     def _cleanup(self):
         # kept for API parity; reassembly uses internal cleanup via sys.maxsize holes,
         # you can implement timed connection culling here if needed.
-        pass
+        try: 
+            self.reasm.flow_tracker.prune_stale()
+        except Exception:
+            pass
+        
+
+# def debug_feed(tcp_reasm: TCPReassembler, pkt):
+#     """
+#     Feed a packet into TCPReassembler and print debug info:
+#     - IP src/dst, TCP flags
+#     - Flow state
+#     - Produced datagram (if any)
+#     """
+#     if not pkt.haslayer(IP) or not pkt.haslayer(TCP):
+#         print("Not an IP/TCP packet")
+#         return
+
+#     ip = pkt[IP]
+#     tcp = pkt[TCP]
+
+#     # Decode flags
+#     flags = []
+#     if tcp.flags & 0x02: flags.append("SYN")
+#     if tcp.flags & 0x10: flags.append("ACK")
+#     if tcp.flags & 0x01: flags.append("FIN")
+#     if tcp.flags & 0x04: flags.append("RST")
+#     if tcp.flags & 0x08: flags.append("PSH")
+#     if tcp.flags & 0x20: flags.append("URG")
+#     if tcp.flags & 0x40: flags.append("ECE")
+#     if tcp.flags & 0x80: flags.append("CWR")
+
+#     BUFID = (ip.src, ip.dst, tcp.sport, tcp.dport)
+#     flow_info = tcp_reasm.reasm.flow_tracker.get_flow_safe(BUFID, pkt=(ip,tcp))
+
+#     print(f"\n--- PACKET ---")
+#     print(f"{ip.src}:{tcp.sport} -> {ip.dst}:{tcp.dport}  flags: {','.join(flags)}  len={len(tcp.payload)}")
+#     print(f"Flow state: {flow_info.get('state')}  direction: {flow_info.get('direction')}")
+
+#     # Feed into reassembler
+#     result = tcp_reasm.feed(pkt)
+#     if result:
+#         payload, key = result
+#         print(f"DATAGRAM produced!  length={len(payload)}  key={key}")
+#         # Optionally print first 64 bytes as hex
+#         print(f"Payload preview (hex): {payload[:64].hex()} ...")
+#     else:
+#         print("No datagram produced yet (buffering)")
+
+# from scapy.all import sniff
+
+# tcp_reasm = TCPReassembler()
+
+# # Capture 1 packet trên interface eth0 (hoặc read từ pcap)
+# pkt = sniff(count=1, filter="tcp port 80", iface="lo")[0]
+# debug_feed(tcp_reasm, pkt)

@@ -470,6 +470,7 @@ def worker_loop(ids: IDS, stop_event: threading.Event):
             # TCP
             if TCP in ip_pkt:
                 out = ids.reasm.feed(ip_pkt)
+                print(out)
                 if out:
                     assembled_bytes, conn_key = out
                     src, dst, sport, dport = conn_key

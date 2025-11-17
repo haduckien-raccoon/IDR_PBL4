@@ -4,6 +4,7 @@ from app.database import init_db
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
+# from app.workers.send_mail_worker import start_mail_workers
 
 app = FastAPI(title="IDR Project API")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -13,6 +14,7 @@ templates = Jinja2Templates(directory="app/templates")
 @app.on_event("startup")
 def on_startup():
     init_db()
+    # start_mail_workers(num_workers=1) 
 
 # Gắn các router API
 app.include_router(api_router)

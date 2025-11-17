@@ -17,7 +17,7 @@ STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
 # how many recent entries to keep in memory for new WS clients
-MAX_RECENT = 1000
+MAX_RECENT = 5000
 
 
 # =========================================
@@ -124,7 +124,7 @@ class LogTailer:
         self.type_ = type_
         self.recent_cap = recent_cap
 
-    async def load_recent_logs(self, count: int = 1000) -> List[Dict[str, Any]]:
+    async def load_recent_logs(self, count: int = 10000) -> List[Dict[str, Any]]:
         """
         Efficiently read the last `count` lines from the file (like `tail -n count`),
         then parse them into blocks (header + optional hexdump).

@@ -30,6 +30,7 @@ import sys
 import threading
 from app.capture_packet.flowtracker_module import FlowTracker
 
+console_logger = logging.getLogger("console")
 BUFID = Tuple[str, str, int, int]  # (src_ip, dst_ip, src_port, dst_port)
 
 class TCPReassembly:
@@ -55,6 +56,59 @@ class TCPReassembly:
         self.max_ack_blocks_per_flow = 50
         self.max_holes_per_flow = 64
         self.max_flow_raw_bytes = 2 * 1024 * 1024  # 2MB per ack-block (tuneable)
+        #------------------------------#
+
+    #--------------------New--------------------------#
+    def memory_usage(self) -> int:
+        """Compute approximate memory used by raw buffers in _buffer."""
+        total = 0
+        for buf in self._buffer.values():
+            for k, v in buf.items():
+                if isinstance(k, int) and isinstance(v, dict):
+                    raw = v.get('raw')
+                    if raw:
+                        total += len(raw)
+        return total
+
+    def cleanup_timeouts(self):
+        """Remove idle flows or enforce memcap."""
+        now = time.time()
+        # 1) prune idle flows
+        to_del = []
+        for bufid, buf in list(self._buffer.items()):
+            last = buf.get('last_seen')
+            if last is None:
+                continue
+            if now - last > self.idle_timeout:
+                to_del.append((bufid, 'idle_timeout'))
+
+        for bufid, reason in to_del:
+            try:
+                self._submit_and_delete(bufid, reason=reason)
+            except Exception:
+                # defensive: ensure deletion
+                self._buffer.pop(bufid, None)
+
+        # 2) enforce memcap (flush oldest until under cap)
+        mem = self.memory_usage()
+        if mem <= self.memcap:
+            return
+        # sort buffers by last_seen ascending (oldest first) and flush until mem below cap
+        items = sorted(
+            ((bufid, buf.get('last_seen', 0)) for bufid, buf in self._buffer.items()),
+            key=lambda x: x[1] or 0
+        )
+        for bufid, _ in items:
+            if mem <= self.memcap:
+                break
+            try:
+                self._submit_and_delete(bufid, reason='memcap_flush')
+                # recompute mem delta conservatively
+                mem = self.memory_usage()
+            except Exception:
+                # ensure removal if submit fails
+                self._buffer.pop(bufid, None)
+                mem = self.memory_usage()
         #------------------------------#
 
     # ---------- public helpers ----------
@@ -182,7 +236,14 @@ class TCPReassembly:
                     block['isn'] = DSN
             block['raw'] = RAW
             block['len'] = len(block['raw'])
-
+            #New -----------------------#
+            # NEW: enforce per-block raw size limit to prevent memory blowup
+            if block['len'] > self.max_flow_raw_bytes:
+                # too big -> flush whole buffer
+                self._submit_and_delete(BUFID, reason='raw_size_exceeded')
+                return
+            #------------------------------#
+            
         # Update HDL using RFC-815 like logic: holes described in absolute seq numbers
         HDL = self._buffer[BUFID].get('hdl', [])
         # If HDL empty, we can set a fresh hole starting after this block (LAST) if not set
@@ -330,6 +391,13 @@ class TCPReassembler:
         self.timeout = timeout
 
     def feed(self, ip_pkt) -> Optional[Tuple[bytes, Tuple[str,str,int,int]]]:
+        # NEW: periodic cleanup to avoid leak #
+        try:
+            # run lightweight cleanup: prune idle flows & enforce memcap
+            self.reasm.cleanup_timeouts()
+        except Exception:
+            console_logger.debug("cleanup_timeouts error", exc_info=True)
+
         # return any queued assembled datagram first
         with self.lock:
             if self._outq:

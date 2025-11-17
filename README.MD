@@ -2,9 +2,9 @@
 
 ## Author
 
--   Nguyen Hieu\
--   Huynh Thao Nhi\
--   Nguyen Huu Minh Quan\
+-   Nguyen Hieu
+-   Huynh Thao Nhi
+-   Nguyen Huu Minh Quan
 -   Ha Duc Kien
 
 ## Version

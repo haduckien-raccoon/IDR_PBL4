@@ -24,6 +24,7 @@ from app.core.config import settings
 from app.database import db, get_session
 from app.services.analyzer import Analyzer
 from app.models import Event, Alert, AttackType, IncidentReport
+from app.workers.send_mail_worker import enqueue_mail
 
 # WebSocket broadcaster (dùng chung toàn app)
 from app.core.ws_broadcaster import manager
@@ -69,8 +70,7 @@ def _infer_smtp_from_username(username: str):
     mapping = {
         'gmail.com': ("smtp.gmail.com", 587, True),
         'googlemail.com': ("smtp.gmail.com", 587, True),
-        'outlook.com': ("smtp.office3F365.com", 587, True),
-        'hotmail.com': ("smtp.office365.com", 587, True),
+        'outlook.com': ("smtp.office365.com", 587, True),
         'live.com': ("smtp.office365.com", 587, True),
         'yahoo.com': ("smtp.mail.yahoo.com", 587, True),
         'yahoo.com.vn': ("smtp.mail.yahoo.com", 587, True),
@@ -478,8 +478,8 @@ async def create_raw_alert(payload: RawAlertPayload, session: Session = Depends(
             "status": e.status,
             "source_ip": str(e.source_ip),
             "destination_ip": str(e.destination_ip),
-            "description": e.description, # Gửi mô tả đầy đủ
-            "payload_b64": payload.payload_b64, # Gửi payload (nếu có)
+            "description": e.description,
+            "payload_b64": payload.payload_b64[:2730] if payload.payload_b64 else "No payload",
             "action": action
         }
 
@@ -492,6 +492,26 @@ async def create_raw_alert(payload: RawAlertPayload, session: Session = Depends(
             logger.info(f"Email sent for raw alert #{a.alert_id}")
         except Exception as mail_err:
             logger.error(f"Email error for raw alert #{a.alert_id}: {mail_err}")
+
+        # email_attempted =False
+        # try:
+        #     subj = f"[IDR Alert] {a.alert_level.upper()} - event #{e.event_id}"
+        #     txt = {
+        #         f"Rule: {payload.rule_id} - {payload.message}\n",
+        #         f"Flow: {payload.src_ip}:{payload.src_port} -> {payload.dst_ip}:{payload.dst_port}\n",
+        #         f"Severity: {e.severity}\n",
+        #         f"Time: {e.timestamp.isoformat() if e.timestamp else 'N/A'}\n",
+        #     }
+        #     to_addr = getattr(settings, "ALERT_TO", None) or os.getenv("ALERT_TO")
+        #     if to_addr:
+        #         enqueue_mail(to_addr, subj, "\n".join(txt))
+        #         a.is_sent = True
+        #         email_attempted = True
+        #         logger.info(f"Enqueued email for raw alert #{a.alert_id} to {to_addr}")
+        #     else:
+        #         logger.warning("ALERT_TO not configured; skipping enqueue email.")
+        # except Exception as mail_err:
+        #     logger.error(f"Enqueue email error for raw alert #{a.alert_id}: {mail_err}")
 
         # 5. Phát realtime tới WebSocket clients
         try:

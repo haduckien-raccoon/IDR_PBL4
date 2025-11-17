@@ -1,0 +1,1260 @@
+[
+    {
+        "uuid": "sid-WEB-ORA-1674-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bUNION\\b.{1,100}?\\bSELECT\\b.{1,100}?\\bFROM\\b.{1,100}?\\bv\\$version\\b",
+        "field": ["http_uri", "http_client_body"],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "v$version"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "high",
+        "message": "WEBAPP SQL Injection Oracle version detection attempt (v$version)"
+    },
+    {
+        "uuid": "sid-WEB-ORA-1673-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\butl_http\\b.{1,50}?\\brequest\\b",
+        "field": ["http_uri", "http_client_body"],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "utl_http"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection Oracle RCE attempt (UTL_HTTP)"
+    },
+    {
+        "uuid": "sid-1676-WEB-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bUNION\\b(?:[\\s+]{1,20}|%20|%2b){1,20}(?:ALL(?:[\\s+]{1,20}|%20|%2b){1,20})?\\bSELECT\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "union"
+        ], 
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection union select attempt (in URL)"
+    },
+    {
+        "uuid": "sid-1677-WEB-Optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bwhere\\b.{1,50}?\\blike\\b.{1,50}?['\"].*?%",
+        "field": ["http_uri", "http_client_body"],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "like"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "high",
+        "message": "WEBAPP SQL Injection like '%%' attempt"
+    },
+    {
+        "uuid": "sid-1692-WEB-Optimized",
+        "group_id": "sql_injection-destructive",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bdrop\\b[\\s+%20%2b]{1,20}\\btable\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "drop"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection drop table attempt"
+    },
+    {
+        "uuid": "sid-1697-WEB-Optimized",
+        "group_id": "sql_injection-destructive",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\balter\\b[\\s+%20%2b]{1,20}\\bdatabase\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "alter"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severty": "critical",
+        "message": "WEBAPP SQL Injection alter database attempt"
+    },
+    {
+        "uuid": "sid-2576-WEB-Optimized",
+        "group_id": "buffer-overflow-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bdbms_repcat\\.generate_replication_support\\b[\\s\\S]{1,500}?(?:'|\"|%27|%22).{1024,}",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "dbms_repcat"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "WEBAPP SQL Injection vector for Oracle buffer overflow attempt (dbms_repcat)"
+    },
+
+    {
+        "uuid": "SQLI-C-TAUTOLOGY-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:\\b(?:AND|OR)\\b|['\"`\\u2019])(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}(?:'?\"?1'?\"?\\s*[=<>]{1,2}\\s*'?\"?1|'?\"?\\w{1,5}'?\"?\\s*[=<>]{1,2}\\s*'?\"?\\w{1,5}|\\bTRUE\\b)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "1=1",
+            "true"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE)"
+    },
+    {
+        "uuid": "SQLI_C-TIMEBASED-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\b(?:SLEEP|PG_SLEEP|WAITFOR\\s+DELAY|BENCHMARK)\\b\\s*\\([\\s\\S]{1,100}\\)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "sleep",
+            "waitfor",
+            "benchmark"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "[SQLi-C] Time-based SQLi function detected (SLEEP, WAITFOR, BENCHMARK)"
+    },
+    {
+        "uuid": "SQLI_C-FILEOPS-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\b(?:LOAD_FILE|LOAD\\s+DATA|INTO\\s+(?:OUTFILE|DUMPFILE)|BULK\\s+INSERT|COPY\\b[\\s\\S]{1,50}?\\bFROM|BACKUP\\s+DATABASE[\\s\\S]{1,50}?\\bTO\\b)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "load_file",
+            "load",
+            "into",
+            "bulk",
+            "copy",
+            "backup"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "[SQLi-C] File Access/Exfiltration attempt (LOAD_FILE, OUTFILE, BULK INSERT, COPY)"
+    },
+    {
+        "uuid": "SQLI_C-INFO-001",
+        "group_id": "sql_injection-recon",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\b(?:@@version|information_schema|pg_shadow|pg_group|pg_user|V\\$|master\\.\\.|sys\\.|CURRENT_SETTING|GLOBAL_NAME)\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "@@version",
+            "information_schema",
+            "pg_shadow",
+            "pg_group",
+            "pg_user",
+            "v$",
+            "master",
+            "sys",
+            "current_setting",
+            "global_name"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "[SQLi-C] Information Disclosure (@@version, information_schema, pg_shadow, V$)"
+    },
+    {
+        "uuid": "SQLI_C-OBFUSCATION-001",
+        "group_id": "sql_injection-obfuscation",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\b(?:select|union|insert|update|delete|where|and|or)[^\\r\\n]{0,120}?(?:char\\s*\\(\\s*0x[0-9A-Fa-f]{4,}\\s*(?:,|\\)|\\s*\\+)|0x[0-9A-Fa-f]{6,}\\s*(?:\\||\\+|,))",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "char",
+            "0x"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] Obfuscation attempt (CHAR(0x...) or long hex string concatenation in SQL context)"
+    },
+    {
+        "uuid": "SQLI_C-DDL-001",
+        "group_id": "sql_injection-destructive",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\b(?:DROP\\b(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}(?:TABLE|DATABASE)|CREATE\\b(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}(?:USER|ROLE)|ALTER\\b(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}USER|GRANT\\b(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}(?:CONNECT|RESOURCE|DBA))\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "drop",
+            "create",
+            "alter",
+            "grant"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "[SQLi-C] Destructive DDL or Privilege Escalation (DROP, CREATE USER, GRANT)"
+    },
+    {
+        "uuid": "SQLI_C-AUTH_BYPASS-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\bADMIN\\b\\s*(?:['\\\"]|%27)?\\s*(?:\\bOR\\b|%4f%52)[\\s\\S]{1,50}(?:1=1|'\\w'='\\w)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "admin"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "[SQLi-C] Auth Bypass (admin OR 1=1)"
+    },
+    {
+        "uuid": "SQLI_C-ENUM-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)\\b(?:ORDER|GROUP)\\s+BY\\b(?:[\\s\\S]{1,100}?\\b(?:SLEEP|BENCHMARK)\\b|[\\s+]*\\d{1,3}(?:[\\s,]*\\d{1,3})*\\s*(?:--|#|/\\*|$))",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "order",
+            "group"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] Enumeration or Time-based in ORDER/GROUP BY"
+    },
+    {
+        "uuid": "SQLI_C-SUBSELECT-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)[=><]\\s*\\(\\s*\\bSELECT\\b|\\bRLIKE\\s*\\(\\s*\\bSELECT\\b|\\bIF\\s*\\(\\s*\\bSELECT\\b",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "select",
+            "rlike",
+            "if"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] Boolean-based using sub-select (e.g., ...=(SELECT...), RLIKE(SELECT...))"
+    },
+    {
+        "uuid": "SQLI_C-COMMENT-001-balanced",
+        "group_id": "sql_injection-obfuscation",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:--|#|/\\*!\\d|%2D%2D|%23)\\s*(?:\\b(?:SELECT|UNION|DROP|EXEC|INSERT|UPDATE|DELETE)\\b)[\\s\\S]{0,30}(?:\\bFROM\\b|;|'|\")",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "--",
+            "#",
+            "/*",
+            "%2D%2D",
+            "%23"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] Suspicious SQL comment (balanced)"
+    },
+    {
+        "uuid": "http-sqli-union-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:\\bUNION\\b\\s+\\bSELECT\\b|\\bSELECT\\b[^\\n\\r]{0,120}\\bFROM\\b[^\\n\\r]{0,120}\\bUNION\\b)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "union"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Possible SQL injection: UNION SELECT pattern detected in HTTP request"
+    },
+    {
+        "uuid": "http-sqli-boolean-or-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:\\b'or\\b|\\b\"or\\b)\\s+[^\\s]*=\\s*[^\\s]+|(?:--\\s*$|#\\s*$|/\\*.*\\*/)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "'or",
+            "\"or",
+            "--",
+            "#",
+            "/*"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "Possible SQL injection: boolean OR / comment-based injection"
+    },
+
+
+    {
+        "uuid": "MALWARE-SHAFT-SID-230",
+        "group_id": "attempted-dos",
+        "proto": "TCP",
+        "dst_port": "any",
+        "pcre": "",
+        "field": [],
+        "flow": [
+            "to_client",
+            "established"
+        ],
+        "content": [
+            "login:"
+        ],
+        "fast_pattern": "only",
+        "action": "alert",
+        "severity": "high",
+        "message": "MALWARE-OTHER shaft client login to handler"
+    },
+
+    {
+        "uuid": "webscan_missing_or_abnormal_useragent",
+        "group_id": "WEB_SCANNING",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(?:^-$|curl|python-requests|nikto|dirbuster|nmap|sqlmap|fuzz|owasp|wget|Go-http-client)",
+        "field": [
+            "http_user_agent"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "-",
+            "curl",
+            "python-requests",
+            "nikto",
+            "dirbuster",
+            "nmap",
+            "sqlmap",
+            "fuzz",
+            "owasp",
+            "wget",
+            "Go-http-client"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Suspicious or missing User-Agent (known scanner or automated tool)"
+    },
+    {
+        "uuid": "webscan_path_traversal_payload",
+        "group_id": "WEB_SCANNING",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:\\.\\./|\\%2e\\%2e/|/etc/passwd|/boot.ini|/proc/self|/windows/system32)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "../",
+            "%2e%2e",
+            "etc/passwd",
+            "boot.ini",
+            "proc/self",
+            "windows/system32"
+        ],
+        "fast_pattern": "",
+        "action": "block",
+        "severity": "high",
+        "message": "Path traversal payload detected (../, %2e%2e, system file access attempt)"
+    },
+    {
+        "uuid": "webscan_tool_signature",
+        "group_id": "WEB_SCANNING",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(nikto|dirbuster|acunetix|netsparker|arachni|zap|burp|nessus|openvas|nmap|whatweb)",
+        "field": [
+            "http_user_agent"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "nikto",
+            "dirbuster",
+            "acunetix",
+            "netsparker",
+            "arachni",
+            "zap",
+            "burp",
+            "nessus",
+            "openvas",
+            "nmap",
+            "whatweb"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "Known web vulnerability scanner signature detected in request"
+    },
+    {
+        "uuid": "webscan_unusual_status_codes",
+        "group_id": "WEB_SCANNING",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)HTTP/1\\.[01]\\s+(?:400|401|403|404|500|501|502|503|504)",
+        "field": [
+            "http_stat_line"
+        ],
+        "flow": [
+            "from_server",
+            "established"
+        ],
+        "content": [
+            "HTTP/1.",
+            " 400",
+            " 401",
+            " 403",
+            " 404",
+            " 500",
+            " 501",
+            " 502",
+            " 503",
+            " 504"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Multiple 4xx/5xx response codes detected (probing or enumeration behavior)"
+    },
+
+
+    {
+        "uuid": "lfi_linux_sensitive_files",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(?:/etc/passwd|/etc/shadow|/etc/group|/root/\\.bash_history|/proc/self/environ)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "etc/passwd",
+            "etc/shadow",
+            "etc/group",
+            ".bash_history",
+            "proc/self/environ"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Request for common sensitive Linux/Unix file."
+    },
+    {
+        "uuid": "lfi_windows_sensitive_files",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(?:boot\\.ini|win\\.ini|php\\.ini|System32\\\\Config\\\\SAM|my\\.ini)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "boot.ini",
+            "win.ini",
+            "php.ini",
+            "SAM",
+            "my.ini"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Request for common sensitive Windows file."
+    },
+    {
+        "uuid": "lfi_directory_traversal",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(\\.\\./|\\.\\.\\\\|%2e%2e%2f|%2e%2e%5c){3,}",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "../",
+            "..\\",
+            "%2e%2e/"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Directory traversal characters (../) found in request."
+    },
+    {
+        "uuid": "lfi_php_wrapper",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)php://(?:filter|input|expect|fd)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "php://filter",
+            "php://input",
+            "php://expect",
+            "php://fd"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Use of a dangerous PHP wrapper (php://...)."
+    },
+    {
+        "uuid": "lfi_null_byte_injection",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(%00|\\x00)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "%00"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Null byte injection (%00) used to bypass path validation."
+    },
+    {
+        "uuid": "lfi_linux_procfs",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)/proc/self/(?:fd/\\d+|cmdline|environ|status|stat)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/proc/self/fd/",
+            "/proc/self/cmdline",
+            "/proc/self/environ",
+            "/proc/self/status",
+            "/proc/self/stat"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Access to sensitive Linux procfs file system."
+    },
+    {
+        "uuid": "lfi_windows_system_and_config_files",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(boot\\.ini|win\\.ini|system\\.ini|php\\.ini|httpd\\.conf|my\\.ini|SAM|metabase\\.xml|applicationhost\\.config|sysprep\\.inf|unattend\\.xml|netsetup\\.log)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "boot.ini",
+            "win.ini",
+            "system.ini",
+            "php.ini",
+            "httpd.conf",
+            "my.ini",
+            "SAM",
+            "metabase.xml",
+            "applicationhost.config",
+            "sysprep.inf",
+            "unattend.xml",
+            "netsetup.log"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Request for sensitive Windows system or application configuration file. [cite: 5]"
+    },
+    {
+        "uuid": "lfi_advanced_directory_traversal",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)((\\.\\.|%2e%2e|%252e%252e)(\\/|\\\\|%2f|%5c|%252f|%255c)){3,}",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "../",
+            "..\\",
+            "%2e%2e",
+            "%252e%252e"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Advanced directory traversal with URL encoding detected."
+    },
+    {
+        "uuid": "lfi_exotic_encoding_traversal",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(%c0%af|%c1%9c|%uff0e|%u2215|%u2216)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "%c0%af",
+            "%c1%9c",
+            "%uff0e",
+            "%u2215",
+            "%u2216"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "LFI attempt detected: Directory traversal using exotic or non-canonical encoding."
+    },
+    {
+        "uuid": "lfi_apache_xampp_log_access",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(apache|xampp)[\\\\\\/](logs)[\\\\\\/](access|error)[_]?(log)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "apache",
+            "xampp",
+            "logs",
+            "access",
+            "error",
+            "log"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Access to Apache or XAMPP log files."
+    },
+    {
+        "uuid": "os_command_injection_unix",
+        "group_id": "COMMAND_INJECTION_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)[;`|&](ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            ";",
+            "`",
+            "|",
+            "&",
+            "ls",
+            "cd",
+            "pwd",
+            "cat",
+            "whoami",
+            "uname",
+            "ifconfig",
+            "id",
+            "wget",
+            "curl",
+            "ps",
+            "netstat",
+            "bash",
+            "sh"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "OS Command Injection attempt detected: Suspicious Unix/Linux command found in request."
+    },
+    {
+        "uuid": "lfi_bsd_sensitive_files",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(/etc/rc\\.conf|/etc/master\\.passwd|/etc/sysctl\\.conf|/var/log/messages|/var/cron/tabs/root)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "rc.conf",
+            "master.passwd",
+            "sysctl.conf",
+            "messages",
+            "/var/cron/tabs/root"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Request for sensitive BSD system file."
+    },
+    {
+        "uuid": "lfi_deep_directory_traversal",
+        "group_id": "LFI_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "((\\.\\.[\\\\/]|%2e%2e(%2f|%5c)|%252e%252e(%252f|%255c)){6,})",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "../",
+            "..\\",
+            "%2e%2e",
+            "%252e%252e"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "LFI attempt detected: Deep directory traversal (6+ levels) found in request."
+    },
+    {
+        "uuid": "f4a2b3c4-9a1b-11ef-9cba-0242ac120002",
+        "group_id": "LFI_WINDOWS",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:c:\\\\boot\\.ini|windows[\\\\/](?:win\\.ini|system32)|c%3a%5cboot\\.ini|c%3a%2fboot\\.ini)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+        "boot.ini",
+        "win.ini",
+        "windows/system32",
+        "windows\\system32",
+        "c%3a%5cboot.ini",
+        "c%3a%2fboot.ini"
+        ],
+        "fast_pattern": "",
+        "action": "block",
+        "severity": "high",
+        "message": "Possible Windows file-read probe (boot.ini / win.ini)"
+    },
+    {
+        "uuid": "f5a2b3c4-9a1b-11ef-9cba-0242ac120002",
+        "group_id": "LFI_HTTPD_LOGS",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:httpd\\.conf|httpd2\\.conf|access_log|error_log|http\\-access\\.log|http\\-error\\.log|apache2[\\\\/].*httpd\\.conf)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+        "httpd.conf",
+        "httpd2.conf",
+        "access_log",
+        "error_log",
+        "http-access.log",
+        "http-error.log",
+        "apache2/httpd.conf"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "Probe for webserver config/log files (httpd.conf / access_log / error_log)"
+    },
+    {
+        "uuid": "f6a2b3c4-9a1b-11ef-9cba-0242ac120002",
+        "group_id": "LFI_ENCODING_EVASION",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:%c0%af|%c1%1c|%c1%9c|%ef%bc%8f|%252f){1,}",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+        "%c0%af",
+        "%c1%1c",
+        "%c1%9c",
+        "%ef%bc%8f",
+        "%252f"
+        ],
+        "fast_pattern": "",
+        "action": "block",
+        "severity": "high",
+        "message": "Encoded/overlong UTF-8 or double-encoded slash sequences — possible evasion for LFI"
+    },
+
+
+    {
+        "uuid": "csrf_cookie_insecure",
+        "group_id": "CSRF_INDICATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)Set-Cookie:\\s*[^\\r\\n]+(?!.*HttpOnly)(?!.*SameSite)",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "from_server",
+            "established"
+        ],
+        "content": [
+            "Set-Cookie:"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Insecure Set-Cookie header (missing HttpOnly or SameSite)"
+    },
+
+
+    {
+        "uuid": "aa123456-8a1b-11ef-9cba-0242ac120002",
+        "group_id": "COMMAND_INJECTION",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(;\\s*(ls|cat|whoami|nc|bash)|`.*`)",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            ";",
+            "`"
+        ],
+        "fast_pattern": "",
+        "action": "block",
+        "severity": "critical",
+        "message": "Possible command injection attempt"
+    },
+    {
+        "uuid": "f3a2b3c4-9a1b-11ef-9cba-0242ac120002",
+        "group_id": "LFI_NULLBYTE",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(%00|\\x00|%2500)\\b",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "%00",
+            "%2500"
+        ],
+        "fast_pattern": "",
+        "action": "block",
+        "severity": "high",
+        "message": "Null byte (%00) in URI/param — possible LFI/null-byte poisoning"
+    },
+
+
+    {
+        "uuid": "snort_sid_1300_admin_file_upload",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)/admin\\.php.*file_name=",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/admin.php",
+            "file_name="
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP admin.php file upload attempt"
+    },
+    {
+        "uuid": "snort_sid_2074_mambo_upload_php",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)/uploadimage\\.php.*userfile_name=[^&]*\\.php",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/uploadimage.php",
+            "userfile_name=",
+            ".php"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP Mambo uploadimage.php upload php file attempt"
+    },
+    {
+        "uuid": "snort_sid_2075_mambo_upload_php",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)/upload\\.php.*userfile_name=[^&]*\\.php",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/upload.php",
+            "userfile_name=",
+            ".php"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP Mambo upload.php upload php file attempt"
+    },
+    {
+        "uuid": "snort_sid_2547_hp_jetadmin_upload",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)/plugins/hpjwja/script/devices_update_printer_fw_upload\\.hts",
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/plugins/hpjwja/script/devices_update_printer_fw_upload.hts"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-OTHER HP Web JetAdmin remote file upload attempt"
+    },
+    {
+        "uuid": "snort_sid_2562_mcafee_epo_upload",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 81,
+        "pcre": "(?is)/spipe/repl_file.*Command=BEGIN",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/spipe/repl_file",
+            "Command=BEGIN"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP McAfee ePO file upload attempt"
+    },
+    {
+        "uuid": "snort_sid_46665_digital_guardian_upload",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?ims)name\\s*=\\s*[\\x22\\x27]inputFilePath[\\x22\\x27]\\x3b((?!^--).)*?filename\\s*=\\s*[\\x22\\x27]\\S+?\\x2easpx?[\\x22\\x27][\\r\\n]{2,}",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/DigitalGuardian/Management/ServerSettingsPDFTemplates.aspx",
+            "inputFilePath",
+            "Content-Disposition",
+            ".asp"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP Digital Guardian Management Console arbitrary file upload attempt"
+    },
+    {
+        "uuid": "snort_sid_46666_digital_guardian_skin_upload",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?ims)name\\s*=\\s*[\\x22\\x27]skinFile[\\x22\\x27]\\x3b((?!^--).)*?filename\\s*=\\s*[\\x22\\x27]\\S+?\\x2easpx?[\\x22\\x27][\\r\\n]{2,}",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/DigitalGuardian/Policies/PromptSkin.aspx",
+            "skinFile",
+            ".asp",
+            "Content-Disposition"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP Digital Guardian Management Console arbitrary file upload attempt"
+    },
+    {
+        "uuid": "snort_sid_59933_confluence_rce_cve_2022_26134",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)java\\.util\\.\\*java\\.io\\.FileOutputStream.*request\\.getParameter\\(\"name\"\\).*confluence.*request\\.getParameter\\(\"contentString\"\\)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "java.util.*",
+            "java.io.FileOutputStream",
+            "request.getParameter(\"name\")",
+            "confluence",
+            "request.getParameter(\"contentString\")"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "critical",
+        "message": "MALWARE-BACKDOOR Jsp.Webshell.Noop upload attempt"
+    }
+]

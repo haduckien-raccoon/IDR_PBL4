@@ -180,7 +180,6 @@ body {
 .summary-text span {
     font-size: 0.9rem;
     color: var(--text-secondary);
-    display: block;
 }
 .summary-text strong {
     font-size: 1.4rem;

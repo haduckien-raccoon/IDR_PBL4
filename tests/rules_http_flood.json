@@ -1,0 +1,30 @@
+[
+    {
+        "uuid": "snort_sid_90002_http_flood_detect",
+        "group_id": "HTTP_FLOOD",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": null,
+        "field": [
+            "http_uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            {
+                "pattern": "*", 
+                "fast_pattern": true
+            },
+            {
+                "pattern": "*",
+                "count": 100,
+                "seconds": 5
+            }
+        ],
+        "action": "alert",
+        "severity": "critical",
+        "message": "DOS – HTTP Flood detected (too many requests)"
+    }
+]

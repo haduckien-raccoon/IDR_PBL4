@@ -332,13 +332,13 @@ async def ws_alerts(ws: WebSocket):
 @router.get("/traffic")
 async def traffic_page():
     html = Path(__file__).parent.parent / "templates" / "packets.html"
-    return HTMLResponse(html.read_text())
+    return HTMLResponse(html.read_text(encoding="utf-8"))
 
 
 @router.get("/alerts")
 async def alerts_page():
     html = Path(__file__).parent.parent / "templates" / "alerts.html"
-    return HTMLResponse(html.read_text())
+    return HTMLResponse(html.read_text(encoding="utf-8"))
 
 
 # register router

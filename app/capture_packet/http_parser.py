@@ -1,44 +1,25 @@
+# #haduckien@Raccoon2005:/media/haduckien/E/Studying/HK5/PBL4/idr_project$ sudo /media/haduckien/E/Tool/miniconda3/bin/conda run -n base --no-capture-output python app/capture_packet/http_parser.py --iface lo --filter "tcp dst port 80"
 # http_parser.py
 from __future__ import annotations
-import sys
-import os
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
-import argparse
-import threading
-import queue
-import time
 import logging
 import re
-import binascii
-import math
-import base64
-from collections import Counter
-from pathlib import Path
-import json
-import hashlib
 from urllib.parse import unquote_plus
-from typing import Dict, Any, Tuple, List, Optional
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import requests
-from typing import Deque, Tuple, Dict, Any, List, Optional
-from collections import deque
-import sys
-import threading
-import re
-from typing import Dict, Optional, Tuple
-from urllib.parse import unquote_plus
-
-from scapy.all import sniff, IP, TCP, Raw
-from app.capture_packet.flowtracker_module import FlowTracker
-from app.capture_packet.reassembly_module import TCPReassembler   # <--- thêm dòng này
+from typing import Dict, Optional, Any
+from app.capture_packet.reassembly_module import TCPReassembler
 
 # =============================
-# HTTP PARSER (giống Snort)
+# Logging
 # =============================
+console_logger = logging.getLogger("http_parser")
+console_logger.setLevel(logging.INFO)
+ch = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+ch.setFormatter(formatter)
+console_logger.addHandler(ch)
 
+# =============================
+# HTTP Parser
+# =============================
 class HTTPParseResult:
     def __init__(self):
         self.method: Optional[str] = None
@@ -47,21 +28,25 @@ class HTTPParseResult:
         self.body: bytes = b""
         self.regions: Dict[str, bytes] = {}
 
+        # Snort/Suricata-style fields
+        self.http_method: Optional[str] = None
+        self.http_version: Optional[str] = None
+        self.http_host: Optional[str] = None
+        self.http_user_agent: Optional[str] = None
+
 class HTTPParser:
     CRLF = b"\r\n"
     HEADER_RE = re.compile(rb"^(?P<name>[^:]+):[ \t]*(?P<value>.+)$")
 
     def parse(self, data: bytes, client_side: bool = True) -> HTTPParseResult:
         result = HTTPParseResult()
-
         try:
             header_end = data.find(b"\r\n\r\n")
             if header_end == -1:
                 return result
 
             header_block = data[:header_end]
-            body_block = data[header_end+4:]
-
+            body_block = data[header_end + 4:]
             lines = header_block.split(self.CRLF)
             if not lines:
                 return result
@@ -69,18 +54,20 @@ class HTTPParser:
             # ---- first line ----
             first = lines[0].decode("latin1", errors="ignore")
             parts = first.split()
-
-            if client_side:   # HTTP request
+            if client_side:
                 if len(parts) >= 2:
                     result.method = parts[0].upper()
+                    result.http_method = result.method
                     result.uri = unquote_plus(parts[1])
+                    if len(parts) >= 3:
+                        result.http_version = parts[2]
             else:
-                result.method = parts[0]  # status only
+                if len(parts) >= 1:
+                    result.http_version = parts[0]
 
             # ---- headers ----
             current_name = None
             current_value = ""
-
             for l in lines[1:]:
                 if l.startswith(b" ") or l.startswith(b"\t"):
                     if current_name:
@@ -108,63 +95,37 @@ class HTTPParser:
                 clen = int(result.headers.get("content-length", "0") or "0")
                 result.body = body_block[:clen]
 
-            # ---- Snort regions ----
+            # ---- Snort/Suricata regions ----
             if result.uri:
                 result.regions["http_uri"] = result.uri.encode("latin1")
+            if result.method:
+                result.regions["http_method"] = result.method.encode("latin1")
+            if result.http_version:
+                result.regions["http_version"] = result.http_version.encode("latin1")
 
             header_bytes = b"".join([f"{k}: {v}\r\n".encode("latin1") for k, v in result.headers.items()])
             result.regions["http_header"] = header_bytes
-
             if client_side:
                 result.regions["http_client_body"] = result.body
             else:
                 result.regions["http_server_body"] = result.body
 
-            # ---- HTTP Cookie region ----
+            # Optional fields
+            result.http_host = result.headers.get("host")
+            result.http_user_agent = result.headers.get("user-agent")
+            if result.http_host:
+                result.regions["http_host"] = result.http_host.encode("latin1")
+            if result.http_user_agent:
+                result.regions["http_user_agent"] = result.http_user_agent.encode("latin1")
+
             cookie_header = result.headers.get("cookie")
             if cookie_header:
-                # Snort lưu cookies tách riêng
                 result.regions["http_cookie"] = cookie_header.encode("latin1")
+            status = result.headers.get("status")
+            if status:
+                result.regions["http_status"] = status.encode("latin1")
 
         except Exception:
             pass
 
         return result
-
-
-# =============================
-# SNIFF + REASSEMBLY
-# =============================
-
-# tcp_reasm = TCPReassembler()
-# parser = HTTPParser()
-
-# def process_packet(pkt):
-
-#     res = tcp_reasm.feed(pkt)   # *** SỬ DỤNG REASSEMBLY ***
-#     if not res:
-#         return
-
-#     payload, key = res
-#     src_ip, dst_ip, sport, dport = key
-
-#     print("\n========== FULL HTTP STREAM ===========")
-#     print(payload)
-#     print("=======================================\n")
-
-#     # Xác định chiều client/server
-#     client_side = (dport == 80)
-
-#     http = parser.parse(payload, client_side=client_side)
-
-#     print(http)
-
-
-# def main():
-#     print("[*] Sniffing + TCP Reassembly (port 80) ...")
-#     sniff(filter="tcp port 80", prn=process_packet, iface="lo")
-
-# if __name__ == "__main__":
-#     main()
-
-#haduckien@Raccoon2005:/media/haduckien/E/Studying/HK5/PBL4/idr_project$ sudo /media/haduckien/E/Tool/miniconda3/bin/conda run -n base --no-capture-output python app/capture_packet/http_parser.py --iface lo --filter "tcp dst port 80"

@@ -82,7 +82,8 @@
       // (Code highlight sidebar của bạn giữ nguyên)
       const currentPath = window.location.pathname;
       document.querySelectorAll(".sidebar ul li a").forEach(link => {
-        if (link.getAttribute("href") === currentPath) {
+        // Kiểm tra nếu đường dẫn hiện tại khớp hoàn toàn hoặc là /dashboard mà link là /
+        if (link.getAttribute("href") === currentPath || (currentPath === "/" && link.getAttribute("href") === "/dashboard")) {
           link.parentElement.classList.add("active");
         } else {
           link.parentElement.classList.remove("active");
@@ -205,11 +206,12 @@
         <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
       </div>
       <ul>
-        <li class="active"><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li class="active"><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
-        <li class="active"><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
-        <li class="active"><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
-        <li class="active"><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+        <li><a href="/analytics"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
+        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
+        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
+        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
       </ul>
     </nav>
 
@@ -260,7 +262,8 @@
           <div class="summary-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
           <div class="summary-text">
             <span>Critical Threats</span>
-            <strong id="critical-count">0 <span class="new-alert" id="critical-new"></span></strong>
+            <!-- Cấu trúc mới: span cho số và span cho trạng thái "new" -->
+            <strong id="critical-count-value">0</strong> <span class="new-alert" style="display: inline;" id="critical-new"></span>
           </div>
           <button class="btn btn-danger" id="btn-investigate">Investigate</button>
         </div>
@@ -268,7 +271,7 @@
           <div class="summary-icon"><i class="fa-solid fa-ban"></i></div>
           <div class="summary-text">
             <span>Blocked Requests</span>
-            <strong id="blocked-count">0 <span class="new-alert" id="blocked-new"></span></strong>
+            <strong id="blocked-count-value">0</strong> <span class="new-alert" style="display: inline;" id="blocked-new"></span>
           </div>
           <button class="btn btn-secondary" id="btn-view-logs">View Logs</button>
         </div>
@@ -276,15 +279,15 @@
           <div class="summary-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
           <div class="summary-text">
             <span>Suspicious Anomalies</span>
-            <strong id="anomaly-count">0 <span class="new-alert" id="anomaly-new"></span></strong>
+            <strong id="anomaly-count-value">0</strong> <span class="new-alert" style="display: inline;" id="anomaly-new"></span>
           </div>
           <button class="btn btn-secondary" id="btn-analyze">Analyze</button>
         </div>
         <div class="widget widget-summary" id="safe-requests">
-          <div class="summary-icon"><i class="fa-solid fa-shield-check"></i></div>
+          <div class="summary-icon"><i class="fa-solid fa-check"></i></i></div>
           <div class="summary-text">
             <span>Safe Requests</span>
-            <strong id="safe-count">0</strong>
+            <strong id="safe-count-value">0</strong> <span class="new-alert" style="display: inline;" id="safe-new"></span>
           </div>
           <button class="btn btn-secondary" id="btn-monitor">Monitor</button>
         </div>
@@ -416,4 +419,6 @@
       console.log("Globe initialized (1x1). Waiting for stable layout..."); 
     }); 
   </script>
+  </body>
+   <script src="/static/js/dashboard.js"></script>
 </html>

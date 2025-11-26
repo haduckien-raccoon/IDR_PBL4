@@ -76,3 +76,227 @@
 #                 self.log_traffic(meta, payload)
 #             except Exception:
 #                 console_logger.exception("log_traffic error")
+
+
+
+    # def match_payload(self, payload: bytes, meta: Dict[str, Any]):
+    #     """
+    #     Full Snort-like payload matching pipeline
+    #     1. Build multi-buffer from HTTP fields (uses HTTPParseResult.regions)
+    #     2. Fast pattern Aho-Corasick (latin1 mapping) — supports two build styles:
+    #     - self.aho is dict[str, Automaton] (per-buffer automata)
+    #     - self.aho is Automaton and self.aho_map maps key->list[(rule_idx, content_idx)]
+    #     3. Full content match with offset/depth/distance/within
+    #     4. PCRE match on decoded variants if required
+    #     5. Alert logging + optional block
+    #     """
+
+    #     # --- 0. truncate payload if needed ---
+    #     p = payload[: self.payload_bytes]
+
+    #     # --- 1. build buffers (multi-buffer like Snort) ---
+    #     buffers: Dict[str, bytes] = {"raw": p}
+
+    #     try:
+    #         parsed: HTTPParseResult = self.http_parser.parse(p, client_side=True)
+
+    #         # Merge regions from parser (Snort-style). parsed.regions is Dict[str, bytes].
+    #         # Only accept bytes values (type-safe).
+    #         for region_name, region_value in parsed.regions.items():
+    #             if isinstance(region_value, (bytes, bytearray)):
+    #                 buffers[region_name] = bytes(region_value)
+
+    #         # NOTE:
+    #         # --- DO NOT call undefined some_mapping.update(...) here ---
+    #         # We don't need to update any external mapping at this point.
+    #         # Buffers are ready and type-safe: Dict[str, bytes].
+    #     except Exception:
+    #         console_logger.debug("HTTP parse error", exc_info=True)
+
+    #     # in ra http đã parsed (nếu có)
+    #     for region_name, region_bytes in buffers.items():
+    #         size = len(region_bytes)
+    #         snippet = region_bytes[:50]  # hiển thị tối đa 50 byte đầu tiên
+    #         try:
+    #             snippet_str = snippet.decode("latin1", "ignore")
+    #         except Exception:
+    #             snippet_str = "<binary data>"
+    #         console_logger.info(
+    #             "Parsed HTTP region: %-20s | size: %-6d | snippet: %s",
+    #             region_name, size, snippet_str
+    #         )
+
+    #     # --- prepare hits list ---
+    #     hits: List[Tuple[str, str, str]] = []
+
+    #     # --- 2. Fast pattern Aho-Corasick (bytes -> latin1) ---
+    #     if self.aho:
+    #         try:
+    #             # Case A: self.aho is a dict of automata per region (e.g., {"raw": automaton, "http_uri": automaton, ...})
+    #             if isinstance(self.aho, dict):
+    #                 for buf_name, buf_bytes in buffers.items():
+    #                     aho_automaton = self.aho.get(buf_name)
+    #                     if not aho_automaton:
+    #                         continue
+    #                     s = buf_bytes.decode("latin1", "ignore")
+    #                     for end_index, val in aho_automaton.iter(s):
+    #                         # if automaton stores value as (rule_idx, content_idx) directly adjust accordingly
+    #                         # we assume val is the pattern key or stored payload; map to rule indices if needed
+    #                         # Best-effort: accept either (rule_idx, content_idx) or key -> lookup in aho_map
+    #                         if isinstance(val, tuple) and len(val) == 2 and isinstance(val[0], int):
+    #                             rule_idx, content_idx = val
+    #                             r = self.compiled[rule_idx]["rule"]
+    #                             hits.append((rule_id(r), r.get("message"), f"AHO_{buf_name}"))
+    #                         else:
+    #                             # val is likely the key string -> use self.aho_map if present
+    #                             key = val
+    #                             if getattr(self, "aho_map", None):
+    #                                 for rule_idx, _ in self.aho_map.get(key, []):
+    #                                     r = self.compiled[rule_idx]["rule"]
+    #                                     hits.append((rule_id(r), r.get("message"), f"AHO_{buf_name}"))
+    #                             else:
+    #                                 # fallback: can't map -> still record the key match as generic
+    #                                 hits.append((f"AHO_KEY:{key}", f"AHO matched key {key}", f"AHO_{buf_name}"))
+    #             else:
+    #                 # Case B: self.aho is a single Automaton and self.aho_map maps key->list[(rule_idx, content_idx)]
+    #                 automaton = self.aho
+    #                 aho_map = getattr(self, "aho_map", {}) or {}
+    #                 for buf_name, buf_bytes in buffers.items():
+    #                     s = buf_bytes.decode("latin1", "ignore")
+    #                     for end_index, val in automaton.iter(s):
+    #                         # val is the key string (that's how build_aho added words)
+    #                         key = val
+    #                         for rule_idx, _ in aho_map.get(key, []):
+    #                             r = self.compiled[rule_idx]["rule"]
+    #                             hits.append((rule_id(r), r.get("message"), f"AHO_{buf_name}"))
+    #         except Exception:
+    #             console_logger.debug("AHO error", exc_info=True)
+    #     # --- 3. Full content + PCRE match ---
+    #     for entry in self.compiled:
+    #         r = entry["rule"]
+
+    #         # --- 3a. early proto/port filtering ---
+    #         rule_proto = (r.get("proto") or "ANY").upper()
+    #         if rule_proto != "ANY" and str(meta.get("proto") or "").upper() != rule_proto:
+    #             continue
+
+    #         if r.get("dst_port") is not None and meta.get("dport") is not None:
+    #             if r["dst_port"] != meta["dport"]:
+    #                 continue
+    #         if r.get("src_port") is not None and meta.get("sport") is not None:
+    #             if r["src_port"] != meta["sport"]:
+    #                 continue
+
+    #         # --- 3b. Full content match ---
+    #         contents = entry.get("contents", [])
+    #         last_end = 0
+    #         rule_matched = True
+
+    #         for idx, c in enumerate(contents):
+
+    #             # correct multi-buffer behavior:
+    #             # RULE FIELD *MUST* EXIST — no fallback to "raw"
+    #             buf_name = c["raw"].get("field", "raw")
+
+    #             if buf_name not in buffers:
+    #                 # Snort/Suricata: nếu FIELD không có → rule FAIL
+    #                 rule_matched = False
+    #                 break
+
+    #             buf = buffers[buf_name]
+
+    #             # prepare data
+    #             pat = c["pattern_bytes"]
+    #             nocase = c["raw"].get("nocase", False)
+    #             hs = buf.lower() if nocase else buf
+    #             needle = pat.lower() if nocase else pat
+
+    #             # --- content[0]: offset + depth ---
+    #             if idx == 0:
+    #                 start = int(c["raw"].get("offset", 0) or 0)
+    #                 depth = c["raw"].get("depth", None)
+    #                 end = start + depth if (depth is not None and depth >= 0) else len(buf)
+
+    #             # --- content[1+]: distance + within ---
+    #             else:
+    #                 distance = int(c["raw"].get("distance", 0) or 0)
+    #                 start = last_end + distance
+    #                 within = c["raw"].get("within", None)
+    #                 end = last_end + within if (within is not None and within >= 0) else len(buf)
+
+    #             # bounds
+    #             start = max(0, start)
+    #             end = min(len(buf), end)
+    #             if start > end:
+    #                 rule_matched = False
+    #                 break
+
+    #             # match
+    #             pos = hs.find(needle, start, end)
+    #             if pos < 0:
+    #                 rule_matched = False
+    #                 break
+
+    #             last_end = pos + len(needle)
+
+    #         if not rule_matched:
+    #             continue
+
+    #         # --- 3c. PCRE match ---
+    #         pcre = entry.get("pcre_compiled")
+    #         if pcre:
+    #             matched_pcre = False
+    #             variants = generate_decodes(buf, enable_decode=self.enable_decode)
+
+    #             for label, txt in variants:
+    #                 if isinstance(txt, bytes):
+    #                     txt = txt.decode("latin1", "ignore")
+    #                 try:
+    #                     if pcre.search(txt):
+    #                         matched_pcre = True
+    #                         break
+    #                 except Exception:
+    #                     pass
+
+    #             if not matched_pcre:
+    #                 continue
+
+    #         # --- 3d. MATCHED RULE ---
+    #         hits.append((rule_id(r), r.get("message"), f"FULL_{buf_name}"))
+
+
+    #     # --- 4. Log alerts or traffic ---
+    #     if hits:
+    #         for rid, message, variant in hits:
+    #             h = hashlib.sha1(f"{rid}|{meta.get('src')}|{meta.get('dst')}|{variant}|{len(p)}".encode()).hexdigest()[:12]
+    #             if self.should_throttle(h):
+    #                 console_logger.debug("throttled alert %s", h)
+    #                 continue
+    #             try:
+    #                 # add action + severity
+    #                 if rid in self.rules:
+    #                     meta["action"] = self.rules[rid].get("action", "unknown")
+    #                     meta["severity"] = self.rules[rid].get("severity", "medium")
+    #                 else:
+    #                     meta["action"] = "unknown"
+    #                     meta["severity"] = "medium"
+    #                 action = meta["action"]
+    #                 severity = meta["severity"]
+    #                 self.log_alert(meta, p, rid, message, variant, action, severity)
+
+    #                 # Block if requested
+    #                 # if action.lower() == "block" and str(meta.get("src")) != "127.0.0.1":
+    #                 #     src_ip = meta.get("src")
+    #                 #     if src_ip:
+    #                 #         try:
+    #                 #             enqueue_block(src_ip, reason=f"IDS rule {rid} triggered block action")
+    #                 #             console_logger.info("Enqueued block for %s", src_ip)
+    #                 #         except Exception:
+    #                 #             console_logger.exception("enqueue_block error")
+    #             except Exception:
+    #                 console_logger.exception("log_alert error")
+    #     else:
+    #         try:
+    #             self.log_traffic(meta, payload)
+    #         except Exception:
+    #             console_logger.exception("log_traffic error")

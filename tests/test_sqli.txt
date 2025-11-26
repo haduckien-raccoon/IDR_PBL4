@@ -43,3 +43,26 @@ curl -v "http://localhost/index.php?note=I_will_sleep_now_and_read_cat_foods"
 the bot iot net
 
 Bộ dữ liệu IOT 23
+{
+        "uuid": "SQLI-C-TAUTOLOGY-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?is)(?:\\b(?:AND|OR)\\b|['\"`\\u2019])(?:[\\s+]{1,20}|/\\*.*?\\*/|%20|%2b){1,20}(?:'?\"?1'?\"?\\s*[=<>]{1,2}\\s*'?\"?1|'?\"?\\w{1,5}'?\"?\\s*[=<>]{1,2}\\s*'?\"?\\w{1,5}|\\bTRUE\\b)",
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "1=1",
+            "true"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "[SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE)"
+    },

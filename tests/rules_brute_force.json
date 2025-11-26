@@ -1,0 +1,36 @@
+[
+    {
+        "uuid": "snort_sid_90001_bruteforce_login_attempt",
+        "group_id": "BRUTE_FORCE_HTTP_LOGIN",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": null,
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            {
+                "pattern": "login",
+                "nocase": true,
+                "fast_pattern": true
+            },
+            {
+                "pattern": "failed",
+                "nocase": true
+            },
+            {
+                "pattern": "*", 
+                "count": 5,
+                "seconds": 10
+            }
+        ],
+        "action": "alert",
+        "severity": "high",
+        "message": "BRUTEFORCE – too many failed login attempts"
+    }
+]

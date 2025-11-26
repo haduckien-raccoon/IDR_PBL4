@@ -1,0 +1,30 @@
+[
+    {
+        "id": "BF-LOGIN-001",
+        "type": "bruteforce",
+        "uri": "/login",
+        "interval": 10,
+        "threshold": 8,
+        "message": "Brute-force login attempt detected",
+        "severity": "medium",
+        "action": "alert"
+    },
+    {
+        "id": "HF-REQ-001",
+        "type": "http_flood",
+        "interval": 10,
+        "threshold": 60,
+        "message": "HTTP request flood detected",
+        "severity": "high",
+        "action": "alert"
+    },
+    {
+        "id": "FLOW-IP-001",
+        "type": "flow_rate",
+        "interval": 30,
+        "threshold": 200,
+        "message": "High request rate from source IP",
+        "severity": "medium",
+        "action": "alert"
+    }
+]

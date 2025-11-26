@@ -93,13 +93,44 @@ def load_rules(path: Path) -> List[Dict[str, Any]]:
         norm_contents = []
         for c in rr.get("content", []):
             if isinstance(c, str):
-                norm_contents.append({"pattern": c, "nocase": False, "fast_pattern": False})
-            elif isinstance(c, dict):
                 norm_contents.append({
-                    "pattern": c.get("pattern") or c.get("value") or "",
-                    "nocase": bool(c.get("nocase")),
-                    "fast_pattern": bool(c.get("fast_pattern"))
+                    "pattern": c,
+                    "nocase": False,
+                    "fast_pattern": False,
                 })
+                continue
+
+            if not isinstance(c, dict):
+                continue
+
+            content_dict = dict(c)
+            content_dict["pattern"] = c.get("pattern") or c.get("value") or ""
+            content_dict["nocase"] = bool(c.get("nocase"))
+            content_dict["fast_pattern"] = bool(c.get("fast_pattern"))
+
+            for int_field in ("offset", "depth", "distance", "within"):
+                if c.get(int_field) is None:
+                    continue
+                try:
+                    content_dict[int_field] = int(c[int_field])
+                except Exception:
+                    if int_field in ("offset", "distance"):
+                        content_dict[int_field] = 0
+                    else:
+                        content_dict[int_field] = None
+
+            for rate_field in ("count", "seconds"):
+                if c.get(rate_field) is None:
+                    continue
+                try:
+                    content_dict[rate_field] = int(c[rate_field])
+                except Exception:
+                    content_dict.pop(rate_field, None)
+
+            if "key_fields" in c and not isinstance(c.get("key_fields"), (list, tuple)):
+                content_dict.pop("key_fields", None)
+
+            norm_contents.append(content_dict)
         rr["content"] = norm_contents
 
         # pcre optional
@@ -111,6 +142,16 @@ def load_rules(path: Path) -> List[Dict[str, Any]]:
         # flow (to_server, established,...)
         rr["flow"] = rr.get("flow", [])
 
+        #rate_filter:
+        rf = rr.get("rate_filter")
+        if rf:
+            rr["rate_filter"] = {
+                "track": rf.get("track", "src_ip"),
+                "count": int(rf.get("count", None)),
+                "seconds": int(rf.get("seconds", None)),
+            }
+        else:
+            rr["rate_filter"] = None
         rules.append(rr)
 
     console_logger.info("Loaded %d rules", len(rules))
@@ -138,6 +179,18 @@ def compile_rules(raw_rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     "nocase": bool(c.get("nocase")),
                     "fast_pattern": bool(c.get("fast_pattern", False))
                 }
+                for field in ("offset", "depth", "distance", "within"):
+                    if c.get(field) is None:
+                        continue
+                    try:
+                        content_dict[field] = int(c[field])
+                    except Exception:
+                        if field in ("offset", "distance"):
+                            content_dict[field] = 0
+                        else:
+                            content_dict[field] = None
+                if c.get("field"):
+                    content_dict["field"] = c.get("field")
 
             # Bytes-level
             pattern_bytes = content_dict["pattern"].encode("latin1", "ignore")
@@ -209,60 +262,129 @@ except ImportError:
 #     except Exception as e:
 #         console_logger.warning("Failed building Aho-Corasick automaton: %s", e)
 #         return None, None
+# def build_aho(compiled_rules: list):
+#     """
+#     Build a Snort-like Aho-Corasick automaton from compiled_rules.
+#     Each automaton key = fast pattern string, value = list of (rule_index, content_index)
+    
+#     Returns:
+#         aho: pyahocorasick.Automaton
+#         aho_map: Dict[str, List[Tuple[int,int]]], mapping fast pattern → candidate rules
+#     """
+#     if not AHO_AVAILABLE:
+#         console_logger.info("Aho-Corasick not available, skipping automaton build")
+#         return None, {}
+
+#     try:
+#         aho = ahocorasick.Automaton()
+#         aho_map = {}  # key: pattern string -> list of (rule_idx, content_idx)
+
+#         for r_idx, ent in enumerate(compiled_rules):
+#             contents = ent.get("contents", [])
+#             if not contents:
+#                 continue
+
+#             # Chọn fast_pattern(s), nếu không có thì dùng content[0]
+#             fp_indices = [i for i, c in enumerate(contents) if c.get("fast_pattern")]
+#             if not fp_indices:
+#                 fp_indices = [0]
+
+#             for ci in fp_indices:
+#                 c = contents[ci]
+#                 pb: bytes = c.get("pattern_bytes") or b""
+#                 if not pb:
+#                     continue
+
+#                 # Latin1 decode để map 1:1 byte -> char
+#                 key = pb.decode("latin1", "ignore")
+
+#                 # Thêm vào external map để chứa tất cả candidate
+#                 if key not in aho_map:
+#                     aho_map[key] = []
+#                 aho_map[key].append((r_idx, ci))
+
+#                 # Thêm vào Aho automaton
+#                 # Vì pyahocorasick overwrite nếu add_word trùng, nên chỉ add 1 lần
+#                 if key not in aho:
+#                     aho.add_word(key, key)
+
+#         # Finalize automaton
+#         aho.make_automaton()
+#         console_logger.info("AHO automaton built with patterns (compiled_rules count=%d)", len(compiled_rules))
+#         return aho, aho_map
+
+#     except Exception as e:
+#         console_logger.warning("Failed building AHO automaton: %s", e)
+#         return None, {}
+# build_aho: build automata per-field and aho_map includes (rule_idx, content_idx, field)
 def build_aho(compiled_rules: list):
     """
-    Build a Snort-like Aho-Corasick automaton from compiled_rules.
-    Each automaton key = fast pattern string, value = list of (rule_index, content_index)
-    
+    Build field-specific Aho-Corasick automata from compiled_rules.
     Returns:
-        aho: pyahocorasick.Automaton
-        aho_map: Dict[str, List[Tuple[int,int]]], mapping fast pattern → candidate rules
+        aho_by_field: Dict[field_name, Automaton]
+        aho_map: Dict[key_str, List[(rule_idx, content_idx, field_name)]]
     """
     if not AHO_AVAILABLE:
         console_logger.info("Aho-Corasick not available, skipping automaton build")
-        return None, {}
+        return {}, {}
+
+    aho_by_field = {}
+    aho_map = {}  # key -> list of (rule_idx, content_idx, field)
 
     try:
-        aho = ahocorasick.Automaton()
-        aho_map = {}  # key: pattern string -> list of (rule_idx, content_idx)
-
         for r_idx, ent in enumerate(compiled_rules):
-            contents = ent.get("contents", [])
-            if not contents:
-                continue
-
-            # Chọn fast_pattern(s), nếu không có thì dùng content[0]
-            fp_indices = [i for i, c in enumerate(contents) if c.get("fast_pattern")]
-            if not fp_indices:
-                fp_indices = [0]
-
-            for ci in fp_indices:
-                c = contents[ci]
+            contents = ent.get("contents", []) or []
+            for ci, c in enumerate(contents):
                 pb: bytes = c.get("pattern_bytes") or b""
                 if not pb:
                     continue
-
-                # Latin1 decode để map 1:1 byte -> char
                 key = pb.decode("latin1", "ignore")
 
-                # Thêm vào external map để chứa tất cả candidate
+                # Determine fields for this content (content-level field overrides rule-level field)
+                raw = c.get("raw", {}) or {}
+                fields = raw.get("field")
+                if fields is None:
+                    # try rule-level default field
+                    rule_default_fields = ent.get("rule", {}).get("field")
+                    fields = rule_default_fields or ["raw"]
+                if isinstance(fields, str):
+                    fields = [fields]
+
+                # add key to each field's automaton
+                for f in fields:
+                    if f not in aho_by_field:
+                        aho_by_field[f] = ahocorasick.Automaton()
+                    # add_word only once per automaton
+                    try:
+                        if not aho_by_field[f].exists(key):  # pyahocorasick: use try/except if needed
+                            aho_by_field[f].add_word(key, key)
+                    except Exception:
+                        # some pyahocorasick versions don't have exists; just try/except
+                        try:
+                            aho_by_field[f].add_word(key, key)
+                        except Exception:
+                            pass
+
+                # update global map linking key -> (rule_idx, content_idx, field)
                 if key not in aho_map:
                     aho_map[key] = []
-                aho_map[key].append((r_idx, ci))
+                for f in fields:
+                    aho_map[key].append((r_idx, ci, f))
 
-                # Thêm vào Aho automaton
-                # Vì pyahocorasick overwrite nếu add_word trùng, nên chỉ add 1 lần
-                if key not in aho:
-                    aho.add_word(key, key)
+        # finalize automata
+        for f, a in aho_by_field.items():
+            try:
+                a.make_automaton()
+            except Exception:
+                pass
 
-        # Finalize automaton
-        aho.make_automaton()
-        console_logger.info("AHO automaton built with patterns (compiled_rules count=%d)", len(compiled_rules))
-        return aho, aho_map
+        console_logger.info("Built field-specific Aho-Corasick automata (fields=%d, rules=%d)", len(aho_by_field), len(compiled_rules))
+        return aho_by_field, aho_map
 
     except Exception as e:
-        console_logger.warning("Failed building AHO automaton: %s", e)
-        return None, {}
+        console_logger.warning("Failed building field-specific AHO automata: %s", e)
+        return {}, {}
+
     
 # ----------------- Payload decoding helpers -----------------
 def try_base64_decode(s: str) -> Optional[str]:

@@ -119,8 +119,8 @@ class TCPReassembly:
 
         ip = pkt[IP]
         tcp = pkt[TCP]
-        if tcp.dport != 80:
-            return
+        # if tcp.dport != 80:
+        #     return
         
         payload = bytes(tcp.payload)
         has_payload = len(payload) > 0

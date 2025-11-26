@@ -15,7 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Tìm tất cả các link trong sidebar
   document.querySelectorAll(".sidebar ul li a").forEach(link => {
-    if (link.getAttribute("href") === currentPath) {
+    // Điều chỉnh path: nếu path là /incidents/ (có / ở cuối) hoặc /incidents
+    const href = link.getAttribute("href");
+    if (href === currentPath || href + '/' === currentPath || href === currentPath + '/') {
       link.parentElement.classList.add("active");
     } else {
       link.parentElement.classList.remove("active");
@@ -32,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <ul>
         <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+        <li class="active"><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
         <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
         <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
         <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
@@ -53,132 +55,124 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </header>
 
-      <!-- Cột trái: Filter + Quick stats -->
       <aside class="left-column">
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-filter"></i> Bộ lọc sự kiện</h4>
+            <h4><i class="fa-solid fa-filter"></i> Event filter</h4>
           </div>
           <div class="filter-row">
             <div>
-              <label>Từ ngày</label>
+              <label>From date</label>
               <input type="date" id="from-date">
             </div>
             <div>
-              <label>Đến ngày</label>
+              <label>To date</label>
               <input type="date" id="to-date">
             </div>
           </div>
           <div class="filter-row">
             <div>
-              <label>Loại tấn công</label>
+              <label>Attack Type</label>
               <select id="attack-type">
-                <option value="">Tất cả</option>
-                <option>SQL Injection</option>
-                <option>XSS</option>
-                <option>DDoS</option>
-                <option>Brute Force</option>
+                <option value="">All</option>
+                </select>
+            </div>
+            <div class="filter-group">
+              <label for="status-filter">Status:</label>
+              <select id="status-filter" class="form-control">
+                <option value="">-- All --</option>
+                <option value="new">New</option>
+                <option value="investigating">Investigating</option>
+                <option value="resolved">Resolved</option>
               </select>
             </div>
             <div>
-              <label>Mức độ</label>
+              <label>Severity</label>
               <select id="severity">
                 <option value="">All</option>
-                <option>Critical</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
               </select>
             </div>
           </div>
           <button class="btn btn-secondary" style="margin-top:10px;width:100%;">
-            <i class="fa-solid fa-magnifying-glass"></i> Áp dụng bộ lọc
+            <i class="fa-solid fa-magnifying-glass"></i> Apply filter
           </button>
         </div>
 
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-gauge-high"></i> Tổng quan nhanh</h4>
+            <h4><i class="fa-solid fa-gauge-high"></i> Quick Overview</h4>
           </div>
           <div class="stat-cards">
             <div class="stat-card">
-              <span>Sự kiện hôm nay</span>
+              <span>Today's Event</span>
               <strong id="incident-today">0</strong>
             </div>
             <div class="stat-card">
-              <span>Sự kiện chưa xử lý</span>
+              <span>Pending events</span>
               <strong id="incident-open">0</strong>
             </div>
             <div class="stat-card">
-              <span>IP đã bị chặn</span>
+              <span>IP has been blocked</span>
               <strong id="blocked-ip-count">0</strong>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Cột giữa: danh sách sự kiện -->
       <section class="main-column">
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-list"></i> Danh sách sự kiện tấn công</h4>
+            <h4><i class="fa-solid fa-list"></i> List of attack events</h4>
             <div class="widget-controls">
-              <span><i class="fa-solid fa-rotate"></i> Refresh</span>
+              <span style="cursor:pointer;"><i class="fa-solid fa-rotate"></i> Refresh</span>
             </div>
           </div>
           <table class="table" id="incident-table">
             <thead>
               <tr>
-                <th>Thời gian</th>
-                <th>Nguồn</th>
-                <th>Đích</th>
-                <th>Loại tấn công</th>
+                <th>Time</th>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Attack Type</th>
                 <th>Severity</th>
-                <th>Trạng thái</th>
-                <th style="text-align:right;">Thao tác</th>
+                <th>Status</th>
+                <th style="text-align:right;">Action</th>
               </tr>
             </thead>
             <tbody>
-              <!-- JS render từ API /api/incidents -->
               <tr>
-                <td>2025-11-04 09:15:21</td>
-                <td>192.168.1.10:445</td>
-                <td>10.0.0.5:80</td>
-                <td>SQL Injection</td>
-                <td><span class="badge badge-critical">Critical</span></td>
-                <td><span class="status-monitoring">OPEN</span></td>
-                <td style="text-align:right;">
-                  <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-eye"></i> Details</button>
-                </td>
+                <td colspan="7" style="text-align:center;">Loading data...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- Cột phải: chi tiết + log -->
       <aside class="right-column">
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-circle-info"></i> Chi tiết sự kiện</h4>
+            <h4><i class="fa-solid fa-circle-info"></i> Event details</h4>
           </div>
           <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">
-            Chọn một sự kiện bên trái để xem chi tiết.
+            Select an event on the left to see details.
           </p>
           <ul style="font-size:0.85rem;list-style:none;line-height:1.5;" id="incident-detail">
             <li><strong>Source IP:</strong> –</li>
             <li><strong>Destination IP:</strong> –</li>
-            <li><strong>Protocol:</strong> –</li>
-            <li><strong>Port:</strong> –</li>
+            <li><strong>Attack Type:</strong> –</li>
+            <li><strong>Severity:</strong> –</li>
+            <li><strong>Detected By:</strong> –</li>
             <li><strong>Payload mẫu:</strong> –</li>
           </ul>
 
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-danger"><i class="fa-solid fa-user-slash"></i> Block IP</button>
-            <button class="btn btn-secondary"><i class="fa-solid fa-envelope"></i> Gửi email</button>
-            <button class="btn btn-secondary"><i class="fa-solid fa-check"></i> Đánh dấu đã xử lý</button>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;" id="action-buttons">
+            <p style="font-size:0.85rem;color:var(--text-secondary);">Select an event to view the action.</p>
           </div>
-        </div>
+          </div>
 
         <div class="widget">
           <div class="widget-header">
@@ -190,8 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="tab">server.log</div>
           </div>
           <div class="log-viewer" id="log-viewer">
-            # Ví dụ: log sẽ load từ API /api/logs?type=traffic\n
-            [09:15:21] 192.168.1.10 -> 10.0.0.5 SQLi payload ' OR 1=1 --
+            <p>Select an event to view the log.</p>
           </div>
         </div>
       </aside>
@@ -199,9 +192,11 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 
   <script>
+    // Định nghĩa biến cấu hình cho API endpoint
     window.__CONFIG__ = {
-      API_BASE: "{{ api_base if api_base is defined else '' }}"
+      API_BASE: "{{ api_base if api_base is defined else '' }}" // Flask/Jinja2 template variable
     };
   </script>
+  <script src="{{ url_for('static', path='js/incident.js') }}"></script>
 </body>
 </html>

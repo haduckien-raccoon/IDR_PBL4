@@ -1,5 +1,99 @@
 [
     {
+        "uuid": "SQLI_C-AUTH_BYPASS-001",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(^|[?&])(username|user|email)=[^&]*admin(?:['\"])?\\s*or\\s*(?:1=1|['\"]1['\"]=['\"]1['\"])",
+        "field": ["http_uri", "http_client_body"],
+        "flow": ["to_server", "established"],
+        "content": [],
+        "action": "alert",
+        "severity": "critical",
+        "message": "[SQLi-C] Auth Bypass (admin OR 1=1)"
+    },
+    {
+        "uuid": "sqli_like_keyword",
+        "group_id": "SQLI_KEYWORD",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri", "http_client_body"],
+
+        "flow": ["to_server", "established"],
+
+        "content": [
+            { "value": "like", "nocase": true },
+            { "value": "'", "distance": 0, "within": 50 }
+        ],
+
+        "action": "alert",
+        "severity": "low",
+        "message": "SQLi indicator: LIKE keyword after quote"
+    },
+    {
+        "uuid": "sqli_like_regex",
+        "group_id": "SQLI",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_client_body", "http_uri"],
+        "flow": ["to_server", "established"],
+
+        "pcre": "(?i)like\\s*'[%][^']*'",
+
+        "action": "alert",
+        "severity": "medium",
+        "message": "SQLi regex: LIKE '%%pattern'"
+    },
+    {
+        "uuid": "sqli_or_1_eq_1",
+        "group_id": "SQLI_LOGIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri", "http_client_body"],
+        "flow": ["to_server", "established"],
+
+        "content": [
+            { "value": "or", "nocase": true },
+            { "value": "1=1", "distance": 0, "within": 10 }
+        ],
+
+        "pcre": "(?i)\\bOR\\s+1\\s*=\\s*1\\b",
+
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi indicator: OR 1=1 detected"
+    },
+    {
+        "uuid": "sqli injection detect",
+        "group_id": "SQLI_LOGIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": [],
+        "flow": [],
+
+        "content": [
+            "%27"
+        ],
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi indicator: OR 1=1 detected"
+    },
+    {
+        "uuid": "sqli_injection_detect_1",
+        "group_id": "SQLI_LOGIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": [],
+        "flow": [],
+
+        "content": [
+            "%22"
+        ],
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi indicator: OR 1=1 detected"
+    },
+    {
         "uuid": "sid-WEB-ORA-1674-Optimized",
         "group_id": "sql_injection-attempt",
         "proto": "TCP",
@@ -60,23 +154,40 @@
         "message": "WEBAPP SQL Injection union select attempt (in URL)"
     },
     {
-        "uuid": "sid-1677-WEB-Optimized",
-        "group_id": "sql_injection-attempt",
+    "uuid": "sqli_where_keyword",
+        "group_id": "SQLI_KEYWORD",
         "proto": "TCP",
         "dst_port": 80,
-        "pcre": "(?is)\\bwhere\\b.{1,50}?\\blike\\b.{1,50}?['\"].*?%",
         "field": ["http_uri", "http_client_body"],
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "content": [
-            "like"
-        ],
-        "fast_pattern": "",
+
+        "flow": ["to_server", "established"],
+
+        "content": [{
+            "value": "where",
+            "nocase": true
+        }],
+
+        "fast_pattern": "where",
         "action": "alert",
-        "severty": "high",
-        "message": "WEBAPP SQL Injection like '%%' attempt"
+        "severity": "low",
+        "message": "SQLi indicator: WHERE keyword"
+    },
+    
+    
+    {
+        "uuid": "sqli_where_like_pattern",
+        "group_id": "SQLI_LIKE_COMPLEX",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri", "http_client_body"],
+
+        "flow": ["to_server", "established"],
+
+        "pcre": "(?is)\\bwhere\\b.{1,80}?\\blike\\b.{1,40}?['\"][^'\"]*%",
+
+        "action": "alert",
+        "severity": "high",
+        "message": "SQL Injection attempt: WHERE LIKE pattern"
     },
     {
         "uuid": "sid-1692-WEB-Optimized",
@@ -160,8 +271,15 @@
             "established"
         ],
         "content": [
-            "1=1",
-            "true"
+            {
+                "pattern": " or ",
+                "nocase": true,
+                "fast_pattern": true
+            },
+            {
+                "pattern": "1=1",
+                "nocase": true
+            }
         ],
         "fast_pattern": "",
         "action": "alert",
@@ -298,28 +416,7 @@
         "severity": "critical",
         "message": "[SQLi-C] Destructive DDL or Privilege Escalation (DROP, CREATE USER, GRANT)"
     },
-    {
-        "uuid": "SQLI_C-AUTH_BYPASS-001",
-        "group_id": "sql_injection-attempt",
-        "proto": "TCP",
-        "dst_port": 80,
-        "pcre": "(?is)\\bADMIN\\b\\s*(?:['\\\"]|%27)?\\s*(?:\\bOR\\b|%4f%52)[\\s\\S]{1,50}(?:1=1|'\\w'='\\w)",
-        "field": [
-            "http_uri",
-            "http_client_body"
-        ],
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "content": [
-            "admin"
-        ],
-        "fast_pattern": "",
-        "action": "alert",
-        "severity": "critical",
-        "message": "[SQLi-C] Auth Bypass (admin OR 1=1)"
-    },
+    
     {
         "uuid": "SQLI_C-ENUM-001",
         "group_id": "sql_injection-attempt",
@@ -441,8 +538,6 @@
         "severity": "high",
         "message": "Possible SQL injection: boolean OR / comment-based injection"
     },
-
-
     {
         "uuid": "MALWARE-SHAFT-SID-230",
         "group_id": "attempted-dos",
@@ -461,38 +556,6 @@
         "action": "alert",
         "severity": "high",
         "message": "MALWARE-OTHER shaft client login to handler"
-    },
-
-    {
-        "uuid": "webscan_missing_or_abnormal_useragent",
-        "group_id": "WEB_SCANNING",
-        "proto": "TCP",
-        "dst_port": 80,
-        "pcre": "(?i)(?:^-$|curl|python-requests|nikto|dirbuster|nmap|sqlmap|fuzz|owasp|wget|Go-http-client)",
-        "field": [
-            "http_user_agent"
-        ],
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "content": [
-            "-",
-            "curl",
-            "python-requests",
-            "nikto",
-            "dirbuster",
-            "nmap",
-            "sqlmap",
-            "fuzz",
-            "owasp",
-            "wget",
-            "Go-http-client"
-        ],
-        "fast_pattern": "",
-        "action": "alert",
-        "severity": "medium",
-        "message": "Suspicious or missing User-Agent (known scanner or automated tool)"
     },
     {
         "uuid": "webscan_path_traversal_payload",
@@ -551,38 +614,6 @@
         "severity": "high",
         "message": "Known web vulnerability scanner signature detected in request"
     },
-    {
-        "uuid": "webscan_unusual_status_codes",
-        "group_id": "WEB_SCANNING",
-        "proto": "TCP",
-        "dst_port": 80,
-        "pcre": "(?is)HTTP/1\\.[01]\\s+(?:400|401|403|404|500|501|502|503|504)",
-        "field": [
-            "http_stat_line"
-        ],
-        "flow": [
-            "from_server",
-            "established"
-        ],
-        "content": [
-            "HTTP/1.",
-            " 400",
-            " 401",
-            " 403",
-            " 404",
-            " 500",
-            " 501",
-            " 502",
-            " 503",
-            " 504"
-        ],
-        "fast_pattern": "",
-        "action": "alert",
-        "severity": "medium",
-        "message": "Multiple 4xx/5xx response codes detected (probing or enumeration behavior)"
-    },
-
-
     {
         "uuid": "lfi_linux_sensitive_files",
         "group_id": "LFI_INDICATOR",
@@ -834,42 +865,45 @@
         "message": "LFI attempt detected: Access to Apache or XAMPP log files."
     },
     {
-        "uuid": "os_command_injection_unix",
+        "uuid": "cmdinj_operator_unix",
+        "group_id": "COMMAND_INJECTION_OPERATOR",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri"],
+        "flow": ["to_server", "established"],
+        "uri_match": ["/login", "/admin", "/shell"],
+
+        "pcre": "(?i)[;|&]\\s*(ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)",
+        "fast_pattern": ";",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Possible command injection operator detected."
+    },
+    {
+        "uuid": "cmdinj_command_unix",
+        "group_id": "COMMAND_INJECTION_CMD",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri"],
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)\\b(ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)\\b",
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Potential OS command keyword detected."
+    },
+    {
+        "uuid": "cmdinj_high_confidence_unix",
         "group_id": "COMMAND_INJECTION_INDICATOR",
         "proto": "TCP",
         "dst_port": 80,
-        "pcre": "(?i)[;`|&](ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)",
-        "field": [
-            "http_uri"
-        ],
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "content": [
-            ";",
-            "`",
-            "|",
-            "&",
-            "ls",
-            "cd",
-            "pwd",
-            "cat",
-            "whoami",
-            "uname",
-            "ifconfig",
-            "id",
-            "wget",
-            "curl",
-            "ps",
-            "netstat",
-            "bash",
-            "sh"
-        ],
-        "fast_pattern": "",
+        "field": ["http_uri"],
+        "flow": ["to_server", "established"],
+        "pcre": "(?i)[;|&](\\s*)(ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)",
+        "fast_pattern": ";",
         "action": "alert",
         "severity": "critical",
-        "message": "OS Command Injection attempt detected: Suspicious Unix/Linux command found in request."
+        "message": "OS Command Injection attempt detected."
     },
     {
         "uuid": "lfi_bsd_sensitive_files",
@@ -1020,30 +1054,6 @@
         "action": "alert",
         "severity": "medium",
         "message": "Insecure Set-Cookie header (missing HttpOnly or SameSite)"
-    },
-
-
-    {
-        "uuid": "aa123456-8a1b-11ef-9cba-0242ac120002",
-        "group_id": "COMMAND_INJECTION",
-        "proto": "TCP",
-        "dst_port": 80,
-        "pcre": "(?is)(;\\s*(ls|cat|whoami|nc|bash)|`.*`)",
-        "field": [
-            "http_uri"
-        ],
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "content": [
-            ";",
-            "`"
-        ],
-        "fast_pattern": "",
-        "action": "block",
-        "severity": "critical",
-        "message": "Possible command injection attempt"
     },
     {
         "uuid": "f3a2b3c4-9a1b-11ef-9cba-0242ac120002",
@@ -1257,4 +1267,5 @@
         "severity": "critical",
         "message": "MALWARE-BACKDOOR Jsp.Webshell.Noop upload attempt"
     }
+    
 ]

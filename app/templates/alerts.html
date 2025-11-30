@@ -1,106 +1,328 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <title>Realtime Alerts Monitor</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #0d1117;
-      color: #e6edf3;
-      margin: 0;
-    }
-    header {
-      background: #161b22;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    a { color: #58a6ff; text-decoration: none; }
-    .container { padding: 15px 20px; }
-    input {
-      width: 350px; padding: 6px; border: none;
-      border-radius: 4px; background: #21262d;
-      color: #e6edf3; margin-bottom: 10px;
-    }
-    table {
-      width: 100%; border-collapse: collapse; font-size: 13px;
-    }
-    th, td {
-      border: 1px solid #30363d; padding: 5px; vertical-align: top;
-    }
-    th {
-      background: #161b22; color: #ff6b6b;
-    }
-    tr:nth-child(even) { background: #161b22; }
-    pre { white-space: pre-wrap; color: #aaa; margin: 0; }
-  </style>
-  <script>
-    let logs = [];
+    <meta charset="utf-8" />
+    <title>Alert Logs Monitor</title>
 
-    function renderTable() {
-      const q = document.getElementById("search").value.toLowerCase();
-      const tbody = document.getElementById("alertTable");
-      tbody.innerHTML = "";
-      for (const item of logs) {
-        if (q && !JSON.stringify(item).toLowerCase().includes(q)) continue;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.timestamp || ""}</td>
-          <td>${item.alert_id || ""}</td>
-          <td>${item.message || ""}</td>
-          <td>${item.proto || ""}</td>
-          <td>${item.src || ""}</td>
-          <td>${item.dst || ""}</td>
-          <td>${item.variant || ""}</td>
-          <td>${item.entropy || ""}</td>
-          <td><pre>${item.body || ""}</pre></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    function initWS() {
-      let ws = new WebSocket("ws://localhost:8000/api/logs/ws/alerts");
-      ws.onmessage = e => {
-        const data = JSON.parse(e.data);
-        logs.unshift(data);
-        if (logs.length > 1000) logs.pop();
-        renderTable();
-      };
-      ws.onclose = () => setTimeout(initWS, 2000);
-    }
-
-    window.onload = () => {
-      initWS();
-      document.getElementById("search").addEventListener("input", renderTable);
-    };
-  </script>
+    <style>
+        .log-line {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 0.75rem;
+        }
+        .log-new {
+            background-color: rgba(233, 69, 96, 0.18);
+            transition: background-color 1s ease;
+        }
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row.selected {
+            background: rgba(233, 69, 96, 0.2) !important;
+        }
+    </style>
 </head>
+
 <body>
-  <header>
-    <h1>🚨 Realtime Alerts Monitor</h1>
-    <a href="/api/logs/traffic">View Traffic</a>
-  </header>
-  <div class="container">
-    <input id="search" placeholder="🔍 Filter alerts..." />
-    <table>
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Alert ID</th>
-          <th>Message</th>
-          <th>Proto</th>
-          <th>Source</th>
-          <th>Destination</th>
-          <th>Variant</th>
-          <th>Entropy</th>
-          <th>Body</th>
-        </tr>
-      </thead>
-      <tbody id="alertTable"></tbody>
-    </table>
-  </div>
+<div class="dashboard-container">
+    {% include 'includes/sidebar.html' %}
+
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h2>Alert Logs</h2>
+                <div class="system-status">
+                    Realtime từ file <code>alerts.log</code> qua WebSocket
+                    <span id="alerts-conn" class="status-blocked">Connecting...</span>
+                </div>
+            </div>
+            <div class="user-menu">
+                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-bell"></i>
+                <i class="fa-solid fa-user-circle"></i>
+            </div>
+        </div>
+
+        <!-- CỘT TRÁI: Stats + Filter -->
+        <section class="left-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-gauge-high"></i> Alert Statistics</h4>
+                </div>
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <span>Total alerts</span>
+                        <strong id="stat-alert-count">0</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Last alert ID</span>
+                        <strong id="stat-last-id">--</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Last variant</span>
+                        <strong id="stat-last-variant">--</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Last time</span>
+                        <strong id="stat-last-time">--:--:--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-filter"></i> Filter Alert (client-side)</h4>
+                </div>
+                <div class="filter-row">
+                    <div>
+                        <label for="filter-alert-id">Alert ID</label>
+                        <input id="filter-alert-id" type="text" placeholder="vd: SQLI_C-OBFUSCATION-001">
+                    </div>
+                    <div>
+                        <label for="filter-alert-ip">IP / Port</label>
+                        <input id="filter-alert-ip" type="text" placeholder="vd: 10.10.30.195, :80">
+                    </div>
+                </div>
+                <button class="btn btn-secondary" id="btn-alert-clear-filter">
+                    <i class="fa-solid fa-eraser"></i> Clear filter
+                </button>
+            </div>
+        </section>
+
+        <!-- CỘT GIỮA: Bảng alerts -->
+        <section class="main-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-magnifying-glass"></i> Hexdump chi tiết (alert)</h4>
+                    <div class="widget-controls">
+                        <span id="alert-hex-selected-info" style="font-size:0.8rem;color:var(--text-secondary);">
+                            Chọn 1 alert ở bảng trên để xem hexdump.
+                        </span>
+                    </div>
+                </div>
+                <pre id="alerts-hexdump" class="log-viewer">Chưa có alert nào được chọn.</pre>
+            </div>
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-triangle-exclamation"></i> Realtime Alert Logs</h4>
+                    <div class="widget-controls">
+                        <span style="font-size:0.8rem;">Tối đa 300 alert mới nhất</span>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active">Headers</div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table class="table" id="alerts-table">
+                        <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Alert ID</th>
+                            <th>Message</th>
+                            <th>Proto</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Variant</th>
+                        </tr>
+                        </thead>
+                        <tbody id="alerts-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CỘT PHẢI: Timeline đơn giản -->
+        <section class="right-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-list"></i> Alert Timeline (gần nhất)</h4>
+                </div>
+                <ul class="timeline-list" id="alert-timeline">
+                    <li>
+                        <span>Chưa có alert</span>
+                        <span class="incident-time">waiting...</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+(function () {
+    const tbody = document.getElementById("alerts-body");
+    const hexBox = document.getElementById("alerts-hexdump");
+    const hexInfo = document.getElementById("alert-hex-selected-info");
+    const statCount = document.getElementById("stat-alert-count");
+    const statId = document.getElementById("stat-last-id");
+    const statVariant = document.getElementById("stat-last-variant");
+    const statTime = document.getElementById("stat-last-time");
+    const connStatus = document.getElementById("alerts-conn");
+    const filterId = document.getElementById("filter-alert-id");
+    const filterIp = document.getElementById("filter-alert-ip");
+    const btnClear = document.getElementById("btn-alert-clear-filter");
+    const timeline = document.getElementById("alert-timeline");
+
+    let alertCount = 0;
+    let allRows = [];
+    let timelineItems = [];
+
+    function nowTime() {
+        const d = new Date();
+        return d.toTimeString().split(" ")[0];
+    }
+
+    function updateConnStatus(ok) {
+        if (ok) {
+            connStatus.textContent = "Connected";
+            connStatus.classList.remove("status-blocked");
+            connStatus.classList.add("status-contained");
+        } else {
+            connStatus.textContent = "Disconnected";
+            connStatus.classList.remove("status-contained");
+            connStatus.classList.add("status-blocked");
+        }
+    }
+
+    function applyFilter() {
+        const idVal = filterId.value.trim();
+        const ipVal = filterIp.value.trim();
+
+        for (const tr of allRows) {
+            const text = tr.dataset.fulltext || "";
+            let show = true;
+            if (idVal && !text.includes(idVal)) show = false;
+            if (ipVal && !text.includes(ipVal)) show = false;
+            tr.style.display = show ? "" : "none";
+        }
+    }
+
+    filterId.addEventListener("input", applyFilter);
+    filterIp.addEventListener("input", applyFilter);
+    btnClear.addEventListener("click", () => {
+        filterId.value = "";
+        filterIp.value = "";
+        applyFilter();
+    });
+
+    function setSelectedRow(tr) {
+        for (const row of allRows) {
+            row.classList.remove("selected");
+        }
+        if (tr) tr.classList.add("selected");
+    }
+
+    function rebuildTimeline() {
+        timeline.innerHTML = "";
+        for (const item of timelineItems.slice(0, 5)) {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <span>[${item.id}] ${item.msg}</span>
+                <span class="incident-time">${item.ts}</span>
+            `;
+            timeline.appendChild(li);
+        }
+        if (timelineItems.length === 0) {
+            timeline.innerHTML = '<li><span>Chưa có alert</span><span class="incident-time">waiting...</span></li>';
+        }
+    }
+
+    function addAlertRow(obj) {
+        const tr = document.createElement("tr");
+        tr.classList.add("clickable-row", "log-new");
+
+        const ts = obj.timestamp || "";
+        const id = obj.alert_id || "";
+        const msg = obj.message || "";
+        const proto = obj.proto || "";
+        const src = obj.src || "";
+        const dst = obj.dst || "";
+        const variant = obj.variant || "";
+
+        tr.dataset.fulltext = `${ts} ${id} ${msg} ${proto} ${src} ${dst} ${variant}`;
+        tr.dataset.hexdump = obj.body || "";
+
+        tr.innerHTML = `
+            <td>${ts}</td>
+            <td><span class="badge badge-high">${id}</span></td>
+            <td>${msg}</td>
+            <td>${proto}</td>
+            <td>${src}</td>
+            <td>${dst}</td>
+            <td>${variant}</td>
+        `;
+
+        tr.addEventListener("click", () => {
+            setSelectedRow(tr);
+            const body = tr.dataset.hexdump || "";
+            if (body) {
+                hexBox.textContent = body;
+                hexInfo.textContent = `Hexdump của alert [${id}] | ${src} -> ${dst}`;
+            } else {
+                hexBox.textContent = "Không có hexdump cho alert này.";
+                hexInfo.textContent = `Không có hexdump cho alert [${id}]`;
+            }
+        });
+
+        tbody.prepend(tr);
+        allRows.unshift(tr);
+        if (allRows.length > 300) {
+            const old = allRows.pop();
+            old.remove();
+        }
+
+        alertCount++;
+        statCount.textContent = alertCount;
+        statId.textContent = id || "--";
+        statVariant.textContent = variant || "--";
+        statTime.textContent = nowTime();
+
+        // timeline
+        timelineItems.unshift({ ts, id, msg });
+        if (timelineItems.length > 20) timelineItems = timelineItems.slice(0, 20);
+        rebuildTimeline();
+
+        setTimeout(() => tr.classList.remove("log-new"), 1500);
+    }
+
+    // WebSocket
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsScheme}://${window.location.host}/logs/ws/alerts`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+        updateConnStatus(true);
+    };
+
+    ws.onmessage = (event) => {
+        try {
+            const obj = JSON.parse(event.data);
+            addAlertRow(obj);
+            applyFilter();
+        } catch (e) {
+            console.error("Invalid alert log JSON", e, event.data);
+        }
+    };
+
+    ws.onclose = () => {
+        updateConnStatus(false);
+    };
+
+    ws.onerror = () => {
+        updateConnStatus(false);
+    };
+})();
+</script>
 </body>
 </html>

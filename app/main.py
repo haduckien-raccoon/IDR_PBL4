@@ -24,12 +24,12 @@
 
 
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager  
-from typing import Optional
+from contextlib import asynccontextmanager  # 👈 [THÊM VÀO] Thêm contextlib
+from typing import Optional  # 👈 Import Optional for type hinting
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -37,10 +37,14 @@ from app.database import init_db
 from app.api.dashboard import router as dashboard_router
 from app.api.ws import router as ws_router
 from app.api.alerts import router as alerts_router
+from app.api import api_router
 from app.api.incident import router as incident_router
-# from app.api.rules import router as rules_router
+from app.api.rules import router as rules_router
+from app.api.analytics import router as analytics_router
 from app.api.ssh_terminal import router as ssh_router
-from app.api.edit_reverse_proxy import router as reverse_proxy_router
+from app.api.reverse_proxy import router as reverse_proxy_router
+from app.api import view_log   
+
 
 logger = get_logger(__name__)
 
@@ -63,38 +67,32 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Ứng dụng đang khởi động...")
     
     # --- KHỞI TẠO DATABASE ---
-    # Di chuyển init_db() vào đây để đảm bảo nó chỉ chạy khi 
-    # ứng dụng khởi động, không phải khi tệp được nhập.
     try:
         init_db()
         logger.info("✅ Database initialized successfully.")
     except Exception as e:
         logger.critical(f"❌ DATABASE INITIALIZATION FAILED: {e}", exc_info=True)
-        # Bạn có thể muốn 'raise' lỗi ở đây để dừng ứng dụng
-        # nếu không có DB thì ứng dụng không thể chạy.
-        # raise
 
     # --- ĐĂNG KÝ ROUTER ---
-    # Cũng có thể thực hiện việc này ở đây hoặc bên ngoài. 
-    # Để ở đây giúp log startup sạch sẽ hơn.
     try:
         app.include_router(dashboard_router)
         app.include_router(ws_router)
         app.include_router(alerts_router)
+        app.include_router(api_router)
         app.include_router(incident_router, prefix="/api", tags=["Incidents"])
-        # app.include_router(rules_router, prefix="/api", tags=["Rules"])
+        app.include_router(rules_router, prefix="/api", tags=["Rules"])
+        app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
         app.include_router(ssh_router, prefix="/api", tags=["SSH"])
         app.include_router(reverse_proxy_router, prefix="/api", tags=["Reverse Proxy"])
-        # app.include_router(view_alert_router) 
+        app.include_router(view_log.router)
+        # Khởi động tailer đọc traffic.log và ai_alerts.log
+        await view_log.start_log_tailers()
         logger.info("✅ Routers registered successfully.")
     except Exception as e:
         logger.error(f"❌ Failed to include routers: {e}")
 
     # Ứng dụng hiện đã sẵn sàng
     yield
-    
-    # --- SHUTDOWN ---
-    # (Thêm code dọn dẹp nếu cần)
     logger.info("🛑 Ứng dụng đang tắt...")
 
 
@@ -105,7 +103,7 @@ app = FastAPI(
     title="IDR Project",
     version="1.0.0",
     description="Intrusion Detection & Response backend (FastAPI version)",
-    lifespan=lifespan  # 👈 [SỬA] Gán hàm lifespan cho app
+    lifespan=lifespan
 )
 
 # Giữ lại SECRET_KEY (nếu cần dùng cho JWT/session)
@@ -125,8 +123,13 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 # ------------------------------------------------------
 # 5️⃣ XÓA BỎ LỆNH GỌI init_db() VÀ ROUTER TỪ ĐÂY
 # ------------------------------------------------------
-# (Đã di chuyển logic này vào trong hàm 'lifespan' ở trên)
 
+def _tpl_ctx(request: Request) -> dict:
+    return {
+        "request": request,
+        "api_base": "",   # same-origin API
+        "ws_path": "/ws"  # adjust if needed
+    }
 
 # ------------------------------------------------------
 # 6️⃣ Định nghĩa đường dẫn cho Trang chủ (/)
@@ -138,7 +141,7 @@ async def get_homepage(request: Request):
     Nó sẽ trả về file 'index.html' từ thư mục 'app/templates'.
     """
     try:
-        return templates.TemplateResponse("index.html", {"request": request})
+        return templates.TemplateResponse("index.html",  _tpl_ctx(request))
     except Exception as e:
         logger.error(f"Lỗi render template 'index.html': {e}", exc_info=True)
         return HTMLResponse(content="<h1>Lỗi 500: Không thể tải template.</h1>", status_code=500)
@@ -148,7 +151,7 @@ async def dashboard_page(request: Request):
     """
     Trang Dashboard chính.
     """
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html",  _tpl_ctx(request))
 
 
 @app.get("/incidents", response_class=HTMLResponse)
@@ -157,6 +160,17 @@ async def incidents_page(request: Request):
     Trang quản lý sự kiện tấn công.
     """
     return templates.TemplateResponse("incident.html", {"request": request})
+
+@app.get("/alerts", response_class=HTMLResponse)
+async def alerts_page(request: Request):
+    """
+    Trang IDS Alerts (DB) – khác với Alert Logs từ file.
+    """
+    return templates.TemplateResponse("alerts.html", {"request": request})
+
+@app.get("/traffic", response_class=HTMLResponse)
+async def alerts_page(request: Request):
+    return templates.TemplateResponse("traffic.html", {"request": request})
 
 
 @app.get("/analytics", response_class=HTMLResponse)
@@ -187,13 +201,24 @@ async def ssh_page(request: Request):
     """
     return templates.TemplateResponse("ssh.html", {"request": request})
 
-
 @app.get("/rules", response_class=HTMLResponse)
 async def rules_page(request: Request):
     """
     Trang quản lý IDS Rules.
     """
     return templates.TemplateResponse("rules.html", {"request": request})
+
+@app.get("/ai", response_class=HTMLResponse)
+async def ai_page(request: Request):
+    """
+    Trang quản lý IDS AI.
+    """
+    return templates.TemplateResponse("view_ai.html", {"request": request})
+    
+@app.get("/reverse-proxy", response_class=HTMLResponse)
+async def proxy_page(request: Request):
+    """Trang cấu hình Reverse Proxy"""
+    return templates.TemplateResponse("reverse_proxy.html", {"request": request})
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):

@@ -79,16 +79,6 @@
   </style>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // (Code highlight sidebar của bạn giữ nguyên)
-      const currentPath = window.location.pathname;
-      document.querySelectorAll(".sidebar ul li a").forEach(link => {
-        // Kiểm tra nếu đường dẫn hiện tại khớp hoàn toàn hoặc là /dashboard mà link là /
-        if (link.getAttribute("href") === currentPath || (currentPath === "/" && link.getAttribute("href") === "/dashboard")) {
-          link.parentElement.classList.add("active");
-        } else {
-          link.parentElement.classList.remove("active");
-        }
-      });
 
       // BỔ SUNG: Logic chuyển đổi Map/Globe View
       const btnMapView = document.getElementById('btn-map-view');
@@ -201,20 +191,7 @@
 <body>
   <div class="dashboard-container">
 
-    <nav class="sidebar">
-      <div class="sidebar-header">
-        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
-      </div>
-      <ul>
-        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
-        <li><a href="/analytics"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
-        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
-        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
-        <li class="active"><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
-        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-      </ul>
-    </nav>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
       <header class="header">

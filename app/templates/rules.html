@@ -1,117 +1,329 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Manage Rules - IDR_Project</title>
 
+  <!-- CSS chung của dashboard -->
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- CSS riêng cho trang Rules: làm form đẹp hơn và bỏ cột phải -->
   <style>
-    /* Chỉ áp dụng cho trang Rules (body.rules-page) */
     body.rules-page .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .rules-grid {
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr); /* chỉ còn 2 cột: filter + nội dung */
+      grid-template-columns: 1.1fr 2fr 1fr;
       gap: 20px;
     }
-    body.rules-page .right-column {
-      display: none;
+
+    .widget {
+      background: #15182b;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03);
+      padding: 18px 20px;
     }
 
-    body.rules-page .rule-form-row {
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .widget-header h4 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #f5f7ff;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .widget-header i {
+      margin-right: 8px;
+      color: #4dabf7;
+    }
+
+    .rule-form-row {
       display: grid;
-      grid-template-columns: repeat(3, minmax(140px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px 14px;
       margin-bottom: 10px;
     }
-    body.rules-page .rule-form-row.single {
-      grid-template-columns: minmax(0, 1fr);
+
+    .rule-form-row.single {
+      grid-template-columns: 1fr;
     }
 
-    body.rules-page .rule-field label {
-      display: block;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-    body.rules-page .rule-field input,
-    body.rules-page .rule-field select {
-      width: 100%;
-      background: #141427;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      padding: 7px 10px;
-      color: var(--text-primary);
-      font-size: 0.85rem;
-    }
-
-    body.rules-page .rule-textarea {
-      width: 100%;
-      min-height: 80px;
-      resize: vertical;
-      background: #141427;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      padding: 8px 10px;
-      color: var(--text-primary);
-      font-size: 0.85rem;
-    }
-
-    body.rules-page .rule-add-footer {
+    .rule-field {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
+      flex-direction: column;
+      gap: 4px;
     }
-    body.rules-page .rule-add-footer .hint {
-      opacity: 0.8;
+
+    .rule-field label {
+      font-size: 12px;
+      color: #b5bfd6;
+      font-weight: 500;
+    }
+
+    .rule-field input,
+    .rule-field select,
+    .rule-field textarea {
+      background: #0f1220;
+      border-radius: 7px;
+      border: 1px solid #272b3f;
+      padding: 7px 9px;
+      color: #e4e7ff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .rule-field input::placeholder,
+    .rule-field textarea::placeholder {
+      color: #6f7590;
+    }
+
+    .rule-textarea {
+      min-height: 90px;
+      resize: vertical;
+      font-family: monospace;
+      line-height: 1.35;
+    }
+
+    .rule-add-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .rule-add-footer .hint {
+      font-size: 11px;
+      color: #8b91ad;
+    }
+
+    .stat-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: #111424;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-card span {
+      font-size: 11px;
+      color: #8f96b6;
+    }
+
+    .stat-card strong {
+      font-size: 18px;
+      color: #f5f7ff;
+    }
+
+    .stat-card.low     strong { color: #4caf50; }
+    .stat-card.medium  strong { color: #ffc107; }
+    .stat-card.high    strong { color: #ff7043; }
+    .stat-card.critical strong { color: #ff5252; }
+
+    .ids-rules-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ids-rules-header h4 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #f5f7ff;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .ids-rules-header i {
+      margin-right: 8px;
+      color: #4dabf7;
+    }
+
+    .rule-search input {
+      min-width: 220px;
+      background: #0f1220;
+      border-radius: 20px;
+      border: 1px solid #272b3f;
+      padding: 6px 12px;
+      color: #e4e7ff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .table thead {
+      background: #151932;
+    }
+
+    .table thead th {
+      padding: 8px 8px;
+      text-align: left;
+      color: #a5acc8;
+      font-weight: 500;
+      border-bottom: 1px solid #24283b;
+      white-space: nowrap;
+    }
+
+    .table tbody td {
+      padding: 7px 8px;
+      border-bottom: 1px solid #1b1f33;
+      color: #e4e7ff;
+      vertical-align: top;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-low {
+      background: rgba(76,175,80,0.1);
+      color: #81c784;
+    }
+    .badge-medium {
+      background: rgba(255,193,7,0.1);
+      color: #ffd54f;
+    }
+    .badge-high {
+      background: rgba(255,112,67,0.1);
+      color: #ffab91;
+    }
+    .badge-critical {
+      background: rgba(244,67,54,0.1);
+      color: #ef9a9a;
+    }
+    .badge-unknown {
+      background: rgba(144,164,174,0.15);
+      color: #cfd8dc;
+    }
+
+    .btn-xs {
+      border: none;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .btn-edit {
+      background: #26c6da;
+      color: #081018;
+    }
+
+    .btn-delete {
+      background: #ef5350;
+      color: #fff;
+    }
+
+    .btn {
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn.btn-secondary {
+      background: #1e2236;
+      color: #e4e7ff;
+    }
+
+    .btn.btn-danger {
+      background: #f7576b;
+      color: #fff;
+    }
+
+    .status-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(76, 175, 80, 0.14);
+      color: #a5d6a7;
+    }
+
+    @media (max-width: 1200px) {
+      .rules-grid {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr);
+        grid-template-rows: auto auto;
+      }
+      .rules-grid > .widget:last-child {
+        grid-column: 1 / span 2;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .rules-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Đánh dấu menu đang active
-  const currentPath = window.location.pathname;
-  document.querySelectorAll(".sidebar ul li a").forEach(link => {
-    if (link.getAttribute("href") === currentPath) {
-      link.parentElement.classList.add("active");
-    } else {
-      link.parentElement.classList.remove("active");
-    }
-  });
-});
-</script>
-
 <body class="rules-page">
   <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
-    <nav class="sidebar">
-      <div class="sidebar-header">
-        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
-      </div>
-      <ul>
-        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
-        <li><a href="/analytics"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
-        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
-        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
-        <li class="active"><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
-        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-      </ul>
-    </nav>
+    {% include 'includes/sidebar.html' %}
 
-    <!-- MAIN -->
+    <!-- Main -->
     <main class="main-content">
+      <!-- Header -->
+      <!-- <div class="page-header">
+        <div>
+          <h2>IDS RULES MANAGER</h2>
+          <p>Manage detection rules for your Intrusion Detection & Response system.</p>
+        </div>
+        <div>
+          <span class="status-pill">
+            <i class="fa-solid fa-circle-check"></i> SYSTEM STATUS: ONLINE
+          </span>
+        </div>
+      </div> -->
       <header class="header">
         <div class="system-status">
-          IDS RULES MANAGER • SYSTEM STATUS: <span class="status-online">ONLINE</span>
+          RULES MANAGER • SYSTEM STATUS:
+          <span class="status-online">ONLINE</span>
         </div>
         <div class="user-menu">
           <i class="fa-solid fa-bell"></i>
@@ -120,77 +332,58 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </header>
 
-      <!-- Cột trái: filter & stats -->
-      <aside class="left-column">
+      <!-- Top row: Filters + Add Rule + Stats -->
+      <div class="rules-grid">
+
+        <!-- Rule Filters -->
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-filter"></i> Bộ lọc rule</h4>
+            <h4><i class="fa-solid fa-filter"></i> Rule Filters</h4>
           </div>
 
-          <div class="filter-row">
-            <div>
+          <div class="rule-form-row single">
+            <div class="rule-field">
               <label>Severity</label>
               <select id="rule-severity-filter">
                 <option value="">All</option>
-                <option>high</option>
-                <option>medium</option>
-                <option>low</option>
+                <option value="critical">critical</option>
+                <option value="high">high</option>
+                <option value="medium">medium</option>
+                <option value="low">low</option>
               </select>
             </div>
-            <div>
-              <label>Proto</label>
+          </div>
+
+          <div class="rule-form-row single">
+            <div class="rule-field">
+              <label>Protocol</label>
               <select id="rule-proto-filter">
                 <option value="">Any</option>
-                <option>TCP</option>
-                <option>UDP</option>
-                <option>HTTP</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+                <option value="http">HTTP</option>
               </select>
             </div>
           </div>
 
-          <div class="filter-row">
-            <div style="flex:1;">
-              <label>Group ID</label>
-              <input type="text" id="rule-group-filter" placeholder="SQLI, XSS, BRUTE_FORCE...">
+          <div class="rule-form-row single">
+            <div class="rule-field">
+              <label>Group Name</label>
+              <select id="rule-groupname"></select>
             </div>
           </div>
 
-          <button class="btn btn-secondary" style="margin-top:10px;width:100%;">
-            <i class="fa-solid fa-magnifying-glass"></i> Áp dụng bộ lọc
+          <button class="btn btn-secondary" id="apply-filter-btn" style="margin-top:10px;width:100%;">
+            <i class="fa-solid fa-magnifying-glass"></i> Apply Filter
           </button>
         </div>
-
-        <div class="widget">
-          <div class="widget-header">
-            <h4><i class="fa-solid fa-gauge"></i> Thống kê nhanh</h4>
-          </div>
-          <div class="stat-cards">
-            <div class="stat-card">
-              <span>Tổng số rule</span>
-              <strong id="rule-total">0</strong>
-            </div>
-            <div class="stat-card">
-              <span>Rule đang bật</span>
-              <strong id="rule-active">0</strong>
-            </div>
-            <div class="stat-card">
-              <span>Rule severity high</span>
-              <strong id="rule-high">0</strong>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Cột giữa: Add Rule + bảng rule (rộng hơn) -->
-      <section class="main-column">
 
         <!-- Add Rule -->
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-plus-circle"></i> Add Rule</h4>
+            <h4 id="form-header-title"><i class="fa-solid fa-plus-circle"></i> Add Rule</h4>
           </div>
 
-          <!-- Hàng 1: Message (full width) -->
           <div class="rule-form-row single">
             <div class="rule-field">
               <label>Message</label>
@@ -198,19 +391,19 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
 
-          <!-- Hàng 2: Severity - Group ID - Action -->
           <div class="rule-form-row">
             <div class="rule-field">
               <label>Severity</label>
               <select id="rule-severity">
+                <option>critical</option>
                 <option>high</option>
                 <option selected>medium</option>
                 <option>low</option>
               </select>
             </div>
             <div class="rule-field">
-              <label>Group ID</label>
-              <input type="text" id="rule-group" placeholder="SQLI, XSS, BRUTE_FORCE...">
+              <label>Group Name</label>
+              <select id="rule-groupname-add"></select>
             </div>
             <div class="rule-field">
               <label>Action</label>
@@ -218,111 +411,135 @@ document.addEventListener("DOMContentLoaded", () => {
                 <option>alert</option>
                 <option>drop</option>
                 <option>log</option>
+                <option>block</option>
               </select>
             </div>
           </div>
 
-          <!-- Hàng 3: Proto - Dst Port - Active -->
           <div class="rule-form-row">
             <div class="rule-field">
-              <label>Proto</label>
+              <label>Protocol</label>
               <input type="text" id="rule-proto" placeholder="TCP / UDP / HTTP">
             </div>
             <div class="rule-field">
-              <label>Dst Port</label>
+              <label>Destination Port</label>
               <input type="number" id="rule-dport" placeholder="80">
             </div>
             <div class="rule-field">
-              <label>Active</label>
-              <select id="rule-active-field">
-                <option value="true" selected>enabled</option>
-                <option value="false">disabled</option>
-              </select>
+              <label>Fast Pattern</label>
+              <input type="text" id="rule-fast-pattern" placeholder="e.g. alter">
+            </div>
+          </div>
+          
+          <div class="rule-form-row">
+            <div class="rule-field">
+              <label>Field (comma separated)</label>
+              <input type="text" id="rule-field" placeholder="http_uri, http_client_body">
+            </div>
+            <div class="rule-field">
+              <label>Flow (comma separated)</label>
+              <input type="text" id="rule-flow" placeholder="to_server, established">
+            </div>
+            <div class="rule-field">
+              <label>Content (comma separated)</label>
+              <input type="text" id="rule-content" placeholder="alter, select">
             </div>
           </div>
 
-          <!-- Hàng 4: Pattern -->
           <div class="rule-form-row single">
             <div class="rule-field">
-              <label>Regex pattern</label>
-              <textarea id="rule-pattern" class="rule-textarea" placeholder="Regex pattern..."></textarea>
+              <label>Regex pattern (PCRE)</label>
+              <textarea id="rule-pattern" class="rule-textarea" placeholder="Regex pattern (PCRE)..."></textarea>
             </div>
           </div>
 
           <div class="rule-add-footer">
             <div class="hint">
-              Gợi ý: bạn có thể copy regex từ file <code>rules.json</code> hoặc tạo mới dựa trên mẫu.
+              Hint: You can copy a regex from <code>rules.json</code> or create your own.
             </div>
-            <button class="btn btn-danger" style="min-width:180px;">
-              <i class="fa-solid fa-plus"></i> Add Rule
-            </button>
+            
+            <div style="display:flex; gap:10px;">
+              <button id="cancel-edit-btn" class="btn btn-secondary" style="display:none;">
+                <i class="fa-solid fa-xmark"></i> Cancel
+              </button>
+              
+              <button id="add-rule-btn" class="btn btn-danger" style="min-width:180px;">
+                <i class="fa-solid fa-plus"></i> Add Rule
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Danh sách rule -->
+        <!-- Quick Statistics -->
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-table"></i> Danh sách IDS Rules</h4>
+            <h4><i class="fa-solid fa-gauge"></i> Quick Statistics</h4>
           </div>
+          <div class="stat-cards">
+            <div class="stat-card">
+              <span>Total Rules</span>
+              <strong id="rule-total">0</strong>
+            </div>
+            <div class="stat-card low">
+              <span>Low Severity</span>
+              <strong id="rule-low-stat">0</strong>
+            </div>
+            <div class="stat-card medium">
+              <span>Medium Severity</span>
+              <strong id="rule-medium-stat">0</strong>
+            </div>
+            <div class="stat-card high">
+              <span>High Severity</span>
+              <strong id="rule-high-stat">0</strong>
+            </div>
+            <div class="stat-card critical">
+              <span>Critical Severity</span>
+              <strong id="rule-critical">0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- IDS Rules List -->
+      <div class="widget">
+        <div class="ids-rules-header">
+          <div>
+            <h4><i class="fa-solid fa-database"></i> IDS Rules List</h4>
+          </div>
           <div class="rule-search">
-            <input type="text" id="rule-search" placeholder="Tìm kiếm...">
-          </div>
-
-          <div style="overflow-x:auto;">
-            <table class="table" id="rules-table">
-              <thead>
-                <tr>
-                  <th>UUID</th>
-                  <th>Group ID</th>
-                  <th>Message</th>
-                  <th>Severity</th>
-                  <th>Proto</th>
-                  <th>Dst Port</th>
-                  <th>Pattern Regex</th>
-                  <th>Action</th>
-                  <th>Activity</th>
-                  <th style="text-align:right;">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Demo row – sau này bạn load từ API /api/rules -->
-                <tr>
-                  <td>b3c4d9f0-8a1b-11ef-9cba-0242ac120002</td>
-                  <td>SQLI</td>
-                  <td>Possible SQL injection attempt detected</td>
-                  <td><span class="badge badge-high">high</span></td>
-                  <td>TCP</td>
-                  <td>80</td>
-                  <td>{?i}(?:\bunion\b\s*select\b...)</td>
-                  <td>alert</td>
-                  <td><span class="badge-active">enabled</span></td>
-                  <td style="text-align:right;">
-                    <button class="btn-xs btn-edit">Edit</button>
-                    <button class="btn-xs btn-delete">Delete</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <input type="text" id="rule-search" placeholder="Search...">
           </div>
         </div>
 
-      </section>
+        <div style="overflow-x:auto;">
+          <table class="table" id="rules-table">
+            <thead>
+              <tr>
+                <th>UUID</th>
+                <th>Group Name</th>
+                <th>Message</th>
+                <th>Severity</th>
+                <th>Proto</th>
+                <th>Dst Port</th>
+                <th>Pattern Regex (Pcre)</th>
+                <th>Fast Pattern</th>
+                <th>Field</th>
+                <th>Flow</th>
+                <th>Content</th>
+                <th>Action</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JS sẽ fill -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </main>
   </div>
 
-  <!-- JS đánh dấu menu đang active (backup, nếu script trên head chưa chạy khi load) -->
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const currentPath = window.location.pathname;
-    document.querySelectorAll(".sidebar ul li a").forEach(link => {
-      if (link.getAttribute("href") === currentPath) {
-        link.parentElement.classList.add("active");
-      } else {
-        link.parentElement.classList.remove("active");
-      }
-    });
-  });
-  </script>
+  <script src="{{ url_for('static', path='js/rules.js') }}"></script>
 </body>
 </html>

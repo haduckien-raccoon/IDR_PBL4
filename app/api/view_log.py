@@ -1,146 +1,238 @@
 import asyncio
 import json
-import re
 import os
+import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import aiofiles
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, APIRouter
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
-app = FastAPI()
-router = APIRouter(prefix="/api/logs", tags=["Logs"])
+# Router cho toàn bộ chức năng xem log
+router = APIRouter(prefix="/logs", tags=["Logs"])
 
-BASE_DIR = Path(__file__).parent
-STATIC_DIR = BASE_DIR / "static"
-TEMPLATES_DIR = BASE_DIR / "templates"
-
-# how many recent entries to keep in memory for new WS clients
+# Giữ tối đa bao nhiêu bản ghi gần nhất trong bộ nhớ
 MAX_RECENT = 5000
 
+# History cho 2 loại log (dùng cho client mới connect vào WS)
+traffic_recent: List[Dict[str, Any]] = []
+alerts_recent: List[Dict[str, Any]] = []
 
-# =========================================
-# Connection Manager
-# =========================================
+
+# ============================================================
+# Quản lý kết nối WebSocket
+# ============================================================
 class ConnectionManager:
-    def __init__(self):
-        self.connections: Dict[str, List[WebSocket]] = {"traffic": [], "alerts": []}
+    def __init__(self) -> None:
+        self.connections: Dict[str, List[WebSocket]] = {
+            "traffic": [],
+            "alerts": [],
+        }
 
-    async def connect(self, ws: WebSocket, type_: str):
+    async def connect(self, ws: WebSocket, type_: str) -> None:
         await ws.accept()
         self.connections[type_].append(ws)
 
-    def disconnect(self, ws: WebSocket, type_: str):
+    def disconnect(self, ws: WebSocket, type_: str) -> None:
         if ws in self.connections[type_]:
             self.connections[type_].remove(ws)
 
-    async def broadcast(self, type_: str, data: str):
+    async def broadcast(self, type_: str, data: str) -> None:
+        """Gửi dữ liệu JSON string tới tất cả client của 1 loại."""
         for ws in list(self.connections[type_]):
             try:
                 await ws.send_text(data)
             except Exception:
+                # nếu lỗi (client đóng), loại khỏi danh sách
                 self.disconnect(ws, type_)
 
 
 manager = ConnectionManager()
 
 
-# =========================================
-# Parsers
-# =========================================
+# ============================================================
+# Parser cho traffic.log
+# ============================================================
 class TrafficParser:
+    """
+    Ví dụ dòng header:
+    2025-11-11 15:41:25,771 [TRAFFIC] TRAFFIC proto=TCP 91.189.91.81:80->10.10.30.195:37284 entropy=4.726 bytes=1448
+    """
+
     RE_HEADER = re.compile(
-        r'^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\s+\[(?P<level>[A-Z]+)\]\s+TRAFFIC\s+'
-        r'proto=(?P<proto>\w+)\s+(?P<src>[0-9a-fA-F\.:]+:[0-9]+)->(?P<dst>[0-9a-fA-F\.:]+:[0-9]+)\s+'
-        r'entropy=(?P<entropy>[0-9.]+)\s+bytes=(?P<bytes>\d+)'
+        r'^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\s+'
+        r'\[(?P<level>[A-Z]+)\]\s+TRAFFIC\s+'
+        r'proto=(?P<proto>\w+)\s+'
+        r'(?P<src>[0-9a-fA-F\.:]+:[0-9]+)->(?P<dst>[0-9a-fA-F\.:]+:[0-9]+)\s+'
+        r'entropy=(?P<entropy>[0-9\.]+)\s+bytes=(?P<bytes>\d+)'
     )
     RE_HEX = re.compile(r'^[0-9a-fA-F]{8}\s+([0-9a-fA-F]{2}\s+){1,}.*$')
 
     @classmethod
-    def parse_header(cls, line: str):
+    def parse_header(cls, line: str) -> Optional[Dict[str, Any]]:
         m = cls.RE_HEADER.match(line.strip())
         if not m:
             return None
+
+        proto_raw = m.group("proto")
+        if proto_raw == "6":
+            proto = "TCP"
+        elif proto_raw == "17":
+            proto = "UDP"
+        else:
+            proto = proto_raw
+
         return {
             "timestamp": m.group("ts"),
             "level": m.group("level"),
-            "proto": "TCP" if m.group("proto") == "6" else "UDP" if m.group("proto") == "17" else m.group("proto"),
+            "proto": proto,
             "src": m.group("src"),
             "dst": m.group("dst"),
             "entropy": m.group("entropy"),
             "bytes": m.group("bytes"),
         }
 
-    @classmethod
-    def is_hexdump_header(cls, line: str):
+    @staticmethod
+    def is_hexdump_header(line: str) -> bool:
         return line.strip().lower().startswith("hexdump:")
 
     @classmethod
-    def is_hex_line(cls, line: str):
+    def is_hex_line(cls, line: str) -> bool:
         return bool(cls.RE_HEX.match(line))
 
 
+# ============================================================
+# Parser cho ai_alerts.log
+# ============================================================
 class AlertParser:
+    """
+    Parser linh hoạt cho alert log.
+
+    Ví dụ (xấp xỉ):
+    2025-10-14 16:27:20,842 [ALERT] ALERT [SQLI_C-OBFUSCATION-001] ... proto=TCP 1.2.3.4:80->5.6.7.8:443 variant=SQLI_C entropy=4.53 bytes=123
+    """
+
     RE_HEADER = re.compile(
-        r'^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\s+\[(?P<level>[A-Z]+)\]\s+ALERT\s+\[(?P<id>[^\]]+)\]\s+(?P<msg>.+?)\s*\|\s*proto=(?P<proto>\w+)\s+(?P<src>[0-9a-fA-F\.:]+:[0-9]+)->(?P<dst>[0-9a-fA-F\.:]+:[0-9]+)\s+variant=(?P<variant>\S+)\s+entropy=(?P<entropy>[0-9.]+)'
+        r'^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\s+'
+        r'\[(?P<level>[A-Z]+)\]\s+'
+        r'(?P<rest>.*)$'
     )
     RE_HEX = re.compile(r'^[0-9a-fA-F]{8}\s+([0-9a-fA-F]{2}\s+){1,}.*$')
 
     @classmethod
-    def parse_header(cls, line: str):
+    def parse_header(cls, line: str) -> Optional[Dict[str, Any]]:
         m = cls.RE_HEADER.match(line.strip())
         if not m:
             return None
+
+        rest = m.group("rest")
+
+        alert_id = None
+        message = rest
+        proto = None
+        src = None
+        dst = None
+        variant = None
+        entropy = None
+
+        # RULE ID trong []
+        m_id = re.search(r'\[(?P<id>[^\]]+)\]', rest)
+        if m_id:
+            alert_id = m_id.group("id")
+
+        # proto=...
+        m_proto = re.search(r'\bproto=(\w+)', rest)
+        if m_proto:
+            proto = m_proto.group(1)
+
+        # src->dst
+        m_flow = re.search(r'([0-9a-fA-F\.:]+:[0-9]+)->([0-9a-fA-F\.:]+:[0-9]+)', rest)
+        if m_flow:
+            src, dst = m_flow.group(1), m_flow.group(2)
+
+        # variant=...
+        m_var = re.search(r'\bvariant=([^\s]+)', rest)
+        if m_var:
+            variant = m_var.group(1)
+
+        # entropy=...
+        m_ent = re.search(r'\bentropy=([0-9\.]+)', rest)
+        if m_ent:
+            entropy = m_ent.group(1)
+
+        # làm gọn message: bỏ RULE ID và các cặp key=value phổ biến
+        tmp = rest
+        if m_id:
+            tmp = tmp.replace(f"[{m_id.group(1)}]", "").strip()
+        tmp = re.sub(r'\b(proto|variant|entropy|bytes|sid|gid|rev)=[^\s]+', "", tmp)
+        tmp = re.sub(r'\s+', " ", tmp).strip()
+        if tmp:
+            message = tmp
+
+        if proto == "6":
+            proto_fmt = "TCP"
+        elif proto == "17":
+            proto_fmt = "UDP"
+        else:
+            proto_fmt = proto or "-"
+
         return {
             "timestamp": m.group("ts"),
             "level": m.group("level"),
-            "alert_id": m.group("id"),
-            "message": m.group("msg"),
-            "proto": "TCP" if m.group("proto") == "6" else "UDP" if m.group("proto") == "17" else m.group("proto"),
-            "src": m.group("src"),
-            "dst": m.group("dst"),
-            "variant": m.group("variant"),
-            "entropy": m.group("entropy"),
+            "alert_id": alert_id or "-",
+            "message": message,
+            "proto": proto_fmt,
+            "src": src or "-",
+            "dst": dst or "-",
+            "variant": variant or "-",
+            "entropy": entropy or "-",
         }
 
-    @classmethod
-    def is_hexdump_header(cls, line: str):
+    @staticmethod
+    def is_hexdump_header(line: str) -> bool:
         return line.strip().lower().startswith("hexdump:")
 
     @classmethod
-    def is_hex_line(cls, line: str):
+    def is_hex_line(cls, line: str) -> bool:
         return bool(cls.RE_HEX.match(line))
 
 
-# =========================================
-# Log Tailer
-# =========================================
+# ============================================================
+# LogTailer: đọc file giống `tail -f`
+# ============================================================
 class LogTailer:
-    def __init__(self, filepath: Path, manager: ConnectionManager, parser, type_: str, recent_cap: int = MAX_RECENT):
+    def __init__(
+        self,
+        filepath: Path,
+        parser,
+        type_: str,
+        history_list: List[Dict[str, Any]],
+        recent_cap: int = MAX_RECENT,
+    ) -> None:
         self.filepath = filepath
-        self.manager = manager
         self.parser = parser
         self.type_ = type_
+        self.history_list = history_list
         self.recent_cap = recent_cap
 
     async def load_recent_logs(self, count: int = 10000) -> List[Dict[str, Any]]:
         """
-        Efficiently read the last `count` lines from the file (like `tail -n count`),
-        then parse them into blocks (header + optional hexdump).
-        Returns list of {'header': ..., 'body': '...'} in chronological order.
+        Đọc phần cuối file (tương đương `tail -n`) rồi parse thành
+        các block header + hexdump.
         """
         if not self.filepath.exists():
             return []
 
-        # read last bytes until we have enough lines
         to_read = 8192
         data = b""
+
         try:
             async with aiofiles.open(self.filepath, "rb") as f:
                 await f.seek(0, os.SEEK_END)
                 file_size = await f.tell()
                 pos = file_size
+
                 while pos > 0 and data.count(b"\n") <= count * 3:
                     read_size = min(to_read, pos)
                     pos -= read_size
@@ -149,166 +241,146 @@ class LogTailer:
                     data = chunk + data
                     if pos == 0:
                         break
-        except Exception:
-            # fallback to simple readlines (safer but slower)
-            async with aiofiles.open(self.filepath, "r", encoding="utf-8", errors="replace") as ftext:
-                lines = await ftext.readlines()
-            text_lines = [ln.rstrip("\n") for ln in lines]
-        else:
-            try:
-                text = data.decode("utf-8", errors="replace")
-            except Exception:
-                text = data.decode(errors="replace")
-            text_lines = text.splitlines()
+        except FileNotFoundError:
+            return []
 
-        # take last `count` lines
-        tail_lines = text_lines[-count:]
+        lines = data.decode("utf-8", errors="replace").splitlines()
 
-        # parse lines into blocks
         logs: List[Dict[str, Any]] = []
-        buffer_header = None
+        buffer_header: Optional[Dict[str, Any]] = None
         hexdump_lines: List[str] = []
         in_hexdump = False
 
-        for line in tail_lines:
-            parsed = self.parser.parse_header(line)
-            if parsed:
-                # if there is a previous header buffered, push it
+        for line in lines[-count * 3 :]:
+            header = self.parser.parse_header(line)
+            if header:
                 if buffer_header:
-                    logs.append({"header": buffer_header, "body": "\n".join(hexdump_lines) if hexdump_lines else ""})
-                buffer_header = parsed
+                    logs.append(
+                        {
+                            "header": buffer_header,
+                            "body": "\n".join(hexdump_lines) if hexdump_lines else "",
+                        }
+                    )
+                buffer_header = header
                 hexdump_lines = []
                 in_hexdump = False
                 continue
 
-            if buffer_header:
-                if self.parser.is_hexdump_header(line):
-                    in_hexdump = True
-                    continue
-                if in_hexdump and self.parser.is_hex_line(line):
-                    hexdump_lines.append(line)
-                    continue
-                # non-hex, non-header: ignore (could be other messages)
+            if self.parser.is_hexdump_header(line):
+                in_hexdump = True
+                continue
 
-        # push last buffered
+            if in_hexdump and self.parser.is_hex_line(line):
+                hexdump_lines.append(line)
+                continue
+
         if buffer_header:
-            logs.append({"header": buffer_header, "body": "\n".join(hexdump_lines) if hexdump_lines else ""})
+            logs.append(
+                {
+                    "header": buffer_header,
+                    "body": "\n".join(hexdump_lines) if hexdump_lines else "",
+                }
+            )
 
         return logs
 
-    async def start(self):
+    async def start(self) -> None:
         """
-        Start tailing the file like `tail -f`.
-        - jump to EOF on start
-        - poll quickly for new lines (small sleep)
-        - detect truncate/rotate and seek to start
-        - parse headers and hexdump blocks, flush immediately on header or blank line
-        - broadcast via WebSocket manager and maintain app.state.<type>_recent
+        Tail realtime giống `tail -f`.
         """
         self.filepath.parent.mkdir(parents=True, exist_ok=True)
         if not self.filepath.exists():
             self.filepath.touch()
 
-        async with aiofiles.open(self.filepath, "r", encoding="utf-8", errors="replace") as f:
-            # move to end (like tail -f)
+        async with aiofiles.open(
+            self.filepath, "r", encoding="utf-8", errors="replace"
+        ) as f:
+            # nhảy tới cuối file
             await f.seek(0, os.SEEK_END)
             last_pos = await f.tell()
 
-            header = None
+            header: Optional[Dict[str, Any]] = None
             hexbuf: List[str] = []
             inhex = False
 
             while True:
                 try:
-                    # handle truncate/rotate: if file shrank, seek to start
+                    # phát hiện file bị truncate/rotate
                     try:
                         curr_size = os.path.getsize(self.filepath)
                     except FileNotFoundError:
                         curr_size = 0
                     if curr_size < last_pos:
-                        # file rotated/truncated
                         await f.seek(0)
                         last_pos = 0
 
-                    await f.seek(last_pos)
                     line = await f.readline()
                     if not line:
-                        # no new data
-                        await asyncio.sleep(0.05)  # 50ms poll for near-realtime
+                        await asyncio.sleep(0.2)
                         continue
 
                     last_pos = await f.tell()
                     line = line.rstrip("\n")
 
-                    parsed = self.parser.parse_header(line)
-                    if parsed:
-                        # new header -> flush previous block immediately
+                    new_header = self.parser.parse_header(line)
+                    if new_header:
                         if header:
                             await self._flush(header, hexbuf)
-                        header = parsed
+                        header = new_header
                         hexbuf = []
                         inhex = False
                         continue
 
-                    # detect hexdump header
-                    if header and self.parser.is_hexdump_header(line):
+                    if header is None:
+                        # bỏ qua cho tới khi gặp header đầu tiên
+                        continue
+
+                    if self.parser.is_hexdump_header(line):
                         inhex = True
                         continue
 
-                    # accumulate hex lines
                     if inhex and self.parser.is_hex_line(line):
                         hexbuf.append(line)
                         continue
 
-                    # blank line ends block -> flush
-                    if header and not line.strip():
-                        await self._flush(header, hexbuf)
+                    if not line.strip():
+                        if header:
+                            await self._flush(header, hexbuf)
                         header = None
                         hexbuf = []
                         inhex = False
                         continue
-
-                    # if any other non-header lines appear while not in hex mode, ignore
                 except Exception:
-                    # don't crash the tailer; sleep briefly and continue
+                    # không để tailer chết vì lỗi bất ngờ
                     await asyncio.sleep(0.2)
 
-    async def _flush(self, header: Dict[str, Any], hexdump: List[str]):
+    async def _flush(self, header: Dict[str, Any], hexdump: List[str]) -> None:
         obj = dict(header)
-        if hexdump:
-            obj["body"] = "\n".join(hexdump)
-        else:
-            obj["body"] = obj.get("body", "")
+        obj["body"] = "\n".join(hexdump) if hexdump else ""
 
-        # Broadcast to connected clients
-        try:
-            await self.manager.broadcast(self.type_, json.dumps(obj))
-        except Exception:
-            pass
+        # broadcast qua WS
+        await manager.broadcast(self.type_, json.dumps(obj))
 
-        # maintain recent list in app.state so new WS clients can receive history
-        key = f"{self.type_}_recent"
-        recent = getattr(app.state, key, None)
-        if recent is None:
-            recent = []
-        # append and keep cap
-        recent.append(obj)
-        if len(recent) > self.recent_cap:
-            recent = recent[-self.recent_cap :]
-        setattr(app.state, key, recent)
+        # cập nhật history
+        self.history_list.append(obj)
+        if len(self.history_list) > self.recent_cap:
+            # giữ lại recent_cap phần tử cuối
+            del self.history_list[: len(self.history_list) - self.recent_cap]
 
 
-# =========================================
-# WebSocket Routes
-# =========================================
+# ============================================================
+# WebSocket endpoints
+# ============================================================
 @router.websocket("/ws/traffic")
 async def ws_traffic(ws: WebSocket):
     await manager.connect(ws, "traffic")
     try:
-        for obj in getattr(app.state, "traffic_recent", []):
+        # gửi history cho client mới
+        for obj in traffic_recent:
             await ws.send_text(json.dumps(obj))
+
+        # giữ kết nối mở; client không cần gửi gì
         while True:
-            # receive to keep connection alive; ignore client messages
             await ws.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(ws, "traffic")
@@ -318,7 +390,7 @@ async def ws_traffic(ws: WebSocket):
 async def ws_alerts(ws: WebSocket):
     await manager.connect(ws, "alerts")
     try:
-        for obj in getattr(app.state, "alerts_recent", []):
+        for obj in alerts_recent:
             await ws.send_text(json.dumps(obj))
         while True:
             await ws.receive_text()
@@ -326,53 +398,58 @@ async def ws_alerts(ws: WebSocket):
         manager.disconnect(ws, "alerts")
 
 
-# =========================================
-# HTML Routes
-# =========================================
+# ============================================================
+# HTTP endpoints trả HTML
+# ============================================================
 @router.get("/traffic")
 async def traffic_page():
-    html = Path(__file__).parent.parent / "templates" / "packets.html"
-    return HTMLResponse(html.read_text(encoding="utf-8"))
+    html_path = Path(__file__).parent.parent / "templates" / "packets.html"
+    return HTMLResponse(html_path.read_text(encoding="utf-8"))
 
 
 @router.get("/alerts")
 async def alerts_page():
-    html = Path(__file__).parent.parent / "templates" / "alerts.html"
-    return HTMLResponse(html.read_text(encoding="utf-8"))
+    html_path = Path(__file__).parent.parent / "templates" / "alerts.html"
+    return HTMLResponse(html_path.read_text(encoding="utf-8"))
 
 
-# register router
-app.include_router(router)
+# ============================================================
+# Hàm khởi động tailer (sẽ được gọi từ main.lifespan)
+# ============================================================
+async def start_log_tailers() -> None:
+    """
+    Được gọi một lần khi ứng dụng khởi động (từ main.lifespan).
 
-
-# =========================================
-# Startup event
-# =========================================
-@router.on_event("startup")
-async def startup_event():
+    - Tiền xử lý: đọc history hiện có trong file log.
+    - Tạo background task tail realtime cho traffic.log và ai_alerts.log.
+    """
     base = Path(__file__).parent.parent / "logs"
 
-    traffic_tailer = LogTailer(base / "traffic.log", manager, TrafficParser, "traffic", recent_cap=MAX_RECENT)
-    alert_tailer = LogTailer(base / "alerts.log", manager, AlertParser, "alerts", recent_cap=MAX_RECENT)
+    traffic_tailer = LogTailer(
+        base / "traffic.log",
+        TrafficParser,
+        "traffic",
+        traffic_recent,
+        recent_cap=MAX_RECENT,
+    )
+    alert_tailer = LogTailer(
+        base / "ai_alerts.log",
+        AlertParser,
+        "alerts",
+        alerts_recent,
+        recent_cap=MAX_RECENT,
+    )
 
-    # start background tailers
-    asyncio.create_task(traffic_tailer.start())
-    asyncio.create_task(alert_tailer.start())
-
-    # preload recent entries (keep them chronological)
-    app.state.traffic_recent = [
+    # nạp sẵn lịch sử
+    traffic_recent[:] = [
         {**entry["header"], "body": entry.get("body", "")}
         for entry in await traffic_tailer.load_recent_logs(MAX_RECENT)
     ]
-    app.state.alerts_recent = [
+    alerts_recent[:] = [
         {**entry["header"], "body": entry.get("body", "")}
         for entry in await alert_tailer.load_recent_logs(MAX_RECENT)
     ]
 
-
-# =========================================
-# Run standalone (for local dev)
-# =========================================
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run("app.api.view_log:app", host="0.0.0.0", port=8000, reload=True)
+    # khởi động tailer background
+    asyncio.create_task(traffic_tailer.start())
+    asyncio.create_task(alert_tailer.start())

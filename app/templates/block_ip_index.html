@@ -1,141 +1,293 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Blocked IPs</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    margin: 0;
-    padding: 0;
-}
+    <meta charset="utf-8" />
+    <title>Block IP Management</title>
 
-h2, h3 {
-    text-align: center;
-    color: #333;
-}
+    <!-- CSS chung của dashboard -->
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-.container {
-    width: 90%;
-    max-width: 1000px;
-    margin: 20px auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1);
-}
-
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 12px;
-    text-align: center;
-}
-
-th {
-    background-color: #4CAF50;
-    color: white;
-}
-
-tr:nth-child(even) {background-color: #f9f9f9;}
-tr:hover {background-color: #f1f1f1;}
-
-.status-blocked {
-    color: white;
-    background-color: #e74c3c;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.status-unblocked {
-    color: white;
-    background-color: #2ecc71;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-button:hover {
-    background-color: #2980b9;
-}
-
-form.manual-block {
-    text-align: center;
-    margin-top: 20px;
-}
-
-form.manual-block input {
-    padding: 8px 12px;
-    margin: 0 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-</style>
+    <style>
+        /* chỉnh nhẹ cho trang Block IP */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            background: #1f1f35;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        .page-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .badge-danger {
+            color: #fff;
+            background: var(--color-red);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+        }
+        .badge-success {
+            color: #fff;
+            background: var(--color-green);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+        }
+        .text-muted {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+    </style>
 </head>
 <body>
+<div class="dashboard-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fa-solid fa-shield-halved"></i> IDR Dashboard</h3>
+        </div>
+        <ul>
+            <li><a href="/"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="/alerts"><i class="fa-solid fa-triangle-exclamation"></i> IDS Alerts (DB)</a></li>
+            <li><a href="/traffic"><i class="fa-solid fa-network-wired"></i> Traffic Logs</a></li>
+            <li><a href="/alerts"><i class="fa-solid fa-bell"></i> Alert Logs</a></li>
+            <li><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
+            <li><a href="/rules"><i class="fa-solid fa-code"></i> IDS Rules</a></li>
+            <!-- MỤC MỚI: Block IP -->
+            <li class="active"><a href="/blockip"><i class="fa-solid fa-ban"></i> Block IP</a></li>
+            <li><a href="/users"><i class="fa-solid fa-users"></i> Users</a></li>
+        </ul>
+    </aside>
 
-<div class="container">
-    <h2>Blocked IPs</h2>
+    <!-- MAIN -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h2>Block IP</h2>
+                <p class="page-subtitle">
+                    Manage blocked IP list (iptables / firewall) in the system.
+                </p>
+            </div>
+            <div class="user-menu">
+                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-bell"></i>
+                <i class="fa-solid fa-user-circle"></i>
+            </div>
+        </div>
 
-    <table>
-        <tr>
-            <th>IP</th>
-            <th>Reason</th>
-            <th>Blocked At</th>
-            <th>Expire At</th>
-            <th>Status</th> 
-            <th>Action</th>
-        </tr>
-        {% for ip in blocked_ips %}
-        <tr>
-            <td>{{ ip.ip_address }}</td>
-            <td>{{ ip.reason }}</td>
-            <td>{{ ip.blocked_at }}</td>
-            <td>{{ ip.expires_at }}</td>
-            <td>
-                {% if ip.status == "blocked" %}
-                    <span class="status-blocked">Blocked</span>
-                {% else %}
-                    <span class="status-unblocked">Unblocked</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if ip.status == "blocked" %}
-                <form method="post" action="/api/ip/unblock_ip">
-                    <input type="hidden" name="ip_address" value="{{ ip.ip_address }}">
-                    <button type="submit">Unblock</button>
+        <!-- CỘT TRÁI: Stats + Filter -->
+        <section class="left-column">
+            <!-- Thống kê -->
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-gauge-high"></i> Block IP Statistics</h4>
+                </div>
+                <div class="widget-content">
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <span>Total number of records</span>
+                            <strong>{{ blocked_ips|length }}</strong>
+                        </div>
+                        <div class="stat-card">
+                            <span>Being blocked</span>
+                            <strong>
+                                {{
+                                    blocked_ips
+                                    | selectattr("status", "equalto", "blocked")
+                                    | list
+                                    | length
+                                }}
+                            </strong>
+                        </div>
+                        <div class="stat-card">
+                            <span>Most recently blocked IP</span>
+                            <strong>
+                                {% if blocked_ips %}
+                                    {{ (blocked_ips|last).ip_address }}
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </strong>
+                        </div>
+                        <div class="stat-card">
+                            <span>The most immediate reason</span>
+                            <strong>
+                                {% if blocked_ips %}
+                                    {{ (blocked_ips|last).reason }}
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter client-side -->
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-filter"></i> Filter (client-side)</h4>
+                </div>
+                <div class="filter-row">
+                    <div>
+                        <label for="filter-ip">IP / Substring</label>
+                        <input id="filter-ip" type="text"
+                               placeholder="vd: 192.168.1, 10.10.30.195">
+                    </div>
+                </div>
+                <button class="btn btn-secondary" id="btn-clear-filter">
+                    <i class="fa-solid fa-eraser"></i> Clear filter
+                </button>
+            </div>
+        </section>
+
+        <!-- CỘT GIỮA: Bảng IP bị block -->
+        <section class="main-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-shield-halved"></i> Blocked IP List</h4>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-compact table-hover">
+                        <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Reason</th>
+                            <th>Blocked At</th>
+                            <th>Expire At</th>
+                            <th>Status</th>
+                            <th style="width: 130px;">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody id="blocked-ip-body">
+                        {% for ip in blocked_ips %}
+                            <tr data-ip="{{ ip.ip_address|lower }}"
+                                data-reason="{{ ip.reason|lower }}">
+                                <td>{{ ip.ip_address }}</td>
+                                <td>{{ ip.reason }}</td>
+                                <td>{{ ip.blocked_at }}</td>
+                                <td>{{ ip.expires_at }}</td>
+                                <td>
+                                    {% if ip.status == "blocked" %}
+                                        <span class="badge-danger">Blocked</span>
+                                    {% else %}
+                                        <span class="badge-success">Unblocked</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if ip.status == "blocked" %}
+                                        <!-- Status = blocked → nút Unblock màu xanh -->
+                                        <form method="post" action="/blockip/unblock_ip" style="display:inline;">
+                                            <input type="hidden" name="ip_address" value="{{ ip.ip_address }}">
+                                            <button class="btn btn-success btn-sm" type="submit">
+                                                <i class="fa-solid fa-unlock"></i> Unblock
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <!-- Status = unblocked → nút Block màu đỏ -->
+                                        <form method="post" action="/blockip/blocked" style="display:inline;">
+                                            <input type="hidden" name="ip_address" value="{{ ip.ip_address }}">
+                                            <input type="hidden" name="reason" value="Manual re-block">
+                                            <button class="btn btn-danger btn-sm" type="submit">
+                                                <i class="fa-solid fa-ban"></i> Block
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% if blocked_ips|length == 0 %}
+                        <p class="text-muted" style="padding: 10px;">
+                            No IP has been blocked yet.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- CỘT PHẢI: Form block IP -->
+        <section class="right-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-plus"></i> Manual IP blocking</h4>
+                </div>
+                <form method="post" action="/blockip/blocked" class="form-grid">
+                    <div class="form-group">
+                        <label for="ip_address">IP Address</label>
+                        <input id="ip_address" name="ip_address" type="text"
+                               placeholder="vd: 192.168.1.100" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reason">Reason</label>
+                        <input id="reason" name="reason" type="text"
+                               placeholder="vd: Manual block, Brute-force, ...">
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary w-100" type="submit">
+                            <i class="fa-solid fa-ban"></i> Block IP
+                        </button>
+                    </div>
                 </form>
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <h3>Manual Block IP</h3>
-    <form method="post" action="/api/ip/blocked" class="manual-block">
-        <input type="text" name="ip_address" placeholder="IP to block">
-        <input type="text" name="reason" placeholder="Reason">
-        <button type="submit">Block</button>
-    </form>
+            </div>
+        </section>
+    </main>
 </div>
 
+<script>
+    // Filter client-side cho bảng IP
+    const filterInput = document.getElementById("filter-ip");
+    const clearBtn = document.getElementById("btn-clear-filter");
+    const rows = document.querySelectorAll("#blocked-ip-body tr");
+
+    function applyFilter() {
+        const term = (filterInput.value || "").toLowerCase().trim();
+        rows.forEach(row => {
+            const ip = row.dataset.ip || "";
+            const reason = row.dataset.reason || "";
+            if (!term || ip.includes(term) || reason.includes(term)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    if (filterInput) {
+        filterInput.addEventListener("input", applyFilter);
+    }
+    if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+            filterInput.value = "";
+            applyFilter();
+        });
+    }
+</script>
 </body>
 </html>

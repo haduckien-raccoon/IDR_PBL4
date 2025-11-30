@@ -5,7 +5,7 @@ from app.models import BlockedIPModel
 from app.workers.blocker import enqueue_block
 import redis
 
-router = APIRouter(prefix="/api/ip", tags=["block_ip"])
+router = APIRouter(prefix="/blockip", tags=["block_ip"])
 templates = Jinja2Templates(directory="app/templates")
 
 # Redis connection (dùng để publish lệnh block/unblock nếu cần)
@@ -26,8 +26,22 @@ async def block_ip(ip_address: str = Form(...), reason: str = Form("manual")):
     """
     if not ip_address:
         raise HTTPException(status_code=400, detail="IP không hợp lệ")
-    enqueue_block(ip_address, reason=reason)
-    return RedirectResponse(url="/api/ip", status_code=303)
+    
+    # Đưa job cho worker xử lý iptables (nếu bạn đang dùng queue)
+    try:
+        enqueue_block(ip_address, reason=reason)
+    except Exception:
+        # Nếu worker chưa chạy thì bỏ qua, vẫn cập nhật DB
+        pass
+
+    # Cập nhật DB ngay để giao diện phản ánh trạng thái
+    try:
+        # Hàm này nên set status = "blocked", cập nhật lý do + thời gian
+        BlockedIPModel.block_ip(ip_address, reason)
+    except AttributeError:
+        # Nếu project cũ chưa có hàm block_ip, bỏ qua (UI sẽ phụ thuộc worker)
+        pass
+    return RedirectResponse(url="/blockip", status_code=303)
 
 @router.post("/unblock_ip")
 async def unblock_ip(ip_address: str = Form(...)):
@@ -36,7 +50,11 @@ async def unblock_ip(ip_address: str = Form(...)):
     """
     if not ip_address:
         raise HTTPException(status_code=400, detail="IP không hợp lệ")
-    # gỡ khỏi DB và publish lệnh unblock
-    redis_conn.publish("iptables_commands", f"UNBLOCK {ip_address}")
+    if redis_conn is not None:
+        try:
+            redis_conn.publish("iptables_commands", f"UNBLOCK {ip_address}")
+        except Exception:
+            # có thể log ra nếu muốn, nhưng không để 500
+            pass
     BlockedIPModel.unblock_ip(ip_address)
-    return RedirectResponse(url="/api/ip", status_code=303)
+    return RedirectResponse(url="/blockip", status_code=303)

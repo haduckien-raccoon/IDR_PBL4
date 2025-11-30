@@ -1,31 +1,150 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <title>Nginx Reverse Proxy Editor</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reverse Proxy Config - IDR_Project</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    /* --- CSS RIÊNG CHO TRANG NÀY --- */
+
+    /* 1. [QUAN TRỌNG] Ghi đè layout Grid 3 cột mặc định để nội dung full màn hình */
+    .main-content {
+        display: flex !important;
+        flex-direction: column;
+        grid-template-columns: none !important; /* Bỏ chia cột grid */
+        overflow-y: hidden;
+    }
+
+    /* 2. Layout chia đôi màn hình (Trái Form - Phải Config) */
+    .proxy-layout-grid {
+        display: grid;
+        grid-template-columns: 400px 1fr; /* Cột trái cố định 400px, cột phải giãn hết cỡ */
+        gap: 20px;
+        height: 100%; /* Chiếm hết chiều cao còn lại */
+        padding-bottom: 20px;
+    }
+
+    /* 3. Style khung hiển thị code */
+    .config-editor {
+        background: #0f0f1a;
+        color: #dcdccc; /* Màu text code nhẹ dịu */
+        font-family: 'Fira Code', 'Consolas', monospace;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #444;
+        white-space: pre-wrap;
+        overflow: auto;       /* Tự động có thanh cuộn nếu dài */
+        font-size: 0.85rem;
+        line-height: 1.5;
+        height: calc(100vh - 200px); /* Chiều cao tự động tính toán để vừa màn hình */
+        min-height: 400px;
+    }
+
+    /* 4. Style thông báo trạng thái */
+    .status-msg {
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        display: none; /* Ẩn mặc định */
+        animation: fadeIn 0.3s ease-in;
+    }
+    .status-msg.success { background: rgba(48, 227, 202, 0.15); color: #30e3ca; border: 1px solid rgba(48, 227, 202, 0.3); }
+    .status-msg.error { background: rgba(233, 69, 96, 0.15); color: #e94560; border: 1px solid rgba(233, 69, 96, 0.3); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Responsive: Màn hình nhỏ thì xuống dòng */
+    @media (max-width: 1000px) {
+        .proxy-layout-grid {
+            grid-template-columns: 1fr; /* 1 cột duy nhất */
+            height: auto;
+        }
+        .config-editor {
+            height: 400px; /* Chiều cao cố định trên mobile */
+        }
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-  <div class="max-w-3xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-4">Nginx Reverse Proxy Config</h1>
+<body>
+  <div class="dashboard-container">
 
-    {% if msg %}
-      <div class="p-3 rounded mb-4 {{ 'bg-green-200' if category=='success' else 'bg-red-200' }}">
-        {{ msg }}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+      <header class="header">
+        <div class="system-status">
+          NGINX CONFIG • <span class="status-online">PROXY MANAGER</span>
+        </div>
+        <div class="user-menu">
+            <i class="fa-solid fa-bell"></i>
+            <i class="fa-solid fa-moon"></i>
+            <i class="fa-solid fa-user-circle"></i>
+        </div>
+      </header>
+
+      <div class="proxy-layout-grid">
+        
+        <div class="widget" style="height: fit-content;">
+            <div class="widget-header">
+                <h4><i class="fa-solid fa-pen-to-square"></i> Update Proxy Target</h4>
+            </div>
+
+            <div id="status-box" class="status-msg"></div>
+
+            <p style="font-size: 0.9rem; color: #a0a0b8; margin-bottom: 20px; line-height: 1.5;">
+                Thay đổi địa chỉ đích (Target URL) mà Nginx sẽ điều hướng traffic tới.<br>
+                Hệ thống sẽ <b>tự động reload Nginx</b> sau khi lưu thành công.
+            </p>
+
+            <form id="proxy-form">
+                <div class="filter-row" style="flex-direction: column; align-items: stretch; background: transparent; padding: 0; border: none;">
+                    <label style="margin-bottom: 8px; color: #fff;">Current Proxy Pass Target</label>
+                    <input type="text" id="target-input" name="target" placeholder="http://127.0.0.1:8080" required 
+                           style="width: 100%; font-family: monospace; font-size: 1.1rem; padding: 12px; background: #0f0f1a; border-color: #444;">
+                </div>
+                
+                <div style="margin-top: 25px;">
+                    <button type="submit" id="btn-update" class="btn btn-danger" style="width: 100%; padding: 12px; font-size: 1rem;">
+                        <i class="fa-solid fa-rotate"></i> Update & Reload Nginx
+                    </button>
+                </div>
+            </form>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333;">
+                <h5 style="color: #a0a0b8; margin-bottom: 10px; font-size: 0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lưu ý an toàn:</h5>
+                <ul style="font-size: 0.85rem; color: #888; padding-left: 20px; line-height: 1.6;">
+                    <li>Cấu hình cũ sẽ được tự động sao lưu vào <code>/etc/nginx/backups</code>.</li>
+                    <li>Nếu Nginx reload thất bại (do lỗi cú pháp), hệ thống sẽ tự động <b>khôi phục (rollback)</b> về bản cũ ngay lập tức.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="widget" style="display: flex; flex-direction: column;">
+            <div class="widget-header">
+                <h4><i class="fa-solid fa-file-code"></i> Current Nginx Configuration</h4>
+                <div class="widget-controls">
+                    <span id="btn-refresh" style="cursor: pointer;"><i class="fa-solid fa-sync"></i> Refresh</span>
+                </div>
+            </div>
+            
+            <div class="config-editor" id="config-viewer">Loading config...</div>
+        </div>
+
       </div>
-    {% endif %}
 
-    <form method="post" action="/api/reverse-proxy/update">
-      <label class="block mb-2 font-semibold">New proxy_pass target</label>
-      <input type="text" name="target" placeholder="http://127.0.0.1:8080"
-             class="w-full border p-2 rounded mb-4" required>
-
-      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        Update & Reload
-      </button>
-    </form>
-
-    <h2 class="text-xl font-semibold mt-8 mb-2">Current config</h2>
-    <pre class="bg-white p-4 rounded shadow overflow-x-auto text-sm">{{ config }}</pre>
+    </main>
   </div>
+
+  <script>
+    window.__CONFIG__ = {
+      API_BASE: "{{ api_base if api_base is defined else '' }}"
+    };
+  </script>
+  <script src="{{ url_for('static', path='js/reverse_proxy.js') }}"></script>
 </body>
 </html>

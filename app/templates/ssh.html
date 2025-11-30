@@ -7,6 +7,7 @@
 
   <!-- CSS chung của hệ thống -->
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/ssh.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Xterm.js (terminal trong trình duyệt) -->
@@ -32,22 +33,7 @@
 <body>
   <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
-    <nav class="sidebar">
-      <div class="sidebar-header">
-        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
-      </div>
-      <ul>
-        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
-        <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
-        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
-        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
-        <!-- Trang SSH -->
-        <li class="active"><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
-        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-      </ul>
-    </nav>
+    {% include 'includes/sidebar.html' %}
 
     <!-- MAIN -->
     <main class="main-content">
@@ -58,9 +44,6 @@
           <div class="system-status">
             SSH CONSOLE • <span class="status-online">CONNECTED MODE</span>
           </div>
-          <p class="ssh-header-subtitle">
-            Open an SSH terminal to the protected server directly from the Web interface.
-          </p>
         </div>
         <div class="user-menu">
           <i class="fa-solid fa-bell"></i>
@@ -88,33 +71,43 @@
 
         <!-- PANEL: Session Info + Quick Commands -->
         <div class="widget glass-panel info-panel">
-          <div class="panel-header">
-            <h3><i class="fa-solid fa-circle-info"></i> Session Info</h3>
-          </div>
-          
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Host</label>
-              <span>192.168.1.8</span>
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-circle-info"></i> Session Info</h3>
             </div>
-            <div class="info-item">
-              <label>Port</label>
-              <span>22</span>
+    
+            <div class="info-grid" id="ssh-form">
+                <div class="info-item">
+                <label>Host / IP</label>
+                <input type="text" id="ssh-host" class="ssh-input" value="127.0.0.1" placeholder="Ex: 192.168.1.5">
+                </div>
+
+                <div class="info-item">
+                <label>Port</label>
+                <input type="number" id="ssh-port" class="ssh-input" value="22" style="width: 60px;">
+                </div>
+
+                <div class="info-item">
+                <label>User</label>
+                <input type="text" id="ssh-user" class="ssh-input" value="hieu" placeholder="root">
+                </div>
+
+                <div class="info-item">
+                <label>Password</label>
+                <input type="password" id="ssh-password" class="ssh-input" placeholder="••••••">
+                </div>
+
+                <div class="info-item" style="grid-column: span 2;">
+                <button id="btn-connect-ssh" class="btn-block-ip" style="width: 100%; background: #4d79ff;">
+                    <i class="fa-solid fa-plug"></i> Connect SSH
+                </button>
+                </div>
             </div>
-            <div class="info-item">
-              <label>User</label>
-              <span class="text-neon">hieu</span>
-            </div>
-            <div class="info-item">
-              <label>Protocol</label>
-              <span>SSH-2.0</span>
-            </div>
-          </div>
 
           <div class="separator"></div>
 
           <div class="quick-actions">
             <h4>Quick Commands</h4>
+            <button class="btn-snippet">ls</button>
             <button class="btn-snippet">htop</button>
             <button class="btn-snippet">docker ps</button>
             <button class="btn-snippet">netstat -tuln</button>

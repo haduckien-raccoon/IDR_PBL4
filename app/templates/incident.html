@@ -12,36 +12,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Lấy path hiện tại (vd: /dashboard, /incidents)
   const currentPath = window.location.pathname;
-
-  // Tìm tất cả các link trong sidebar
-  document.querySelectorAll(".sidebar ul li a").forEach(link => {
-    // Điều chỉnh path: nếu path là /incidents/ (có / ở cuối) hoặc /incidents
-    const href = link.getAttribute("href");
-    if (href === currentPath || href + '/' === currentPath || href === currentPath + '/') {
-      link.parentElement.classList.add("active");
-    } else {
-      link.parentElement.classList.remove("active");
-    }
-  });
 });
 </script>
 <body>
   <div class="dashboard-container">
 
-    <nav class="sidebar">
-      <div class="sidebar-header">
-        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
-      </div>
-      <ul>
-        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li class="active"><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
-        <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
-        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
-        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
-        <li class="active"><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
-        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-      </ul>
-    </nav>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
       <header class="header">

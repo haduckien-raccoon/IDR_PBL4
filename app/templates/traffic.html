@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Traffic Logs Monitor</title>
+
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        .log-line {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 0.75rem;
+        }
+        .log-new {
+            background-color: rgba(48, 227, 202, 0.15);
+            transition: background-color 1s ease;
+        }
+        .status-chip-ok {
+            color: var(--color-green);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .status-chip-bad {
+            color: var(--color-red);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row.selected {
+            background: rgba(77, 121, 255, 0.15) !important;
+        }
+    </style>
+</head>
+
+<body>
+<div class="dashboard-container">
+    {% include 'includes/sidebar.html' %}
+
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h2>Traffic Logs</h2>
+                <div class="system-status">
+                    Realtime từ file <code>traffic.log</code> qua WebSocket
+                    <span id="traffic-conn" class="status-chip-bad">Connecting...</span>
+                </div>
+            </div>
+            <div class="user-menu">
+                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-bell"></i>
+                <i class="fa-solid fa-user-circle"></i>
+            </div>
+        </div>
+
+        <!-- CỘT TRÁI: Stats + Filter -->
+        <section class="left-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-gauge-high"></i> Traffic Statistics</h4>
+                </div>
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <span>Packets received</span>
+                        <strong id="stat-traffic-count">0</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Last entropy</span>
+                        <strong id="stat-last-entropy">--</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Last bytes</span>
+                        <strong id="stat-last-bytes">--</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Last update</span>
+                        <strong id="stat-last-time">--:--:--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-filter"></i> Quick Filter (client-side)</h4>
+                </div>
+                <div class="filter-row">
+                    <div>
+                        <label for="filter-proto">Protocol</label>
+                        <select id="filter-proto">
+                            <option value="">All</option>
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filter-ip">IP / Port</label>
+                        <input id="filter-ip" type="text" placeholder="vd: 10.10.30.195, :80, 91.189.91.81">
+                    </div>
+                </div>
+                <button class="btn btn-secondary" id="btn-clear-filter">
+                    <i class="fa-solid fa-eraser"></i> Clear filter
+                </button>
+            </div>
+        </section>
+
+        <!-- CỘT GIỮA: Bảng traffic -->
+        <section class="main-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-magnifying-glass"></i> Hexdump chi tiết (traffic)</h4>
+                    <div class="widget-controls">
+                        <span id="hex-selected-info" style="font-size:0.8rem;color:var(--text-secondary);">
+                            Chọn 1 dòng ở bảng trên để xem hexdump.
+                        </span>
+                    </div>
+                </div>
+                <pre id="traffic-hexdump" class="log-viewer">Chưa có packet nào được chọn.</pre>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-database"></i> Realtime Traffic (Header)</h4>
+                    <div class="widget-controls">
+                        <span style="font-size:0.8rem;">Tối đa 300 dòng mới nhất</span>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active">Headers</div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table class="table" id="traffic-table">
+                        <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Proto</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Entropy</th>
+                            <th>Bytes</th>
+                        </tr>
+                        </thead>
+                        <tbody id="traffic-body">
+                        <!-- Rows được thêm bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CỘT PHẢI: Top Talkers (tạm đơn giản, client-side) -->
+        <section class="right-column">
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-globe"></i> Top Talkers (Source IP)</h4>
+                </div>
+                <ul class="ip-list" id="top-src-list">
+                    <li>
+                        <span><i class="fa-solid fa-circle-info"></i> Chưa có dữ liệu</span>
+                        <span class="incident-time">waiting...</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">
+                    <h4><i class="fa-solid fa-globe"></i> Top Targets (Destination IP)</h4>
+                </div>
+                <ul class="ip-list" id="top-dst-list">
+                    <li>
+                        <span><i class="fa-solid fa-circle-info"></i> Chưa có dữ liệu</span>
+                        <span class="incident-time">waiting...</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+(function () {
+    const tbody = document.getElementById("traffic-body");
+    const hexdumpBox = document.getElementById("traffic-hexdump");
+    const hexInfo = document.getElementById("hex-selected-info");
+    const statCount = document.getElementById("stat-traffic-count");
+    const statEntropy = document.getElementById("stat-last-entropy");
+    const statBytes = document.getElementById("stat-last-bytes");
+    const statTime = document.getElementById("stat-last-time");
+    const connStatus = document.getElementById("traffic-conn");
+    const filterProto = document.getElementById("filter-proto");
+    const filterIp = document.getElementById("filter-ip");
+    const btnClearFilter = document.getElementById("btn-clear-filter");
+    const topSrcList = document.getElementById("top-src-list");
+    const topDstList = document.getElementById("top-dst-list");
+
+    let packetCount = 0;
+    let srcStats = {};
+    let dstStats = {};
+    let allRows = [];
+
+    function nowTime() {
+        const d = new Date();
+        return d.toTimeString().split(" ")[0];
+    }
+
+    function updateConnStatus(ok) {
+        if (ok) {
+            connStatus.textContent = "Connected";
+            connStatus.classList.remove("status-chip-bad");
+            connStatus.classList.add("status-chip-ok");
+        } else {
+            connStatus.textContent = "Disconnected";
+            connStatus.classList.remove("status-chip-ok");
+            connStatus.classList.add("status-chip-bad");
+        }
+    }
+
+    function rebuildTopList(stats, ul) {
+        ul.innerHTML = "";
+        const items = Object.entries(stats)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+        if (items.length === 0) {
+            ul.innerHTML = '<li><span><i class="fa-solid fa-circle-info"></i> Chưa có dữ liệu</span><span class="incident-time">waiting...</span></li>';
+            return;
+        }
+
+        for (const [ip, count] of items) {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <span><i class="fa-solid fa-location-arrow"></i> ${ip}</span>
+                <span class="incident-time">${count} packets</span>
+            `;
+            ul.appendChild(li);
+        }
+    }
+
+    function applyFilter() {
+        const protoVal = filterProto.value.trim().toUpperCase();
+        const ipVal = filterIp.value.trim();
+
+        for (const tr of allRows) {
+            const rowProto = tr.dataset.proto || "";
+            const text = tr.dataset.fulltext || "";
+            let show = true;
+
+            if (protoVal && rowProto !== protoVal) {
+                show = false;
+            }
+            if (ipVal && !text.includes(ipVal)) {
+                show = false;
+            }
+            tr.style.display = show ? "" : "none";
+        }
+    }
+
+    filterProto.addEventListener("change", applyFilter);
+    filterIp.addEventListener("input", applyFilter);
+    btnClearFilter.addEventListener("click", () => {
+        filterProto.value = "";
+        filterIp.value = "";
+        applyFilter();
+    });
+
+    function setSelectedRow(tr) {
+        for (const row of allRows) {
+            row.classList.remove("selected");
+        }
+        if (tr) tr.classList.add("selected");
+    }
+
+    function addTrafficRow(obj) {
+        const tr = document.createElement("tr");
+        tr.classList.add("clickable-row", "log-new");
+
+        const ts = obj.timestamp || "";
+        const proto = obj.proto || "";
+        const src = obj.src || "";
+        const dst = obj.dst || "";
+        const entropy = obj.entropy || "";
+        const bytes = obj.bytes || "";
+
+        tr.dataset.proto = proto;
+        tr.dataset.fulltext = `${ts} ${proto} ${src} ${dst}`;
+        tr.dataset.hexdump = obj.body || "";
+
+        tr.innerHTML = `
+            <td>${ts}</td>
+            <td>${proto}</td>
+            <td>${src}</td>
+            <td>${dst}</td>
+            <td>${entropy}</td>
+            <td>${bytes}</td>
+        `;
+
+        tr.addEventListener("click", () => {
+            setSelectedRow(tr);
+            const body = tr.dataset.hexdump || "";
+            if (body) {
+                hexdumpBox.textContent = body;
+                hexInfo.textContent = `Hexdump của packet: ${ts} | ${src} -> ${dst}`;
+            } else {
+                hexdumpBox.textContent = "Không có hexdump cho packet này.";
+                hexInfo.textContent = `Không có hexdump cho packet: ${ts}`;
+            }
+        });
+
+        tbody.prepend(tr);
+        allRows.unshift(tr);
+        if (allRows.length > 300) {
+            const old = allRows.pop();
+            old.remove();
+        }
+
+        // update stats
+        packetCount++;
+        statCount.textContent = packetCount;
+        statEntropy.textContent = entropy || "--";
+        statBytes.textContent = bytes || "--";
+        statTime.textContent = nowTime();
+
+        // update top src/dst
+        const srcIp = src.split(":")[0];
+        const dstIp = dst.split(":")[0];
+        if (srcIp) srcStats[srcIp] = (srcStats[srcIp] || 0) + 1;
+        if (dstIp) dstStats[dstIp] = (dstStats[dstIp] || 0) + 1;
+        rebuildTopList(srcStats, topSrcList);
+        rebuildTopList(dstStats, topDstList);
+
+        // remove highlight after 1.5s
+        setTimeout(() => tr.classList.remove("log-new"), 1500);
+    }
+
+    // WebSocket
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsScheme}://${window.location.host}/logs/ws/traffic`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+        updateConnStatus(true);
+    };
+
+    ws.onmessage = (event) => {
+        try {
+            const obj = JSON.parse(event.data);
+            addTrafficRow(obj);
+            applyFilter(); // giữ filter khi có dữ liệu mới
+        } catch (e) {
+            console.error("Invalid traffic log JSON", e, event.data);
+        }
+    };
+
+    ws.onclose = () => {
+        updateConnStatus(false);
+    };
+
+    ws.onerror = () => {
+        updateConnStatus(false);
+    };
+})();
+</script>
+</body>
+</html>

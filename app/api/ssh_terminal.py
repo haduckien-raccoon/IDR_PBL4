@@ -7,72 +7,65 @@ from starlette.websockets import WebSocketDisconnect
 
 router = APIRouter(prefix="/ssh", tags=["SSH"])
 
-# TODO: sau này bạn có thể lấy những thông tin này từ DB / .env
-SSH_HOST = "192.168.1.8"   # máy chủ cần bảo vệ
-SSH_PORT = 22
-SSH_USER = "hieu"        # user trên server đó
-SSH_PASSWORD = "120605"  # tạm thời hard-code để demo
-
-
 @router.websocket("/terminal")
 async def ssh_terminal(websocket: WebSocket):
-    """
-    WebSocket bridge giữa trình duyệt và SSH server.
-    """
     await websocket.accept()
+    
+    # 1. Lấy thông tin từ Query Params (URL gửi lên từ JS)
+    params = websocket.query_params
+    ssh_host = params.get("host")
+    ssh_port = int(params.get("port", 22))
+    ssh_user = params.get("user")
+    ssh_password = params.get("password")
+
+    # Kiểm tra dữ liệu đầu vào
+    if not ssh_host or not ssh_user or not ssh_password:
+        await websocket.send_text("\r\n\x1b[31mError: Missing connection parameters (host, user, password).\x1b[0m\r\n")
+        await websocket.close()
+        return
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
-        # 1. Kết nối SSH tới server cần bảo vệ
+        # 2. Kết nối SSH với thông tin động
+        await websocket.send_text(f"Connecting to {ssh_host}...\r\n") # Log nhẹ ra màn hình
+        
         ssh.connect(
-            SSH_HOST,
-            port=SSH_PORT,
-            username=SSH_USER,
-            password=SSH_PASSWORD,
+            ssh_host,
+            port=ssh_port,
+            username=ssh_user,
+            password=ssh_password,
             look_for_keys=False,
             allow_agent=False,
+            timeout=10 # Set timeout tránh treo
         )
 
-        # 2. Mở shell tương tác
+        # ... (Phần còn lại giữ nguyên như cũ) ...
         chan = ssh.invoke_shell(term='xterm')
-        # chan là blocking; ta dùng asyncio.to_thread để đọc/ghi không chặn event loop
-
+        
         async def reader():
-            """Đọc output từ SSH và gửi về browser."""
             try:
                 while True:
-                    # chạy recv trong thread riêng
                     data = await asyncio.to_thread(chan.recv, 1024)
                     if not data:
-                        await asyncio.sleep(0.05)
-                        continue
-                    # gửi text về client
+                        break
                     await websocket.send_text(data.decode("utf-8", errors="ignore"))
             except Exception:
-                # SSH đóng / WebSocket đóng -> thoát
                 pass
 
         reader_task = asyncio.create_task(reader())
 
-        # 3. Nhận input từ browser và gửi vào SSH
         try:
             while True:
                 msg = await websocket.receive_text()
-                # gửi từng phím/lệnh vào shell SSH
                 await asyncio.to_thread(chan.send, msg)
         except WebSocketDisconnect:
             pass
         finally:
             reader_task.cancel()
-            try:
-                chan.close()
-            except Exception:
-                pass
             ssh.close()
 
     except Exception as e:
-        # Nếu không SSH được thì báo lỗi lên terminal
-        await websocket.send_text(f"\r\n*** SSH connection error: {e} ***\r\n")
+        await websocket.send_text(f"\r\n\x1b[31m*** SSH connection failed: {e} ***\x1b[0m\r\n")
         await websocket.close()

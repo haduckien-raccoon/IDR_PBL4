@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDR Project - AI Events</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* ========== CÀI ĐẶT CHUNG & BIẾN MÀU ========== */
+        :root {
+            --bg-main: #1a1a2e;
+            --bg-widget: #2a2a45; /* Màu nền cho các widget */
+            --border-color: #40405c;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0b8;
+            --color-red: #e94560;
+            --color-orange: #f0a050;
+            --color-green: #30e3ca;
+            --color-blue: #4d79ff;
+            --color-sidebar: #24243e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .widget {
+            background-color: var(--bg-widget);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .widget-header h4 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .widget-header i {
+            margin-right: 8px;
+            color: var(--color-blue);
+        }
+
+        .widget-header .widget-controls {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .widget-header .widget-controls span {
+            margin-left: 10px;
+        }
+
+        /* ========== BỐ CỤC CHÍNH (GRID) ========== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 240px 1fr; /* Sidebar 240px, phần còn lại 1fr */
+            grid-template-rows: auto;
+            grid-template-areas: 
+                "sidebar main";
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--color-sidebar);
+            padding: 20px 0;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .main-content {
+            grid-area: main;
+            display: grid;
+            grid-template-columns: 1fr; /* Chỉ 1 cột nội dung chính */
+            grid-template-rows: auto 1fr;
+            grid-template-areas: 
+                "header"
+                "main-col";
+            padding: 20px;
+            overflow-y: auto;
+            gap: 20px;
+        }
+
+        /* Loại bỏ bố cục 3 cột cho trang này */
+        
+        /* ========== KHU VỰC CÁC CỘT (Điều chỉnh cho 1 cột chính) ========== */
+        .header { grid-area: header; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .main-column { 
+            grid-area: main-col; 
+            /* Thêm gap cho các widget nếu cần */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== STYLING CÁC THÀNH PHẦN ========== */
+
+        /* Header */
+        .system-status {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .status-online {
+            color: var(--color-green);
+            font-weight: bold;
+        }
+        .user-menu i {
+            font-size: 1.2rem;
+            margin-left: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        /* Sidebar */
+        .sidebar-header {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-header h3 {
+            color: var(--text-primary);
+        }
+        .sidebar ul {
+            list-style: none;
+            margin-top: 20px;
+        }
+        .sidebar ul li a {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .sidebar ul li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        /* Style cho trạng thái active */
+        .sidebar ul li.active a,
+        .sidebar ul li a:hover {
+            background-color: var(--bg-widget);
+            color: var(--text-primary);
+            border-right: 3px solid var(--color-blue);
+        }
+        .sidebar ul li.active {
+          background: rgba(77, 121, 255, 0.15);
+          border-left: 4px solid var(--color-blue);
+        }
+        .sidebar ul li.active a {
+          color: var(--color-blue);
+          font-weight: 600;
+        }
+
+        /* [BỔ SUNG/CẬP NHẬT] Thanh filter & form */
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            background-color: #1f1f35; /* Dùng màu nền tối hơn cho thanh filter */
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            align-items: center;
+        }
+        .filter-row label {
+            color: var(--text-secondary);
+            margin-right: 6px;
+        }
+        .filter-row input,
+        .filter-row select {
+            background: #141427;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            min-width: 120px;
+        }
+        .filter-row button {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+        #apply-filters {
+            background-color: var(--color-blue);
+            color: white;
+        }
+        #clear-filters {
+            background-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+        #refresh-events {
+            background-color: var(--color-green);
+            color: white;
+        }
+        #clear-displayed-alerts {
+            background-color: var(--color-red);
+            color: white;
+        }
+
+        /* Bảng dữ liệu */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .table thead {
+            background: #22223b;
+        }
+        .table th,
+        .table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .table tr:hover {
+            background: #262645;
+        }
+        /* Cố định chiều rộng cột */
+        .table th:nth-child(1), .table td:nth-child(1) { width: 5%; } /* ID */
+        .table th:nth-child(2), .table td:nth-child(2) { width: 15%; } /* Time */
+        .table th:nth-child(3), .table td:nth-child(3) { width: 10%; } /* Source */
+        .table th:nth-child(4), .table td:nth-child(4) { width: 10%; } /* Dest */
+        .table th:nth-child(5), .table td:nth-child(5) { width: 8%; } /* Level */
+        .table th:nth-child(6), .table td:nth-child(6) { width: 8%; } /* Status */
+        .table th:nth-child(7), .table td:nth-child(7) { width: 35%; } /* Description */
+        /* Cột còn lại */
+
+
+        /* Badge severity (từ style.css) */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-critical {
+            background: rgba(233, 69, 96, 0.15);
+            color: var(--color-red);
+        }
+        .badge-high {
+            background: rgba(240, 160, 80, 0.15);
+            color: var(--color-orange);
+        }
+        .badge-medium {
+            background: rgba(77, 121, 255, 0.15);
+            color: var(--color-blue);
+        }
+        .badge-low {
+            background: rgba(48, 227, 202, 0.15);
+            color: var(--color-green);
+        }
+        
+        /* Bổ sung Badge cho Status */
+        .badge-status-new {
+            background: rgba(233, 69, 96, 0.15);
+            color: var(--color-red);
+        }
+        .badge-status-investigating {
+            background: rgba(240, 160, 80, 0.15);
+            color: var(--color-orange);
+        }
+        .badge-status-resolved {
+            background: rgba(48, 227, 202, 0.15);
+            color: var(--color-green);
+        }
+
+        #loading-indicator, #no-data-message {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        {% include 'includes/sidebar.html' %}
+
+        <main class="main-content">
+            <header class="header">
+                <div class="system-status">
+                    AI-DETECTED • SYSTEM STATUS:
+                  <span class="status-online">ONLINE</span>
+                </div>
+                <div class="user-menu">
+                  <i class="fa-solid fa-bell"></i>
+                  <i class="fa-solid fa-moon"></i>
+                  <i class="fa-solid fa-user-circle"></i>
+                </div>
+              </header>
+
+            <section class="main-column">
+                <div class="widget">
+                    
+                    <div class="filter-row">
+                        <label for="filter-message">Description:</label>
+                        <input type="text" id="filter-message" placeholder="Filter by description..." style="min-width: 150px;">
+
+                        <label for="filter-source">Source IP:</label>
+                        <input type="text" id="filter-source" placeholder="Filter by source..." style="min-width: 120px;">
+
+                        <label for="filter-dest">Destination IP:</label>
+                        <input type="text" id="filter-dest" placeholder="Filter by destination..." style="min-width: 120px;">
+                        
+                        <label for="filter-level">Severity:</label>
+                        <select id="filter-level">
+                            <option value="">All Severities</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="MEDIUM">MEDIUM</option>
+                            <option value="LOW">LOW</option>
+                        </select>
+                        
+                        <label for="filter-status">Status:</label>
+                        <select id="filter-status">
+                            <option value="">All Statuses</option>
+                            <option value="new">New</option>
+                            <option value="investigating">Investigating</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+
+                        <button id="apply-filters">Apply Filters</button>
+                        <button id="clear-filters">Clear</button>
+                    </div>
+
+                    <!-- <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
+                        <button id="refresh-events"><i class="fa-solid fa-sync"></i> Refresh Events</button>
+                        <button id="clear-displayed-alerts"><i class="fa-solid fa-trash"></i> Clear Displayed</button>
+                    </div> -->
+
+                    <div id="loading-indicator">Loading AI Events from Database...</div>
+                    <div id="no-data-message" style="display: none;">No AI events found or match the current filters.</div>
+                    
+                    <div id="events-table-container" style="display: none;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Source IP</th>
+                                    <th>Destination IP</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Cập nhật tên biến DOM
+        const eventsTableBody = document.getElementById('events-table-body');
+        const eventsTableContainer = document.getElementById('events-table-container');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noDataMessage = document.getElementById('no-data-message');
+        
+        const refreshEventsButton = document.getElementById('refresh-events');
+        const clearDisplayedEventsButton = document.getElementById('clear-displayed-alerts');
+        const filterMessageInput = document.getElementById('filter-message');
+        const filterSourceInput = document.getElementById('filter-source');
+        const filterDestInput = document.getElementById('filter-dest');
+        const filterLevelSelect = document.getElementById('filter-level');
+        const filterStatusSelect = document.getElementById('filter-status'); 
+        const applyFiltersButton = document.getElementById('apply-filters');
+        const clearFiltersButton = document.getElementById('clear-filters');
+
+        let allEvents = []; // Store all received events for filtering
+
+        // Helper function to create the Severity Badge
+        function getSeverityBadge(level) {
+            const lowerLevel = (level || 'LOW').toLowerCase();
+            const badgeClass = `badge-${lowerLevel === 'critical' ? 'critical' : 
+                                 lowerLevel === 'high' ? 'high' : 
+                                 lowerLevel === 'medium' ? 'medium' : 'low'}`;
+            return `<span class="badge ${badgeClass}">${level}</span>`;
+        }
+
+        // Helper function to create the Status Badge
+        function getStatusBadge(status) {
+            const lowerStatus = (status || 'new').toLowerCase();
+            const badgeClass = `badge-status-${lowerStatus}`;
+            const displayStatus = lowerStatus.charAt(0).toUpperCase() + lowerStatus.slice(1);
+            return `<span class="badge ${badgeClass}">${displayStatus}</span>`;
+        }
+        
+        // Function to create an event table row element
+        function createEventRow(eventData) {
+            // Lấy dữ liệu và sử dụng giá trị mặc định nếu undefined
+            const eventId = eventData.event_id || 'N/A';
+            const timestamp = eventData.timestamp || 'N/A';
+            const src = eventData.src || 'N/A';
+            const dst = eventData.dst || 'N/A';
+            const level = eventData.level || 'LOW'; // Ánh xạ từ severity
+            const status = eventData.status || 'new';
+            const message = eventData.message || 'No description provided'; // Ánh xạ từ description
+
+            // Sử dụng template literal để tạo row HTML
+            return `
+                <tr>
+                    <td>${eventId}</td>
+                    <td>${timestamp.replace('T', ' ').substring(0, 19)}</td>
+                    <td>${src}</td>
+                    <td>${dst}</td>
+                    <td>${getSeverityBadge(level)}</td>
+                    <td>${getStatusBadge(status)}</td>
+                    <td>${message}</td>
+                </tr>
+            `;
+        }
+
+        function applyFilters() {
+            // Đảm bảo lấy giá trị, tránh undefined
+            const filterMessage = filterMessageInput.value?.toLowerCase() || '';
+            const filterSource = filterSourceInput.value?.toLowerCase() || '';
+            const filterDest = filterDestInput.value?.toLowerCase() || '';
+            const filterLevel = filterLevelSelect.value;
+            const filterStatus = filterStatusSelect.value;
+
+            eventsTableBody.innerHTML = ''; // Clear current display
+            loadingIndicator.style.display = 'none'; // Ẩn loading
+
+            // Sắp xếp các sự kiện mới nhất lên trên
+            const sortedEvents = [...allEvents].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+
+            let rowCount = 0;
+            let rowsHtml = '';
+
+            sortedEvents.forEach(event => {
+                let matches = true;
+                
+                // Lọc theo Description (message)
+                if (filterMessage && !(event.message?.toLowerCase().includes(filterMessage))) {
+                    matches = false;
+                }
+                // Lọc theo Source IP
+                if (filterSource && !(event.src?.toLowerCase().includes(filterSource))) {
+                    matches = false;
+                }
+                // Lọc theo Destination IP
+                if (filterDest && !(event.dst?.toLowerCase().includes(filterDest))) {
+                    matches = false;
+                }
+                // Lọc theo Level 
+                if (filterLevel && event.level !== filterLevel) {
+                    matches = false;
+                }
+                // Lọc theo Status
+                if (filterStatus && (event.status?.toLowerCase() !== filterStatus.toLowerCase())) {
+                    matches = false;
+                }
+
+                if (matches) {
+                    rowsHtml += createEventRow(event);
+                    rowCount++;
+                }
+            });
+            
+            eventsTableBody.innerHTML = rowsHtml;
+            
+            if (rowCount === 0) {
+                eventsTableContainer.style.display = 'none';
+                noDataMessage.style.display = 'block';
+                if (allEvents.length === 0) {
+                     noDataMessage.textContent = 'No AI events found in the system.';
+                } else {
+                    noDataMessage.textContent = 'No AI events match the current filters.';
+                }
+            } else {
+                eventsTableContainer.style.display = 'block';
+                noDataMessage.style.display = 'none';
+            }
+        }
+        
+        // Hàm lấy dữ liệu từ API REST
+        async function fetchAIEvents() {
+            eventsTableContainer.style.display = 'none';
+            noDataMessage.style.display = 'none';
+            loadingIndicator.style.display = 'block';
+            loadingIndicator.textContent = 'Loading AI Events from Database...';
+            
+            // Lấy các tham số lọc từ bộ lọc Severity/Status để truyền lên API (Giúp DB lọc trước)
+            const params = new URLSearchParams();
+            if (filterLevelSelect.value) {
+                params.append('severity', filterLevelSelect.value.toLowerCase());
+            }
+            if (filterStatusSelect.value) {
+                params.append('status', filterStatusSelect.value.toLowerCase());
+            }
+            // Không truyền message/IP filters vì chúng ta muốn lọc chúng client-side trên toàn bộ tập hợp AI events
+
+            const url = `/api/view_ai/events?${params.toString()}`;
+            
+            try {
+                const response = await fetch(url); 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                allEvents = data; 
+                
+                applyFilters(); // Áp dụng bộ lọc hiện tại và hiển thị
+                loadingIndicator.style.display = 'none';
+
+            } catch (error) {
+                console.error('Failed to fetch AI events:', error);
+                loadingIndicator.textContent = `Error loading events. Check console for details.`;
+            }
+        }
+
+        function clearFilters() {
+            filterMessageInput.value = '';
+            filterSourceInput.value = '';
+            filterDestInput.value = '';
+            filterLevelSelect.value = '';
+            filterStatusSelect.value = '';
+            fetchAIEvents(); // Lấy lại dữ liệu từ API (chỉ còn bộ lọc AI)
+        }
+
+        function clearDisplayedEvents() {
+            allEvents = []; 
+            eventsTableBody.innerHTML = '';
+            eventsTableContainer.style.display = 'none';
+            noDataMessage.style.display = 'block';
+            noDataMessage.textContent = 'Displayed events cleared. Click Refresh to load new events.';
+        }
+
+        function setInitialFiltersFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialSeverity = urlParams.get('severity');
+            const initialStatus = urlParams.get('status');
+
+            if (initialSeverity && filterLevelSelect.querySelector(`option[value="${initialSeverity.toUpperCase()}"]`)) {
+                filterLevelSelect.value = initialSeverity.toUpperCase();
+            }
+            if (initialStatus && filterStatusSelect.querySelector(`option[value="${initialStatus.toLowerCase()}"]`)) {
+                filterStatusSelect.value = initialStatus.toLowerCase();
+            }
+        }
+
+
+        // --- Event Listeners and Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setInitialFiltersFromURL();
+            fetchAIEvents(); // Lấy dữ liệu lần đầu tiên
+            
+            // Tải lại dữ liệu sau mỗi 30 giây (nếu có dữ liệu mới trong DB)
+            setInterval(fetchAIEvents, 30000); 
+        });
+
+        refreshEventsButton.addEventListener('click', fetchAIEvents);
+        clearDisplayedEventsButton.addEventListener('click', clearDisplayedEvents);
+        applyFiltersButton.addEventListener('click', applyFilters);
+        clearFiltersButton.addEventListener('click', clearFilters);
+    </script>
+</body>
+</html>

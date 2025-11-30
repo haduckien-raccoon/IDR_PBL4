@@ -8,150 +8,140 @@
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Lấy path hiện tại (vd: /dashboard, /incidents)
-  const currentPath = window.location.pathname;
-
-  // Tìm tất cả các link trong sidebar
-  document.querySelectorAll(".sidebar ul li a").forEach(link => {
-    if (link.getAttribute("href") === currentPath) {
-      link.parentElement.classList.add("active");
-    } else {
-      link.parentElement.classList.remove("active");
+  
+  <style>
+    /* CSS riêng cho Heatmap */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: 30px repeat(24, 1fr); /* Cột giờ */
+      grid-template-rows: 20px repeat(7, 1fr);    /* Hàng thứ */
+      gap: 2px;
+      margin-top: 10px;
+      font-size: 10px;
+      color: #888;
     }
-  });
-});
-</script>
+    .hm-cell {
+      background: #2a2a45;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .hm-cell:hover { border: 1px solid #fff; }
+    .hm-label-x { text-align: center; line-height: 20px; }
+    .hm-label-y { text-align: right; padding-right: 5px; line-height: 20px; }
+    
+    /* Màu heatmap theo mức độ */
+    .hm-l1 { background: #1a3a4a; }
+    .hm-l2 { background: #2a5a6a; }
+    .hm-l3 { background: #30e3ca; }
+    .hm-l4 { background: #f0a050; }
+    .hm-l5 { background: #e94560; }
+  </style>
+</head>
 <body>
   <div class="dashboard-container">
 
-    <nav class="sidebar">
-      <div class="sidebar-header">
-        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
-      </div>
-      <ul>
-        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
-        <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
-        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
-        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
-        <li class="active"><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
-        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-      </ul>
-    </nav>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
       <header class="header">
         <div class="system-status">
-          ANALYTICS & REPORTS • <span class="status-online">LAST 30 DAYS</span>
+          ANALYTICS & REPORTS • <span id="status-period" class="status-online">LAST 30 DAYS</span>
         </div>
         <div class="user-menu">
-          <i class="fa-solid fa-bell"></i>
-          <i class="fa-solid fa-moon"></i>
-          <i class="fa-solid fa-user-circle"></i>
+            <i class="fa-solid fa-bell"></i>
+            <i class="fa-solid fa-moon"></i>
+            <i class="fa-solid fa-user-circle"></i>
         </div>
       </header>
 
-      <!-- Cột trái: bộ lọc thời gian -->
       <aside class="left-column">
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-calendar-alt"></i> Khoảng thời gian</h4>
+            <h4><i class="fa-solid fa-calendar-alt"></i> Time Range</h4>
           </div>
           <div class="filter-row">
             <div>
-              <label>Chế độ</label>
+              <label>Mode</label>
               <select id="range-mode">
-                <option value="7d">7 ngày</option>
-                <option value="30d" selected>30 ngày</option>
-                <option value="90d">90 ngày</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d" selected>Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+                <option value="custom">Custom Range</option>
               </select>
             </div>
           </div>
-          <div class="filter-row">
-            <div>
-              <label>Từ ngày</label>
-              <input type="date" id="range-from">
-            </div>
-            <div>
-              <label>Đến ngày</label>
-              <input type="date" id="range-to">
+          <div class="filter-row" id="custom-date-row" style="display:none; margin-top:10px;">
+            <div style="width:100%">
+              <label>From</label>
+              <input type="date" id="range-from" style="width:100%; margin-bottom:5px;">
+              <label>To</label>
+              <input type="date" id="range-to" style="width:100%;">
             </div>
           </div>
-          <button class="btn btn-secondary" style="margin-top:10px;width:100%;">
-            <i class="fa-solid fa-chart-line"></i> Cập nhật thống kê
+          <button id="btn-update-stats" class="btn btn-secondary" style="margin-top:15px;width:100%;">
+            <i class="fa-solid fa-rotate"></i> Update Report
           </button>
         </div>
 
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-percent"></i> Tỉ lệ loại tấn công</h4>
+            <h4><i class="fa-solid fa-bug"></i> Severity Dist.</h4>
           </div>
-          <canvas id="attackTypePie" height="200"></canvas>
+          <div class="chart-container" style="height: 250px;">
+            <canvas id="severityChart"></canvas>
+          </div>
         </div>
       </aside>
 
-      <!-- Cột giữa: các biểu đồ chính -->
       <section class="main-column">
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-chart-area"></i> Lưu lượng tấn công theo thời gian</h4>
+            <h4><i class="fa-solid fa-chart-area"></i> Attack Traffic Trend</h4>
           </div>
-          <canvas id="attackTimeSeries" height="220"></canvas>
+          <div class="chart-container" style="height: 220px;">
+            <canvas id="trendChart"></canvas>
+          </div>
         </div>
-
-        <div class="widget-row">
-          <div class="widget">
+        <div class="widget">
             <div class="widget-header">
-              <h4><i class="fa-solid fa-globe"></i> Top quốc gia tấn công</h4>
+              <h4><i class="fa-solid fa-fire-flame-curved"></i> Attack Heatmap (Day vs Hour)</h4>
             </div>
-            <canvas id="countryBarChart" height="180"></canvas>
-          </div>
-          <div class="widget">
-            <div class="widget-header">
-              <h4><i class="fa-solid fa-bug"></i> Phân bố mức độ severity</h4>
-            </div>
-            <canvas id="severityRadar" height="180"></canvas>
-          </div>
+            <div id="heatmap-container" class="heatmap-grid">
+               </div>
         </div>
       </section>
 
-      <!-- Cột phải: heatmap & báo cáo -->
       <aside class="right-column">
         <div class="widget">
-          <div class="widget-header">
-            <h4><i class="fa-solid fa-fire-flame-curved"></i> Thời gian cao điểm (Heatmap)</h4>
-          </div>
-          <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;">
-            Heatmap theo giờ trong ngày & ngày trong tuần. (có thể render bằng canvas hoặc SVG riêng).
-          </p>
-          <img src="{{ url_for('static', path='img/heatmap_placeholder.png') }}"
-               alt="Heatmap attacks"
-               style="width:100%;opacity:.7;border-radius:8px;">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-globe"></i> Top Targets/IPs</h4>
+            </div>
+            <canvas id="countryChart" height="200"></canvas>
         </div>
 
         <div class="widget">
           <div class="widget-header">
-            <h4><i class="fa-solid fa-file-export"></i> Báo cáo</h4>
+            <h4><i class="fa-solid fa-file-export"></i> Export Data</h4>
           </div>
           <p style="font-size:0.85rem;color:var(--text-secondary);">
-            Tạo báo cáo PDF/CSV theo ngày, tuần, tháng cho quản trị viên.
+            Download current report view for stakeholders.
           </p>
-          <button class="btn btn-secondary" style="width:100%;margin-top:8px;">
+          <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="alert('Feature coming soon: Export PDF')">
             <i class="fa-solid fa-file-pdf"></i> Export PDF
           </button>
-          <button class="btn btn-secondary" style="width:100%;margin-top:6px;">
+          <button class="btn btn-secondary" style="width:100%;margin-top:6px;" onclick="alert('Feature coming soon: Export CSV')">
             <i class="fa-solid fa-file-csv"></i> Export CSV
           </button>
         </div>
       </aside>
     </main>
   </div>
-
+  
   <script>
-    // Khởi tạo các biểu đồ Chart.js sau này
+    window.__CONFIG__ = {
+      API_BASE: "{{ api_base if api_base is defined else '' }}"
+    };
   </script>
+  <script src="{{ url_for('static', path='js/analytics.js') }}"></script>
 </body>
 </html>

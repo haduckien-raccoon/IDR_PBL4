@@ -1,0 +1,42 @@
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
+  </div>
+  <ul id="main-menu">
+    <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+    <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+    <li><a href="/analytics"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
+    <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
+    <li><a href="/ai"><i class="fa-solid fa-robot"></i> AI</a></li>
+    <li><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
+    <li><a href="/reverse-proxy"><i class="fa-solid fa-gears"></i> Proxy Config</a></li>
+    <li><a href="/traffic"><i class="fa-solid fa-network-wired"></i> Traffic Logs</a></li>
+    <li><a href="/alerts"><i class="fa-solid fa-triangle-exclamation"></i> Alert Logs</a></li>
+    <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
+
+  </ul>
+</nav>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const currentPath = window.location.pathname;
+  const menuItems = document.querySelectorAll("#main-menu li a");
+
+  menuItems.forEach(link => {
+    const href = link.getAttribute("href");
+    
+    // Logic so sánh đường dẫn:
+    // 1. Giống hệt (vd: /dashboard)
+    // 2. Hoặc trang con (vd: /incidents/123 thì menu incidents vẫn sáng)
+    // 3. Loại trừ trang chủ '/' nếu đang ở trang con khác
+    if (
+      href === currentPath || 
+      (href !== "/" && currentPath.startsWith(href))
+    ) {
+      link.parentElement.classList.add("active");
+    } else {
+      link.parentElement.classList.remove("active");
+    }
+  });
+});
+</script>

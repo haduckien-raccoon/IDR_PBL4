@@ -33,6 +33,7 @@ class HTTPParseResult:
         self.http_version: Optional[str] = None
         self.http_host: Optional[str] = None
         self.http_user_agent: Optional[str] = None
+        self.status_code: Optional[str] = None
 
 class HTTPParser:
     CRLF = b"\r\n"
@@ -64,6 +65,12 @@ class HTTPParser:
             else:
                 if len(parts) >= 1:
                     result.http_version = parts[0]
+
+                # ---- Parse HTTP Response Status Code ----
+                m = re.match(r"HTTP/\d\.\d\s+(\d{3})", first)
+                if m:
+                    result.status_code = m.group(1)
+                    result.regions["http_status"] = result.status_code.encode("latin1") if result.status_code else b""
 
             # ---- headers ----
             current_name = None
@@ -124,6 +131,7 @@ class HTTPParser:
             status = result.headers.get("status")
             if status:
                 result.regions["http_status"] = status.encode("latin1")
+                result.status_code = status.split()[0]
 
         except Exception:
             pass

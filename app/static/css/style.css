@@ -512,7 +512,7 @@ body {
 /* Thanh add rule */
 .rule-form-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 10px;
     margin-bottom: 10px;
 }
@@ -580,4 +580,303 @@ body {
     color: var(--text-primary);
     font-size: 0.85rem;
     min-width: 220px;
+}
+
+/* =========================================
+   SSH CONSOLE STYLING (GLASSMORPHISM)
+   ========================================= */
+
+/* --- 1. Layout & Grid Setup --- */
+
+.ssh-dashboard-grid {
+    grid-column: 1 / -1; 
+    width: 100%;
+    
+    /* [SỬA] Grid Layout cho 2 cột: Terminal (tự co giãn) | Info (cố định 300px) */
+    display: grid;
+    grid-template-columns: 1fr 300px; 
+    gap: 20px;
+    
+    /* Chiều cao full màn hình trừ đi header */
+    height: calc(100vh - 120px);
+    overflow: hidden; 
+    padding-bottom: 10px;
+}
+/* --- 2. Glass Panel Base (Khung kính nền tảng) --- */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.65); /* Màu nền kính tối */
+    backdrop-filter: blur(16px);        /* Độ mờ kính cao hơn */
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.glass-panel:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Header của các Panel */
+.panel-header {
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel-header h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+.panel-header i { margin-right: 8px; color: var(--color-blue, #4d79ff); }
+
+.btn-icon-add {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-icon-add:hover { background: var(--color-blue, #4d79ff); color: white; }
+
+/* --- 3. Left Column: Server Targets --- */
+.targets-panel .server-list {
+    padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.server-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.server-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+/* Active State (Neon Glow) */
+.server-card.active {
+    background: rgba(59, 130, 246, 0.15); /* Xanh neon nhạt */
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+.icon-box {
+    width: 40px; height: 40px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 1.2rem;
+    color: #64748b;
+}
+.server-card.active .icon-box {
+    background: var(--color-blue, #3b82f6);
+    color: white;
+}
+
+.server-details { flex: 1; display: flex; flex-direction: column; }
+.server-details .name { font-weight: 600; color: #f1f5f9; font-size: 0.9rem; }
+.server-details .ip { color: #94a3b8; font-size: 0.75rem; font-family: 'Fira Code', monospace; margin-top: 2px;}
+
+.status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+}
+.status-dot.online { background: #10b981; color: #10b981; }
+
+.btn-connect {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #475569;
+    background: transparent;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-connect:hover {
+    border-color: var(--color-blue, #3b82f6);
+    color: var(--color-blue, #3b82f6);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* --- 4. Middle Column: Terminal (Tâm điểm) --- */
+.terminal-panel {
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); /* Bóng đậm hơn tạo chiều sâu */
+}
+
+.terminal-header {
+    background: #0f172a; /* Đen đặc hơn background chung */
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px 0 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.terminal-header .tab {
+    height: 100%;
+    display: flex; align-items: center;
+    padding: 0 20px;
+    background: #1e293b;
+    border-top: 2px solid var(--color-blue, #3b82f6);
+    color: #fff;
+    font-size: 0.8rem;
+    font-family: 'Fira Code', monospace;
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+.terminal-header .tab i { margin-right: 8px; color: #10b981; }
+
+.tab-controls i {
+    margin-left: 12px;
+    font-size: 0.8rem;
+    color: #475569;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.tab-controls i:hover { color: #fff; }
+.tab-controls .text-red:hover { color: #ef4444; text-shadow: 0 0 8px red; }
+
+.terminal-body {
+    flex: 1;
+    background: #0b0b14; /* Màu đen tuyền của terminal */
+    padding: 20px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+    overflow-y: auto;
+}
+
+/* Màu sắc text trong terminal */
+.output .green { color: #10b981; font-weight: 700; }
+.output .gray { color: #64748b; }
+.output .typing { color: #f8fafc; }
+
+/* Hiệu ứng con trỏ nhấp nháy */
+.cursor {
+    display: inline-block;
+    width: 8px; height: 18px;
+    background: #cbd5e1;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Custom Scrollbar cho Terminal */
+.terminal-body::-webkit-scrollbar { width: 10px; }
+.terminal-body::-webkit-scrollbar-track { background: #0b0b14; }
+.terminal-body::-webkit-scrollbar-thumb { 
+    background: #334155; 
+    border: 2px solid #0b0b14;
+    border-radius: 5px;
+}
+
+/* --- 5. Right Column: Info & Actions --- */
+.info-panel .info-grid {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+.info-item span {
+    font-family: 'Fira Code', monospace;
+    color: #f1f5f9;
+    font-weight: 500;
+}
+.text-neon { color: #f59e0b; text-shadow: 0 0 5px rgba(245, 158, 11, 0.4); }
+
+.separator {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 0 20px;
+}
+
+.quick-actions {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.quick-actions h4 {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+/* Nút lệnh nhanh giống Code Block */
+.btn-snippet {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-align: left;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-snippet::before {
+    content: '$';
+    color: #64748b;
+    margin-right: 8px;
+}
+
+.btn-snippet:hover {
+    border-color: var(--color-blue, #3b82f6);
+    color: #fff;
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateX(2px);
+}
+
+.btn-snippet.danger:hover {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+@media (max-width: 1200px) {
+    .ssh-dashboard-grid {
+        grid-template-columns: 1fr; 
+    }
+    .info-panel {
+        display: none; 
+    }
 }

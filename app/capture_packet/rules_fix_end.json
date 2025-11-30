@@ -1,5 +1,76 @@
 [
     {
+        "uuid": "sqli_sleep_user_agent",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": ["http_header"],
+        "content": [
+            { "value": "User-Agent: ", "nocase": true },
+            { "value": "sleep(", "nocase": true, "within": 100 }
+        ],
+        "pcre": "/User-Agent\\x3A\\x20[^\\r\\n]*sleep\\(/Hi",
+        "action": "alert",
+        "severity": "high",
+        "message": "SQL use of sleep function in HTTP header - likely SQL injection attempt",
+        "reference": "https://blog.cloudflare.com/the-sleepy-user-agent/"
+    },
+    {
+        "uuid": "sqli_or_1_eq_1_detect",
+        "group_id": "SQLI_LOGIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_client_body", "http_uri"],
+        "flow": ["to_server", "established"],
+        "content": [
+            { "value": "1=1", "nocase": true }
+        ],
+        "fast_pattern": "only",
+        "pcre": "(?i)(and|or)\\s*1\\s*=\\s*1",
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi indicator: '1=1' pattern detected in HTTP request"
+    },
+    {
+        "uuid": "sqli_injection_attack_optimized",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": {
+            "pattern": "id=", 
+            "options": ["http_uri", "nocase"]
+        },
+        "pcre": "/[?&]id=\\\\w*('|\\%27)\\\\s*(or|and|union|select|--|#)/Ii",
+        "msg": "Potential SQL Injection with SQL Keywords detected"
+    },
+    {
+        "uuid": "sqli injection blind",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "sleep(",
+            "/"
+        ],
+        "fast_pattern":"only",
+        "field":["http_uri"],
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi Blind Injection attempt detected (sleep function)"
+    },
+    {
         "uuid": "SQLI_C-AUTH_BYPASS-001",
         "group_id": "sql_injection-attempt",
         "proto": "TCP",
@@ -64,34 +135,69 @@
         "message": "SQLi indicator: OR 1=1 detected"
     },
     {
-        "uuid": "sqli injection detect",
+        "uuid": "sqli_or_1_eq_0_detect",
         "group_id": "SQLI_LOGIC",
         "proto": "TCP",
         "dst_port": 80,
-        "field": [],
-        "flow": [],
+
+        "field": ["http_uri"],
+        "flow": ["to_server", "established"],
 
         "content": [
-            "%27"
+            { "value": "1=0", "nocase": true }
         ],
-        "action": "alert",
+        "fast_pattern": "only",
+        "pcre": "(?i)(and|or)[\\s\\/\\*]+1=0",
+        "action": "drop",
         "severity": "high",
-        "message": "SQLi indicator: OR 1=1 detected"
+        "message": "SQLi indicator: 1=0 logic check detected (possible SQL injection attempt)"
     },
     {
-        "uuid": "sqli_injection_detect_1",
+        "uuid": "sqli_url_comment_ending_detect",
         "group_id": "SQLI_LOGIC",
         "proto": "TCP",
         "dst_port": 80,
-        "field": [],
-        "flow": [],
+
+        "field": ["http_uri"],
+        "flow": ["to_server", "established"],
 
         "content": [
-            "%22"
+            { "value": "--", "nocase": false }
         ],
-        "action": "alert",
+
+        "fast_pattern": "only",
+
+        "pcre": "(?i)(SELECT|UPDATE|INSERT)\\s+[^\\r\\n&]+--$",
+
+        "action": "drop",
         "severity": "high",
-        "message": "SQLi indicator: OR 1=1 detected"
+
+        "message": "SQLi indicator: URL ending with SQL comment characters '--' after SQL keyword"
+    },
+    {
+        "uuid": "sql_sleep_function",
+        "group_id": "sql_injection-attempt",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow":[
+            "to_server",
+            "established"
+        ],
+        "content":[
+            {
+                "value": "AND",
+                "nocase": true
+            },
+            {
+                "value":"SLEEP|28|",
+                "nocase": true,
+                "within": 100
+            }
+        ],
+        "action":"alert",
+        "severity":"high",
+        "message":"SQLi Sleep function detected",
+        "field":["http_uri"]
     },
     {
         "uuid": "sid-WEB-ORA-1674-Optimized",
@@ -539,23 +645,23 @@
         "message": "Possible SQL injection: boolean OR / comment-based injection"
     },
     {
-        "uuid": "MALWARE-SHAFT-SID-230",
-        "group_id": "attempted-dos",
+        "uuid": "MALWARE_SHAFT_SID_230_v2",
+        "group_id": "malware-command-control",
         "proto": "TCP",
-        "dst_port": "any",
-        "pcre": "",
-        "field": [],
-        "flow": [
-            "to_client",
-            "established"
-        ],
+        "dst_port": 5500,
+
+        "field": ["payload"],
+        "flow": ["to_server", "established"],
+
         "content": [
-            "login:"
+            { "value": "login:", "nocase": false }
         ],
+        "pcre": "^login:\\s*\\w{3,16}$",
         "fast_pattern": "only",
+
         "action": "alert",
         "severity": "high",
-        "message": "MALWARE-OTHER shaft client login to handler"
+        "message": "MALWARE-OTHER Shaft client login to handler"
     },
     {
         "uuid": "webscan_path_traversal_payload",
@@ -886,7 +992,7 @@
         "dst_port": 80,
         "field": ["http_uri"],
         "flow": ["to_server", "established"],
-        "pcre": "(?i)\\b(ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)\\b",
+        "pcre": "(?i)(?:^|\\s|;|\\||\\()(?P<cmd>ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)(?:\\s|;|\\||\\)|$)",
         "fast_pattern": "",
         "action": "alert",
         "severity": "medium",
@@ -1266,6 +1372,5 @@
         "action": "alert",
         "severity": "critical",
         "message": "MALWARE-BACKDOOR Jsp.Webshell.Noop upload attempt"
-    }
-    
+    }    
 ]

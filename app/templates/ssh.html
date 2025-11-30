@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SSH Console - IDR_Project</title>
+
+  <!-- CSS chung của hệ thống -->
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Xterm.js (terminal trong trình duyệt) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+
+  <!-- CSS nhỏ bổ sung riêng cho trang SSH -->
+  <style>
+    /* Cho terminal chiếm hết panel, không còn block text giả */
+    .terminal-body {
+      padding: 0;               /* override padding cũ để terminal full */
+      display: flex;
+    }
+    #terminal {
+      width: 100%;
+      height: 100%;
+      padding: 12px 16px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h3><i class="fa-solid fa-shield-halved"></i> IDR_Project</h3>
+      </div>
+      <ul>
+        <li><a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="/incidents"><i class="fa-solid fa-file-lines"></i> Incident Management</a></li>
+        <li><a href="/analytics"><i class="fa-solid fa-triangle-exclamation"></i> Analytics</a></li>
+        <li><a href="/rules"><i class="fa-solid fa-list-check"></i> Manage Rules</a></li>
+        <li><a href="/settings"><i class="fa-solid fa-server"></i> System</a></li>
+        <!-- Trang SSH -->
+        <li class="active"><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
+        <li><a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <div class="system-status">
+            SSH CONSOLE • <span class="status-online">CONNECTED MODE</span>
+          </div>
+          <p class="ssh-header-subtitle">
+            Open an SSH terminal to the protected server directly from the Web interface.
+          </p>
+        </div>
+        <div class="user-menu">
+          <i class="fa-solid fa-bell"></i>
+          <i class="fa-solid fa-moon"></i>
+          <i class="fa-solid fa-user-circle"></i>
+        </div>
+      </header>
+
+      <div class="ssh-dashboard-grid">
+        <!-- PANEL: SSH Terminal (xterm gắn vào #terminal) -->
+        <div class="widget glass-panel terminal-panel">
+          <div class="terminal-header">
+            <div class="tab active"><i class="fa-solid fa-terminal"></i> SSH Session</div>
+            <div class="tab-controls">
+              <i class="fa-solid fa-window-minimize"></i>
+              <i class="fa-solid fa-expand"></i>
+              <i class="fa-solid fa-xmark text-red"></i>
+            </div>
+          </div>
+          <div class="terminal-body">
+            <!-- Xterm sẽ render vào đây -->
+            <div id="terminal"></div>
+          </div>
+        </div>
+
+        <!-- PANEL: Session Info + Quick Commands -->
+        <div class="widget glass-panel info-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-circle-info"></i> Session Info</h3>
+          </div>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Host</label>
+              <span>192.168.1.8</span>
+            </div>
+            <div class="info-item">
+              <label>Port</label>
+              <span>22</span>
+            </div>
+            <div class="info-item">
+              <label>User</label>
+              <span class="text-neon">hieu</span>
+            </div>
+            <div class="info-item">
+              <label>Protocol</label>
+              <span>SSH-2.0</span>
+            </div>
+          </div>
+
+          <div class="separator"></div>
+
+          <div class="quick-actions">
+            <h4>Quick Commands</h4>
+            <button class="btn-snippet">htop</button>
+            <button class="btn-snippet">docker ps</button>
+            <button class="btn-snippet">netstat -tuln</button>
+            <button class="btn-snippet">ufw status</button>
+            <button class="btn-snippet danger">tail -f /var/log/syslog</button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Script điều khiển SSH (WebSocket + xterm.js) -->
+  <script src="{{ url_for('static', path='js/ssh.js') }}"></script>
+</body>
+</html>

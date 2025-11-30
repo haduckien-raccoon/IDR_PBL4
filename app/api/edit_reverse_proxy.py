@@ -87,7 +87,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.websockets import WebSocket
 
 app = FastAPI()
-router = APIRouter(prefix="/api/reverse-proxy", tags=["rules"])
+router = APIRouter(prefix="/reverse-proxy", tags=["reverse-proxy"])
 templates = Jinja2Templates(directory="app/templates")
 
 # mount static files

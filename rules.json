@@ -1,0 +1,30 @@
+    {
+        "uuid": "sqli injection detect",
+        "group_id": "SQLI_LOGIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri"],
+        "flow": [],
+
+        "content": [
+            "%27"
+        ],
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi indicator: %27 detected"
+    },
+    {
+        "uuid": "sqli_injection_detect_1",
+        "group_id": "SQLI_LOGIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "field": ["http_uri"],
+        "flow": [],
+
+        "content": [
+            "%22"
+        ],
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLi indicator: %22 detected"
+    },

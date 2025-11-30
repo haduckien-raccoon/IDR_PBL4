@@ -364,6 +364,9 @@ class IDS:
             for region_name, region_value in parsed.regions.items():
                 if isinstance(region_value, (bytes, bytearray)):
                     buffers[region_name] = bytes(region_value)
+
+            if hasattr(parsed, "status_code") and parsed.status_code is not None:
+                meta["status_code"] = parsed.status_code
         except Exception:
             console_logger.debug("HTTP parse error", exc_info=True)
 
@@ -379,11 +382,16 @@ class IDS:
         #         region_name, len(region_bytes), snippet_str
         #     )
         http_uri = buffers.get("http_uri", b"").decode("latin1", "ignore")
-        status_code = meta.get("status")
+        status_code = meta.get("status_code")
+        method = buffers.get("http_method", b"").decode("latin1", "ignore")
+        response_body = buffers.get("http_client_body", b"")
+        # console_logger.info(
+        #     "HTTP Request: uri=%s, status=%s, method=%s, body=%s",
+        #     http_uri, status_code, method, response_body
+        # )
 
         # Gọi BehaviorInspector
-        alerts = self.behavior_inspector.process(meta, http_uri, status_code)
-
+        alerts = self.behavior_inspector.process(meta, http_uri, status_code, method, response_body)
         # Nếu có alert, log tất cả, không chỉ dùng phần tử đầu tiên
         if alerts:
             for alert in alerts:
@@ -519,20 +527,56 @@ class IDS:
                 continue
 
             # --- PCRE check ---
+            # pcre = entry.get("pcre_compiled")
+            # if pcre:
+            #     matched_pcre = False
+            #     pcre_buf = buffers.get(prev_buf_name, buffers.get("raw", b""))
+            #     variants = generate_decodes(pcre_buf, enable_decode=self.enable_decode)
+            #     for label, txt in variants:
+            #         if isinstance(txt, bytes):
+            #             txt = txt.decode("latin1", "ignore")
+            #         try:
+            #             if pcre.search(txt):
+            #                 matched_pcre = True
+            #                 break
+            #         except Exception:
+            #             continue
+            #     if not matched_pcre:
+            #         continue
+            # --- PCRE check (fixed to match only rule-specified field) ---
             pcre = entry.get("pcre_compiled")
             if pcre:
                 matched_pcre = False
-                pcre_buf = buffers.get(prev_buf_name, buffers.get("raw", b""))
-                variants = generate_decodes(pcre_buf, enable_decode=self.enable_decode)
-                for label, txt in variants:
-                    if isinstance(txt, bytes):
-                        txt = txt.decode("latin1", "ignore")
-                    try:
-                        if pcre.search(txt):
-                            matched_pcre = True
-                            break
-                    except Exception:
-                        continue
+                # Lấy field rule chỉ định, fallback None nếu không có
+                rule_fields = c["raw"].get("field")
+                if isinstance(rule_fields, str):
+                    rule_fields = [rule_fields]
+
+                # Nếu rule chỉ định field, chỉ match buffers đó
+                candidate_buffers = []
+                if rule_fields:
+                    for f in rule_fields:
+                        buf_bytes = buffers.get(f)
+                        if buf_bytes:
+                            candidate_buffers.append(buf_bytes)
+                else:
+                    # nếu không chỉ định, dùng raw buffer
+                    candidate_buffers = [buffers.get("raw", b"")]
+
+                for buf_bytes in candidate_buffers:
+                    variants = generate_decodes(buf_bytes, enable_decode=self.enable_decode)
+                    for label, txt in variants:
+                        if isinstance(txt, bytes):
+                            txt = txt.decode("latin1", "ignore")
+                        try:
+                            if pcre.search(txt):
+                                matched_pcre = True
+                                break
+                        except Exception:
+                            continue
+                    if matched_pcre:
+                        break
+
                 if not matched_pcre:
                     continue
 
@@ -559,11 +603,11 @@ class IDS:
                     console_logger.exception("log_alert error")
         else:
             try:
-                self.log_traffic(meta, payload)
+                #chỉ ghi request vào log traffic dport != 80
+                if meta.get("dport") != 80:
+                    self.log_traffic(meta, payload)
             except Exception:
                 console_logger.exception("log_traffic error")
-
-
 
 # ============== FLOW HASH & DISPATCHER (MULTI-WORKER) ==============
 def _flow_key(pkt) -> Optional[Tuple[Tuple[str,int], Tuple[str,int]]]:
@@ -592,8 +636,9 @@ def _ingest_callback_factory(worker_queues: List["queue.Queue"], metrics: Dict[s
     return ingest
 
 def _worker_loop_shard(worker_id: int, ids: "IDS", q: "queue.Queue", stop_event: threading.Event, metrics: Dict[str, List[int]]):
-    allowed_ports = {80}
+    allowed_ports = {80}  # HTTP
     console_logger.info("Worker %d started", worker_id)
+
     while not stop_event.is_set():
         try:
             pkt = q.get(timeout=0.5)
@@ -603,26 +648,67 @@ def _worker_loop_shard(worker_id: int, ids: "IDS", q: "queue.Queue", stop_event:
             except Exception:
                 pass
             continue
+
         try:
-            if IP not in pkt:
+            if IP not in pkt or TCP not in pkt:
                 continue
+
             ip_pkt = pkt[IP]
-            if TCP in ip_pkt:
-                out = ids.reasm.feed(ip_pkt)
-                if out:
-                    assembled_bytes, conn_key = out
-                    src, dst, sport, dport = conn_key
-                    if int(dport) not in allowed_ports:
-                        continue
+            tcp_pkt = ip_pkt[TCP]
+
+            out = ids.reasm.feed(ip_pkt)
+            if out:
+                assembled_bytes, conn_key = out
+                src, dst, sport, dport = conn_key
+
+                # --- Xác định direction: request hay response ---
+                if int(dport) in allowed_ports:
+                    # client -> server (request)
+                    client_side = True
                     meta = {"src": src, "dst": dst, "sport": int(sport), "dport": int(dport), "proto": "TCP"}
-                    ids.match_payload(assembled_bytes, meta)
+                elif int(sport) in allowed_ports:
+                    # server -> client (response)
+                    client_side = False
+                    meta = {"src": src, "dst": dst, "sport": int(sport), "dport": int(dport), "proto": "TCP"}
                 else:
-                    t = ip_pkt[TCP]
-                    raw_payload = bytes(t.payload) if Raw in t and bytes(t.payload) else b""
-                    if raw_payload and int(t.dport) in allowed_ports:
-                        meta = {"src": ip_pkt.src, "dst": ip_pkt.dst, "sport": int(t.sport), "dport": int(t.dport), "proto": "TCP"}
-                        ids.match_payload(raw_payload, meta)
-                metrics["proc"][worker_id] += 1
+                    continue
+
+                # --- parse HTTP ---
+                try:
+                    parsed = ids.http_parser.parse(assembled_bytes, client_side=client_side)
+                    if not client_side:
+                        meta["status_code"] = parsed.status_code
+                except Exception:
+                    console_logger.debug("HTTP parse error", exc_info=True)
+
+                ids.match_payload(assembled_bytes, meta)
+
+            else:
+                # xử lý payload lẻ (không reassembled)
+                raw_payload = bytes(tcp_pkt.payload) if Raw in tcp_pkt else b""
+                if not raw_payload:
+                    continue
+
+                if int(tcp_pkt.dport) in allowed_ports:
+                    client_side = True
+                    meta = {"src": ip_pkt.src, "dst": ip_pkt.dst, "sport": int(tcp_pkt.sport), "dport": int(tcp_pkt.dport), "proto": "TCP"}
+                elif int(tcp_pkt.sport) in allowed_ports:
+                    client_side = False
+                    meta = {"src": ip_pkt.src, "dst": ip_pkt.dst, "sport": int(tcp_pkt.sport), "dport": int(tcp_pkt.dport), "proto": "TCP"}
+                else:
+                    continue
+
+                try:
+                    parsed = ids.http_parser.parse(raw_payload, client_side=client_side)
+                    if not client_side:
+                        meta["status_code"] = parsed.status_code
+                except Exception:
+                    console_logger.debug("HTTP parse error", exc_info=True)
+
+                ids.match_payload(raw_payload, meta)
+
+            metrics["proc"][worker_id] += 1
+
         except Exception:
             console_logger.exception("Worker %d loop exception", worker_id)
         finally:

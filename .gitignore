@@ -7,5 +7,5 @@ app/services/cai_project/.env
 
 # AI model / data
 app/services/cai_project/cai/*
-app/logs/*.log
-document/*.pdf
+#app/logs/*.log
+#document/*.pdf

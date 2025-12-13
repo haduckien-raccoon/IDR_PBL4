@@ -18,3 +18,5 @@ sudo iptables -A INPUT -p tcp --dport 80 -j DROP
 Xóa drop:
 sudo iptables -D INPUT -s <IP> -j DROP
 sudo /media/haduckien/E/Tool/miniconda3/bin/python -m app.services.iptables_service
+conda activate
+python3 -m app.workers.ai_traffic_worker

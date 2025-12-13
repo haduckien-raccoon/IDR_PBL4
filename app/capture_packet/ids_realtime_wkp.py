@@ -4,6 +4,7 @@ ids_byte_deep.py - simple Snort-like byte-level IDS
 """
 
 from __future__ import annotations
+from http import server
 import sys
 import os
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -224,6 +225,17 @@ class IDS:
                     console_logger.info("Alert sent to API successfully: %s", response.json())
                 else:
                     console_logger.error("Failed to send alert to API: %s - %s", response.status_code, response.text)
+                #Lấy ip trên chính máy chủ IDS
+                my_ip = os.popen("hostname -I | awk '{print $1}'").read().strip()
+                ip_attack = meta.get('src')
+                # console_logger.info("IDS Host IP: %s", my_ip)
+                my_send = f"http://{my_ip}:80/project_course/alerts/{ip_attack}"
+                # console_logger.info("Sending alert to: %s", my_send)
+                response1 = requests.post(my_send, timeout = 60)
+                if response1.status_code == 201:
+                    console_logger.info("Alert sent to API successfully: %s", response1.json())
+                else:
+                    console_logger.error("Failed to send alert to API: %s - %s", response1.status_code, response1.text)
             except requests.exceptions.RequestException as e:
                 console_logger.error("Error sending alert to API: %s", e)
                 # Handle specific request exceptions if needed
@@ -381,6 +393,7 @@ class IDS:
         #         "Parsed HTTP region: %-20s | size: %-6d | snippet: %s",
         #         region_name, len(region_bytes), snippet_str
         #     )
+        
         http_uri = buffers.get("http_uri", b"").decode("latin1", "ignore")
         status_code = meta.get("status_code")
         method = buffers.get("http_method", b"").decode("latin1", "ignore")
@@ -598,13 +611,14 @@ class IDS:
                         meta["severity"] = "medium"
                     action = meta["action"]
                     severity = meta["severity"]
+                    
                     self.log_alert(meta, p, rid, message, variant, action, severity)
                 except Exception:
                     console_logger.exception("log_alert error")
         else:
             try:
-                #chỉ ghi request vào log traffic dport != 80
-                if meta.get("dport") != 80:
+                #chỉ ghi request vào log traffic dport và response vào log traffic sport nếu đều là giao thức http 
+                if meta.get("dport") == 80 or meta.get("sport") == 80:
                     self.log_traffic(meta, payload)
             except Exception:
                 console_logger.exception("log_traffic error")

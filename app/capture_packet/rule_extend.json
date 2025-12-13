@@ -1,0 +1,1239 @@
+[
+    {
+        "uuid": "app_detect_gotomypc",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)jedi.+?request=.+?jedi=",
+        "field": [
+            "body",
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "jedi",
+            "request=",
+            "jedi="
+        ],
+        "fast_pattern": "jedi",
+        "action": "alert",
+        "severity": "medium",
+        "message": "APP-DETECT GoToMyPC remote control attempt detected (HTTP)"
+    },
+    {
+        "uuid": "app_detect_rdp_admin_tunnel",
+        "group_id": "Authentication Bruteforce",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)\\xE0.*mstshash=Administr",
+        "field": [
+            "body",
+            "raw_packet"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "mstshash=Administr"
+        ],
+        "fast_pattern": "mstshash=Administr",
+        "action": "alert",
+        "severity": "medium",
+        "message": "APP-DETECT RDP Administrator connection request (Tunneled over HTTP)"
+    },
+    {
+        "uuid": "app_detect_ida_pro_tcp_variant",
+        "group_id": "Reconnaissance",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^IDA\\x00\\x01\\x00\\x00\\x00",
+        "field": [
+            "body",
+            "raw_packet"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "IDA"
+        ],
+        "fast_pattern": "IDA",
+        "action": "alert",
+        "severity": "low",
+        "message": "APP-DETECT IDA Pro License Check Pattern (TCP Variant)"
+    },
+    {
+        "uuid": "app_detect_quagga_challenge",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Hello,\\s+this\\s+is\\s+Quagga.*Password:",
+        "field": [
+            "body",
+            "raw_packet"
+        ],
+        "flow": [
+            "from_server",
+            "established"
+        ],
+        "content": [
+            "Hello, this is Quagga"
+        ],
+        "fast_pattern": "Hello, this is Quagga",
+        "action": "alert",
+        "severity": "medium",
+        "message": "APP-DETECT Quagga routing daemon password challenge detected"
+    },
+    {
+        "uuid": "app_detect_httptunnel_proxy",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/index\\.html\\?crap=",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/index.html?crap="
+        ],
+        "fast_pattern": "/index.html?crap=",
+        "action": "alert",
+        "severity": "high",
+        "message": "APP-DETECT HTTPTunnel proxy outbound connection detected"
+    },
+    {
+        "uuid": "app_detect_intel_amt_dhcp_tunnel",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x01\\x01\\x06.*\\x37\\x09\\x06\\x03\\x01\\x0F\\x42\\x43\\x0D\\x2C\\x0C\\xFF",
+        "field": [
+            "body",
+            "raw_packet"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "\u0001\u0001\u0006"
+        ],
+        "fast_pattern": "",
+        "action": "alert",
+        "severity": "low",
+        "message": "APP-DETECT Intel AMT DHCP boot request pattern (Tunneled/Anomaly)"
+    },
+    {
+        "uuid": "openvas_scan",
+        "group_id": "Reconnaissance",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:.*OpenVAS",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "OpenVAS"
+        ],
+        "fast_pattern": "OpenVAS",
+        "action": "alert",
+        "severity": "medium",
+        "message": "OpenVAS vulnerability scanner detected"
+    },
+    {
+        "uuid": "bloomberg_bot",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:.*BLP_bbot",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "BLP_bbot"
+        ],
+        "fast_pattern": "BLP_bbot",
+        "action": "alert",
+        "severity": "low",
+        "message": "Bloomberg web crawler detected"
+    },
+    {
+        "uuid": "jenkins_rce",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "POST\\s+/jenkins/script",
+        "field": [
+            "uri",
+            "http_method"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/jenkins/script"
+        ],
+        "fast_pattern": "/jenkins/script",
+        "action": "drop",
+        "severity": "critical",
+        "message": "Jenkins Script Console access attempt (Potential RCE)"
+    },
+    {
+        "uuid": "hola_vpn_startup",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/be_client_cgi\\/perr\\?browser=",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/be_client_cgi/perr?browser="
+        ],
+        "fast_pattern": "/be_client_cgi/perr?browser=",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN startup attempt detected"
+    },
+    {
+        "uuid": "hola_vpn_tunnel",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/hola_trigger\\?ping=tunnel",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/hola_trigger?ping=tunnel"
+        ],
+        "fast_pattern": "/hola_trigger?ping=tunnel",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN tunnel keep-alive detected"
+    },
+    {
+        "uuid": "hola_vpn_ping",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/ping\\?rmt_ver",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/ping?rmt_ver"
+        ],
+        "fast_pattern": "/ping?rmt_ver",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN connectivity check detected"
+    },
+    {
+        "uuid": "hola_ver_header",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)X-Hola-Version:",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "X-Hola-Version:"
+        ],
+        "fast_pattern": "X-Hola-Version:",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN usage detected (Custom Header)"
+    },
+    {
+        "uuid": "hola_pub_uri",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/www\\/hola\\/pub\\/",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "/www/hola/pub/"
+        ],
+        "fast_pattern": "/www/hola/pub/",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN startup URI detected"
+    },
+    {
+        "uuid": "hola_access_pop",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/access\\/popular",
+        "field": ["uri"],
+        "flow": ["to_server", "established"],
+        "content": ["hola.org"],
+        "fast_pattern": "hola.org",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN startup (Access Popular URI)"
+    },
+    {
+        "uuid": "hola_ua_get",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:\\s*hola_get",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["hola_get"],
+        "fast_pattern": "hola_get",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN installation agent detected"
+    },
+    {
+        "uuid": "hola_wget_inst",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:\\s*wget.*Host:\\s*perr\\.hola\\.org",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["perr.hola.org"],
+        "fast_pattern": "perr.hola.org",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Hola VPN installer download via Wget"
+    },
+    {
+        "uuid": "i2p_dns_leak",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)b32\\.i2p",
+        "field": ["uri", "body", "http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["b32.i2p"],
+        "fast_pattern": "b32.i2p",
+        "action": "alert",
+        "severity": "low",
+        "message": "I2P hidden service domain detected (b32.i2p)"
+    },
+    {
+        "uuid": "your_freedom_tunnel",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)1yf\\.de",
+        "field": ["uri", "body", "http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["1yf.de"],
+        "fast_pattern": "1yf.de",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Your-Freedom tunneling service domain detected"
+    },
+    {
+        "uuid": "i2p_trojan_dns",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)pc\\.malware\\.com",
+        "field": ["http_header", "body"],
+        "flow": ["to_server", "established"],
+        "content": ["pc.malware.com"],
+        "fast_pattern": "pc.malware.com",
+        "action": "alert",
+        "severity": "high",
+        "message": "I2P Trojan-related domain detected (pc.malware.com)"
+    },
+    {
+        "uuid": "i2p_netbios",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "FAEDCOENEBEMFHEBFCEFCOEDEPENCAAA",
+        "field": ["body"],
+        "flow": ["to_server", "established"],
+        "content": ["FAEDCOENEBEMFHEBFCEFCOEDEPENCAAA"],
+        "fast_pattern": "FAEDCOENEBEMFHEBFCEFCOEDEPENCAAA",
+        "action": "alert",
+        "severity": "medium",
+        "message": "I2P NetBIOS encoded signature detected (Tunneling Artifact)"
+    },
+    {
+        "uuid": "computrace_c2",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*search64\\.namequery\\.com",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["search64.namequery.com"],
+        "fast_pattern": "search64.namequery.com",
+        "action": "alert",
+        "severity": "low",
+        "message": "Absolute Software Computrace agent calling home"
+    },
+    {
+        "uuid": "cmp_search2",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*search2\\.namequery\\.com",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["search2.namequery.com"],
+        "fast_pattern": "search2.namequery.com",
+        "action": "alert",
+        "severity": "low",
+        "message": "Computrace agent call-home (search2)"
+    },
+    {
+        "uuid": "cmp_search_us",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*search\\.us\\.namequery\\.com",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["search.us.namequery.com"],
+        "fast_pattern": "search.us.namequery.com",
+        "action": "alert",
+        "severity": "low",
+        "message": "Computrace agent call-home (search.us)"
+    },
+    {
+        "uuid": "cmp_nettrace",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*namequery\\.nettrace\\.co\\.za",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["namequery.nettrace.co.za"],
+        "fast_pattern": "namequery.nettrace.co.za",
+        "action": "alert",
+        "severity": "low",
+        "message": "Computrace agent call-home (South Africa domain)"
+    },
+    {
+        "uuid": "cmp_bh_namequery",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*bh\\.namequery\\.com",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["bh.namequery.com"],
+        "fast_pattern": "bh.namequery.com",
+        "action": "alert",
+        "severity": "low",
+        "message": "Computrace agent call-home (bh.namequery)"
+    },
+    {
+        "uuid": "cmp_absolute_m",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*m\\d+\\.absolute\\.com",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": [".absolute.com"],
+        "fast_pattern": ".absolute.com",
+        "action": "alert",
+        "severity": "low",
+        "message": "Computrace agent call-home (m*.absolute.com)"
+    },
+    {
+        "uuid": "cmp_ip_hardcoded",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "Host:\\s*209\\.53\\.113\\.223",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["209.53.113.223"],
+        "fast_pattern": "209.53.113.223",
+        "action": "alert",
+        "severity": "low",
+        "message": "Computrace agent call-home (Hardcoded IP)"
+    },
+    {
+        "uuid": "xolo_miner",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x22.{34}\\x00",
+        "field": [
+            "raw_packet",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "\u0022"
+        ],
+        "fast_pattern": "",
+        "action": "drop",
+        "severity": "high",
+        "message": "Xolominer crypto-mining traffic detected"
+    },
+    {
+        "uuid": "jdwp_rce",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "JDWP-Handshake",
+        "field": [
+            "body",
+            "raw_packet"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "JDWP-Handshake"
+        ],
+        "fast_pattern": "JDWP-Handshake",
+        "action": "drop",
+        "severity": "critical",
+        "message": "Java Debug Wire Protocol (JDWP) exposed - Critical RCE Risk"
+    },
+    {
+        "uuid": "ppcoin_domain",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)tnseed\\.ppcoin\\.net",
+        "field": [
+            "http_header",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "tnseed.ppcoin.net"
+        ],
+        "fast_pattern": "tnseed.ppcoin.net",
+        "action": "alert",
+        "severity": "low",
+        "message": "Crypto-currency mining domain detected (PPCoin)"
+    },
+    {
+        "uuid": "crypto_terracoin",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)seed[12]\\.net\\.terracoin\\.org",
+        "field": [
+            "http_header",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "terracoin.org"
+        ],
+        "fast_pattern": "terracoin.org",
+        "action": "alert",
+        "severity": "low",
+        "message": "Terracoin cryptocurrency network node detected"
+    },
+    {
+        "uuid": "crypto_qrkcoin",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)seed1\\.qrkcoin\\.org",
+        "field": [
+            "http_header",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "qrkcoin.org"
+        ],
+        "fast_pattern": "qrkcoin.org",
+        "action": "alert",
+        "severity": "low",
+        "message": "Quarkcoin cryptocurrency network node detected"
+    },
+    {
+        "uuid": "crypto_metis",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)seed1\\.metiscoininvest\\.info",
+        "field": [
+            "http_header",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "metiscoininvest.info"
+        ],
+        "fast_pattern": "metiscoininvest.info",
+        "action": "alert",
+        "severity": "low",
+        "message": "Metiscoin cryptocurrency node detected"
+    },
+    {
+        "uuid": "crypto_ppcoin_seed",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)seed\\.ppcoin\\.net",
+        "field": [
+            "http_header",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "ppcoin.net"
+        ],
+        "fast_pattern": "ppcoin.net",
+        "action": "alert",
+        "severity": "low",
+        "message": "Peercoin cryptocurrency node detected (seed)"
+    },
+    {
+        "uuid": "crypto_mophides",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)seed\\.mophides\\.com",
+        "field": [
+            "http_header",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "mophides.com"
+        ],
+        "fast_pattern": "mophides.com",
+        "action": "alert",
+        "severity": "low",
+        "message": "Mophides cryptocurrency node detected"
+    },
+    {
+        "uuid": "anyplace_binary_sig",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\xAA\\x25\\x00\\xBF\\xA3\\x5C\\x37\\xA4\\x09\\x1F\\xC4\\x04\\x3F\\xB6\\x34\\xE9\\xEA\\x45\\x0B\\x01\\x6E\\xB0\\x9E\\x53\\xFF\\x15\\xA1\\x7C\\xA0\\x4E\\x17\\x62",
+        "field": [
+            "raw_packet",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "\u00AA%\u0000\u00BF\u00A3"
+        ],
+        "fast_pattern": "",
+        "action": "drop",
+        "severity": "high",
+        "message": "Anyplace Control binary signature detected"
+    },
+    {
+        "uuid": "anyplace_proxy_head",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "HTTP/1\\.1\\s+005\\r\\nVE",
+        "field": [
+            "raw_packet",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "HTTP/1.1 005"
+        ],
+        "fast_pattern": "HTTP/1.1 005",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Anyplace Control non-standard HTTP header detected"
+    },
+    {
+        "uuid": "paros_proxy_ua",
+        "group_id": "Reconnaissance",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:.*Paros",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "Paros"
+        ],
+        "fast_pattern": "Paros",
+        "action": "alert",
+        "severity": "low",
+        "message": "Paros Web Proxy/Scanner detected via User-Agent"
+    },
+    {
+        "uuid": "baidu_ime_setup",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "BaiduJP_Setup_MINI\\.pdb",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["BaiduJP_Setup_MINI.pdb"],
+        "fast_pattern": "BaiduJP_Setup_MINI.pdb",
+        "action": "alert",
+        "severity": "low",
+        "message": "Baidu IME Installer download detected (PDB Signature)"
+    },
+    {
+        "uuid": "sogou_wall_resp",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\[sogoubizhi\\]",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["[sogoubizhi]"],
+        "fast_pattern": "[sogoubizhi]",
+        "action": "alert",
+        "severity": "low",
+        "message": "Sogou Wallpaper application response detected"
+    },
+    {
+        "uuid": "sogou_wall_ua",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:\\s*BIZHI_",
+        "field": ["http_header"],
+        "flow": ["to_server", "established"],
+        "content": ["BIZHI_"],
+        "fast_pattern": "BIZHI_",
+        "action": "alert",
+        "severity": "low",
+        "message": "Sogou Wallpaper application User-Agent detected"
+    },
+    {
+        "uuid": "360_safeguard_login",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/login\\.php\\?refer=%2F",
+        "field": ["uri"],
+        "flow": ["to_server", "established"],
+        "content": ["/login.php?refer=%2F"],
+        "fast_pattern": "/login.php?refer=%2F",
+        "action": "alert",
+        "severity": "medium",
+        "message": "360.cn SafeGuard management console access attempt"
+    },
+    {
+        "uuid": "resp_linux_root",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "uid=0\\(root\\)\\s+gid=0\\(root\\)",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["uid=0(root)"],
+        "fast_pattern": "uid=0(root)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "ATTACK-RESPONSE: Command execution output detected (Linux Root)"
+    },
+    {
+        "uuid": "resp_win_shell",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "Microsoft\\s+Windows\\s+\\[Version\\s+\\d+\\.\\d+\\.\\d+\\]",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["Microsoft Windows [Version"],
+        "fast_pattern": "Microsoft Windows [Version",
+        "action": "alert",
+        "severity": "critical",
+        "message": "ATTACK-RESPONSE: Command execution output detected (Windows Shell)"
+    },
+    {
+        "uuid": "resp_etc_passwd",
+        "group_id": "Path Traversal",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "root:x:0:0:root:\\/root:\\/bin\\/bash",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["root:x:0:0:"],
+        "fast_pattern": "root:x:0:0:",
+        "action": "alert",
+        "severity": "high",
+        "message": "ATTACK-RESPONSE: Sensitive file leakage detected (/etc/passwd)"
+    },
+    {
+        "uuid": "resp_dir_listing",
+        "group_id": "Reconnaissance",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "<title>Index\\s+of\\s+\\/.*<\\/title>",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["Index of /"],
+        "fast_pattern": "Index of /",
+        "action": "alert",
+        "severity": "medium",
+        "message": "ATTACK-RESPONSE: Directory Listing enabled (Information Disclosure)"
+    },
+    {
+        "uuid": "backdoor_china_chopper",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)eval\\s*\\(\\s*base64_decode\\s*\\(",
+        "field": [
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "base64_decode"
+        ],
+        "fast_pattern": "base64_decode",
+        "action": "drop",
+        "severity": "critical",
+        "message": "China Chopper Webshell detected (eval+base64)"
+    },
+    {
+        "uuid": "backdoor_cmd_execution",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(cmd|exec|command|shell)=.*(whoami|net\\s+user|ipconfig|wget|curl|cat\\s+\\/etc)",
+        "field": [
+            "uri",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "cmd"
+        ],
+        "fast_pattern": "cmd",
+        "action": "drop",
+        "severity": "high",
+        "message": "Simple Backdoor/Webshell command execution attempt"
+    },
+    {
+        "uuid": "backdoor_c99_r57",
+        "group_id": "Remote Code Execution",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(c99|r57|wso)\\.php\\?.*(act=|cmd=|action=)",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            ".php"
+        ],
+        "fast_pattern": ".php",
+        "action": "alert",
+        "severity": "high",
+        "message": "Classic PHP Webshell access detected (C99/R57/WSO)"
+    },
+    {
+        "uuid": "bad_http_method",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^(?!(GET|POST|HEAD|PUT|DELETE|OPTIONS|PATCH|TRACE|CONNECT))[A-Z]+",
+        "field": [
+            "http_method",
+            "raw_packet"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [],
+        "fast_pattern": "",
+        "action": "drop",
+        "severity": "medium",
+        "message": "BAD-TRAFFIC: Malformed or Unknown HTTP Method"
+    },
+    {
+        "uuid": "bad_host_localhost",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Host:\\s*(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0)",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "Host:"
+        ],
+        "fast_pattern": "Host:",
+        "action": "alert",
+        "severity": "low",
+        "message": "BAD-TRAFFIC: Suspicious Host header (Localhost/Loopback)"
+    },
+    {
+        "uuid": "bad_http_version",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "HTTP\\/\\d+(\\.|,)\\d+\\s+(?!(200|301|302|404|500|403))\\d{3}",
+        "field": [
+            "raw_packet"
+        ],
+        "flow": [
+            "from_server",
+            "established"
+        ],
+        "content": [
+            "HTTP/"
+        ],
+        "fast_pattern": "HTTP/",
+        "action": "alert",
+        "severity": "low",
+        "message": "BAD-TRAFFIC: Malformed HTTP Response Status Code"
+    },
+    {
+        "uuid": "blacklist_ua_scanners",
+        "group_id": "Reconnaissance",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:\\s*(Nikto|Wikto|Metasploit|Havij|Acunetix|Arachni|Netsparker|Sqlmap|Masscan)",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "User-Agent:"
+        ],
+        "fast_pattern": "User-Agent:",
+        "action": "drop",
+        "severity": "high",
+        "message": "BLACKLIST: Known Vulnerability Scanner User-Agent detected"
+    },
+    {
+        "uuid": "blacklist_scripting_bots",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:\\s*(Python-urllib|libwww-perl|Go-http-client|Curl|Wget|PycURL)",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "User-Agent:"
+        ],
+        "fast_pattern": "User-Agent:",
+        "action": "alert",
+        "severity": "low",
+        "message": "BLACKLIST: Generic Scripting/Bot User-Agent detected (Potential Automated Traffic)"
+    },
+    {
+        "uuid": "blacklist_spam_referer",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Referer:\\s*.*(semalt\\.com|buttons-for-website\\.com|trafficmonsoon|darodar\\.com)",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "Referer:"
+        ],
+        "fast_pattern": "Referer:",
+        "action": "drop",
+        "severity": "medium",
+        "message": "BLACKLIST: Known Spam Referrer Domain detected"
+    },
+    {
+        "uuid": "dos_apache_killer",
+        "group_id": "Denial of Service",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "Range:\\s*bytes=(\\d*-\\d*,){10,}",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "Range:"
+        ],
+        "fast_pattern": "Range:",
+        "action": "drop",
+        "severity": "high",
+        "message": "DoS: Apache Range Header DoS (Apache Killer) attempt"
+    },
+    {
+        "uuid": "dos_tools_ua",
+        "group_id": "Denial of Service",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)User-Agent:\\s*(LOIC|HOIC|Slowloris|Hulk|GoldenEye|ApacheBench|Siege)",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "User-Agent:"
+        ],
+        "fast_pattern": "User-Agent:",
+        "action": "drop",
+        "severity": "medium",
+        "message": "DoS: Known Stress Testing/DoS Tool User-Agent detected"
+    },
+    {
+        "uuid": "dos_xmlrpc_multicall",
+        "group_id": "Denial of Service",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)POST\\s+.*xmlrpc\\.php.*system\\.multicall",
+        "field": [
+            "uri",
+            "body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "system.multicall"
+        ],
+        "fast_pattern": "system.multicall",
+        "action": "drop",
+        "severity": "high",
+        "message": "DoS: WordPress XML-RPC Amplification Attack"
+    },
+    {
+        "uuid": "doh_binary_detect",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Content-Type:\\s*application\\/dns-message",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "application/dns-message"
+        ],
+        "fast_pattern": "application/dns-message",
+        "action": "alert",
+        "severity": "medium",
+        "message": "DNS over HTTP (DoH) Binary traffic detected"
+    },
+    {
+        "uuid": "doh_json_detect",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)Content-Type:\\s*application\\/dns-json",
+        "field": [
+            "http_header"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "application/dns-json"
+        ],
+        "fast_pattern": "application/dns-json",
+        "action": "alert",
+        "severity": "medium",
+        "message": "DNS over HTTP (DoH) JSON traffic detected"
+    },
+    {
+        "uuid": "dns_config_leak",
+        "group_id": "Reconnaissance",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "\\/(named\\.conf|rndc\\.key|root\\.hints|zone\\.file)",
+        "field": [
+            "uri"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "named.conf"
+        ],
+        "fast_pattern": "named.conf",
+        "action": "drop",
+        "severity": "high",
+        "message": "DNS Server configuration file access attempt"
+    },
+    {
+        "uuid": "xor_exe_05",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x48\\x5F.*\\x55\\x40\\x05\\x05",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["\u0055\u0040\u0005\u0005"],
+        "fast_pattern": "\u0055\u0040\u0005\u0005",
+        "action": "drop",
+        "severity": "high",
+        "message": "Obfuscated Executable detected (XOR Key 0x05)"
+    },
+    {
+        "uuid": "xor_exe_04",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x49\\x5E.*\\x54\\x41\\x04\\x04",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["\u0054\u0041\u0004\u0004"],
+        "fast_pattern": "\u0054\u0041\u0004\u0004",
+        "action": "drop",
+        "severity": "high",
+        "message": "Obfuscated Executable detected (XOR Key 0x04)"
+    },
+    {
+        "uuid": "xor_exe_03",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x4E\\x59.*\\x53\\x46\\x03\\x03",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["\u0053\u0046\u0003\u0003"],
+        "fast_pattern": "\u0053\u0046\u0003\u0003",
+        "action": "drop",
+        "severity": "high",
+        "message": "Obfuscated Executable detected (XOR Key 0x03)"
+    },
+    {
+        "uuid": "xor_exe_02",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x4F\\x58.*\\x52\\x47\\x02\\x02",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["\u0052\u0047\u0002\u0002"],
+        "fast_pattern": "\u0052\u0047\u0002\u0002",
+        "action": "drop",
+        "severity": "high",
+        "message": "Obfuscated Executable detected (XOR Key 0x02)"
+    },
+    {
+        "uuid": "xor_exe_01",
+        "group_id": "Other",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "^\\x4C\\x5B.*\\x51\\x44\\x01\\x01",
+        "field": ["body"],
+        "flow": ["from_server", "established"],
+        "content": ["\u0051\u0044\u0001\u0001"],
+        "fast_pattern": "\u0051\u0044\u0001\u0001",
+        "action": "drop",
+        "severity": "high",
+        "message": "Obfuscated Executable detected (XOR Key 0x01)"
+    }
+]

@@ -35,12 +35,12 @@ async def block_ip(ip_address: str = Form(...), reason: str = Form("manual")):
         pass
 
     # Cập nhật DB ngay để giao diện phản ánh trạng thái
-    try:
-        # Hàm này nên set status = "blocked", cập nhật lý do + thời gian
-        BlockedIPModel.block_ip(ip_address, reason)
-    except AttributeError:
-        # Nếu project cũ chưa có hàm block_ip, bỏ qua (UI sẽ phụ thuộc worker)
-        pass
+    # try:
+    #     # Hàm này nên set status = "blocked", cập nhật lý do + thời gian
+    #     BlockedIPModel.block_ip(ip_address, reason)
+    # except AttributeError:
+    #     # Nếu project cũ chưa có hàm block_ip, bỏ qua (UI sẽ phụ thuộc worker)
+    #     pass
     return RedirectResponse(url="/blockip", status_code=303)
 
 @router.post("/unblock_ip")

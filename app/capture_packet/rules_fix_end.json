@@ -1,23 +1,25 @@
 [
     {
-        "uuid": "sqli_sleep_user_agent",
-        "group_id": "sql_injection-attempt",
+        "uuid": "sqli_boolean_or_tautology_v3",
+        "group_id": "SQL_INJECTION",
         "proto": "TCP",
         "dst_port": 80,
-        "flow": [
-            "to_server",
-            "established"
-        ],
-        "field": ["http_header"],
+        "field": ["http_client_body"],
+        "fast_pattern": "only",
+        "flow": ["to_server", "established"],
+
         "content": [
-            { "value": "User-Agent: ", "nocase": true },
-            { "value": "sleep(", "nocase": true, "within": 100 }
+            "%27", 
+            "OR",
+            "1",
+            "%3D"   
         ],
-        "pcre": "/User-Agent\\x3A\\x20[^\\r\\n]*sleep\\(/Hi",
+
+        "pcre": "(?i)(%27|'|\")\\s*(OR|%4F%52)\\s*(%27|'|\")?1(%27|'|\")?\\s*(=|%3D)\\s*(%27|'|\")?1(%27|'|\")?",
+
         "action": "alert",
         "severity": "high",
-        "message": "SQL use of sleep function in HTTP header - likely SQL injection attempt",
-        "reference": "https://blog.cloudflare.com/the-sleepy-user-agent/"
+        "message": "SQL Injection attempt: Boolean OR tautology detected (supports raw + URL-encoded)"
     },
     {
         "uuid": "sqli_or_1_eq_1_detect",
@@ -1352,25 +1354,41 @@
         "group_id": "FILE_UPLOAD_ATTEMPT",
         "proto": "TCP",
         "dst_port": 80,
-        "pcre": "(?is)java\\.util\\.\\*java\\.io\\.FileOutputStream.*request\\.getParameter\\(\"name\"\\).*confluence.*request\\.getParameter\\(\"contentString\"\\)",
-        "field": [
-            "http_uri",
-            "http_client_body"
-        ],
-        "flow": [
-            "to_server",
-            "established"
-        ],
+        "flow": ["to_server", "established"],
+
+        "field": ["http_uri"],
+
         "content": [
-            "java.util.*",
-            "java.io.FileOutputStream",
-            "request.getParameter(\"name\")",
-            "confluence",
-            "request.getParameter(\"contentString\")"
+            "${",
+            "java.",
+            "ognl"
         ],
-        "fast_pattern": "",
+
+        "pcre": "(?i)\\$\\{.*(java\\.|ognl\\.).*\\}",
+
         "action": "alert",
         "severity": "critical",
-        "message": "MALWARE-BACKDOOR Jsp.Webshell.Noop upload attempt"
-    }    
+        "message": "Confluence OGNL RCE CVE-2022-26134 attempt detected"
+    },
+    {
+        "uuid": "snort_webshell_upload_chain",
+        "group_id": "FILE_UPLOAD_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+
+        "field": ["http_client_body"],
+
+        "content": [
+            "java.io.FileOutputStream",
+            "request.getParameter(\"name\")",
+            "request.getParameter(\"contentString\")"
+        ],
+
+        "pcre": "(?is)java\\.io\\.FileOutputStream.*request\\.getParameter\\(\"name\"\\).*request\\.getParameter\\(\"contentString\"\\)",
+
+        "action": "alert",
+        "severity": "high",
+        "message": "JSP webshell upload attempt detected"
+    }
 ]

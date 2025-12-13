@@ -61,22 +61,7 @@
 <body>
 <div class="dashboard-container">
     <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fa-solid fa-shield-halved"></i> IDR Dashboard</h3>
-        </div>
-        <ul>
-            <li><a href="/"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/alerts"><i class="fa-solid fa-triangle-exclamation"></i> IDS Alerts (DB)</a></li>
-            <li><a href="/traffic"><i class="fa-solid fa-network-wired"></i> Traffic Logs</a></li>
-            <li><a href="/alerts"><i class="fa-solid fa-bell"></i> Alert Logs</a></li>
-            <li><a href="/ssh"><i class="fa-solid fa-terminal"></i> SSH Console</a></li>
-            <li><a href="/rules"><i class="fa-solid fa-code"></i> IDS Rules</a></li>
-            <!-- MỤC MỚI: Block IP -->
-            <li class="active"><a href="/blockip"><i class="fa-solid fa-ban"></i> Block IP</a></li>
-            <li><a href="/users"><i class="fa-solid fa-users"></i> Users</a></li>
-        </ul>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <!-- MAIN -->
     <main class="main-content">

@@ -3,17 +3,17 @@ import os, re, shutil, time, subprocess
 from fastapi import APIRouter, HTTPException, Form
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/reverse-proxy", tags=["reverse-proxy"])
+router = APIRouter(prefix="/reverse-proxy", tags=["reverse-proxy"])
 
 # --- CẤU HÌNH ---
 # Trong môi trường dev Window, bạn có thể trỏ đến file giả lập
 NGINX_CONF = "/etc/nginx/sites-available/reverse-proxy" 
 # Nếu chạy trên Windows để test giao diện, hãy dùng file tạm:
-if os.name == 'nt':
-    NGINX_CONF = "nginx_mock.conf"
-    if not os.path.exists(NGINX_CONF):
-        with open(NGINX_CONF, "w") as f:
-            f.write("server { listen 80; location / { proxy_pass http://127.0.0.1:8080; } }")
+# if os.name == 'nt':
+#     NGINX_CONF = "nginx_mock.conf"
+#     if not os.path.exists(NGINX_CONF):
+#         with open(NGINX_CONF, "w") as f:
+#             f.write("server { listen 80; location / { proxy_pass http://127.0.0.1:8080; } }")
 
 BACKUP_DIR = "backups/nginx"
 os.makedirs(BACKUP_DIR, exist_ok=True)

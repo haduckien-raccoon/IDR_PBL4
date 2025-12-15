@@ -973,19 +973,24 @@
         "message": "LFI attempt detected: Access to Apache or XAMPP log files."
     },
     {
-        "uuid": "cmdinj_operator_unix",
+        "uuid": "cmdinj_operator_unix_strict",
         "group_id": "COMMAND_INJECTION_OPERATOR",
         "proto": "TCP",
         "dst_port": 80,
-        "field": ["http_uri"],
-        "flow": ["to_server", "established"],
-        "uri_match": ["/login", "/admin", "/shell"],
 
-        "pcre": "(?i)[;|&]\\s*(ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)",
-        "fast_pattern": ";",
+        "flow": ["to_server", "established"],
+
+        "field": ["http_uri", "http_client_body"],
+
+        "uri_match": ["/login", "/admin"],
+
+        "content": ["="],
+
+        "pcre": "(?i)(\\?|&|=)[^\\r\\n]{0,50}[;|&]\\s*(ls|cat|id|whoami|uname|bash|sh)\\b",
+
         "action": "alert",
-        "severity": "medium",
-        "message": "Possible command injection operator detected."
+        "severity": "high",
+        "message": "Command injection attempt via parameter context detected"
     },
     {
         "uuid": "cmdinj_command_unix",
@@ -1001,18 +1006,24 @@
         "message": "Potential OS command keyword detected."
     },
     {
-        "uuid": "cmdinj_high_confidence_unix",
+        "uuid": "cmdinj_unix_param_context",
         "group_id": "COMMAND_INJECTION_INDICATOR",
         "proto": "TCP",
         "dst_port": 80,
-        "field": ["http_uri"],
+
         "flow": ["to_server", "established"],
-        "pcre": "(?i)[;|&](\\s*)(ls|cd|pwd|cat|whoami|uname|ifconfig|id|wget|curl|ps|netstat|bash|sh)",
-        "fast_pattern": ";",
+
+        "field": ["http_uri", "http_client_body"],
+
+        "content": ["="],
+
+        "pcre": "(?i)(\\?|&|=)[^\\r\\n]{0,40}[;|&]\\s*(ls|cat|id|whoami|uname|bash|sh)\\b",
+
         "action": "alert",
-        "severity": "critical",
-        "message": "OS Command Injection attempt detected."
+        "severity": "high",
+        "message": "Command injection attempt via parameter context detected"
     },
+
     {
         "uuid": "lfi_bsd_sensitive_files",
         "group_id": "LFI_INDICATOR",
@@ -1390,5 +1401,338 @@
         "action": "alert",
         "severity": "high",
         "message": "JSP webshell upload attempt detected"
-    }
+    },
+    {
+        "uuid": "snort_sid_21270_cubecart_worldpay_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "content": [
+            "gateway/WorldPay/return.php?"
+        ],
+        "pcre": "(amount|cartId|email|transId|transStatus)=[^&]*[\\x22\\x27\\x3c\\x3e]",
+        "fast_pattern": "gateway/WorldPay/return.php?",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP Devellion CubeCart multiple parameter XSS vulnerability"
+    },
+    {
+        "uuid": "snort_sid_26483_user_agent_script_tag_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_header"
+        ],
+        "content": [
+            "User-Agent: <SCRIPT>"
+        ],
+        "fast_pattern": "User-Agent: <SCRIPT>",
+        "pcre": "",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP JavaScript tag in User-Agent field possible XSS attempt"
+    },
+    {
+        "uuid": "snort_sid_50876_wordpress_statistics_client_ip_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_header"
+        ],
+        "content": [
+            "Client-IP:"
+        ],
+        "fast_pattern": "Client-IP:",
+        "pcre": "(?im)^(X-Cluster-)?Client-IP\\x3a[^\\r\\n]*?([\\x3c\\x3e]|script|onload|src)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP WordPress Statistics cross site scripting attempt"
+    },
+    {
+        "uuid": "snort_sid_50878_wordpress_statistics_x_real_ip_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_header"
+        ],
+        "content": [
+            "X-Real-IP:"
+        ],
+        "fast_pattern": "X-Real-IP:",
+        "pcre": "(?im)^X-Real-IP\\x3a[^\\r\\n]*?([\\x3c\\x3e]|script|onload|src)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP WordPress Statistics cross site scripting attempt"
+    },
+    {
+        "uuid": "snort_sid_50879_wordpress_statistics_forwarded_for_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_header"
+        ],
+        "content": [
+            "Forwarded-For:"
+        ],
+        "fast_pattern": "Forwarded-For:",
+        "pcre": "(?im)^(X-)?Forwarded-For\\x3a[^\\r\\n]*?([\\x3c\\x3e]|script|onload|src)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP WordPress Statistics cross site scripting attempt"
+    },
+    {
+        "uuid": "snort_refined_xss_script_tag_reflected",
+        "group_id": "XSS_REFLECTED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "content": [],
+        "fast_pattern": "<script",
+        "pcre": "(?i)<script\\b[^>]*>",
+        "action": "alert",
+        "severity": "high",
+        "message": "XSS Reflected attempt using script tag injection"
+    },
+    {
+        "uuid": "snort_refined_xss_event_handler",
+        "group_id": "XSS_EVENT_HANDLER",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "content": [],
+        "fast_pattern": "on",
+        "pcre": "(?i)on(error|load|click|mouseover|focus)\\s*=",
+        "action": "alert",
+        "severity": "high",
+        "message": "XSS attempt via HTML event handler injection"
+    },
+    {
+        "uuid": "snort_refined_xss_dom_based",
+        "group_id": "XSS_DOM_BASED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri",
+            "http_client_body"
+        ],
+        "content": [
+            "javascript:"
+        ],
+        "fast_pattern": "javascript:",
+        "pcre": "(?i)javascript\\s*:",
+        "action": "alert",
+        "severity": "medium",
+        "message": "Possible DOM-based XSS attempt using javascript URI"
+    },
+    {
+        "uuid": "snort_refined_xss_persistent_indicator",
+        "group_id": "XSS_STORED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [],
+        "fast_pattern": "<script",
+        "pcre": "(?i)<script\\b[^>]*>.*</script>",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Possible stored XSS attempt with full script payload"
+    },
+    {
+        "uuid": "ids_path_traversal_basic_dotdot",
+        "group_id": "PATH_TRAVERSAL_BASIC",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_uri"],
+        "content": [".."],
+        "fast_pattern": "..",
+        "pcre": "(\\.\\./|\\.\\.\\\\)",
+        "action": "alert",
+        "severity": "high",
+        "message": "Basic path traversal attempt detected"
+    },
+    {
+        "uuid": "ids_path_traversal_encoded",
+        "group_id": "PATH_TRAVERSAL_ENCODED",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_uri"],
+        "content": ["%2e"],
+        "fast_pattern": "%2e",
+        "pcre": "(?i)(%2e%2e%2f|%2e%2e%5c|%%32%65%%32%65)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Encoded path traversal attempt detected"
+    },
+    {
+        "uuid": "ids_path_traversal_linux_sensitive_files",
+        "group_id": "PATH_TRAVERSAL_LINUX",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_uri"],
+        "content": ["/etc/"],
+        "fast_pattern": "/etc/",
+        "pcre": "(?i)/etc/(passwd|shadow|hosts)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Linux sensitive file path traversal attempt"
+    },
+    {
+        "uuid": "ids_path_traversal_windows_ini_files",
+        "group_id": "PATH_TRAVERSAL_WINDOWS",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_uri"],
+        "content": ["win.ini"],
+        "fast_pattern": "win.ini",
+        "pcre": "(?i)(windows\\\\win\\.ini|boot\\.ini)",
+        "action": "alert",
+        "severity": "high",
+        "message": "Windows configuration file path traversal attempt"
+    },
+    {
+        "uuid": "ids_path_traversal_rce_chain",
+        "group_id": "PATH_TRAVERSAL_RCE_CHAIN",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_uri"],
+        "content": ["cmd.exe"],
+        "fast_pattern": "cmd.exe",
+        "pcre": "(?i)(cmd\\.exe|/bin/cat)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Path traversal chained with command execution attempt"
+    },
+    {
+  "uuid": "ids_shellcode_linux_x86_reverse_tcp",
+  "group_id": "SHELLCODE_METASPLOIT",
+  "proto": "TCP",
+  "dst_port": "any",
+  "flow": ["established"],
+  "field": ["raw_payload"],
+  "content": [
+    "|31 DB F7 E3 53 43 53 6A 02 B0 66 89 E1 CD 80|"
+  ],
+  "pcre": "(?s)\\x31\\xDB\\xF7\\xE3.*\\xCD\\x80",
+  "action": "alert",
+  "severity": "critical",
+  "message": "Metasploit Linux x86 reverse TCP shellcode detected"
+},
+{
+  "uuid": "ids_shellcode_linux_x86_meterpreter",
+  "group_id": "SHELLCODE_METASPLOIT",
+  "proto": "TCP",
+  "dst_port": "any",
+  "flow": ["established"],
+  "field": ["raw_payload"],
+  "content": [
+    "|6A 04 5A 89 E1 89 FB 6A 03 58 CD 80|"
+  ],
+  "fast_pattern": "|6A 04 5A|",
+  "action": "alert",
+  "severity": "critical",
+  "message": "Metasploit Linux x86 meterpreter stage shellcode detected"
+},
+{
+  "uuid": "ids_shellcode_linux_binsh",
+  "group_id": "SHELLCODE_GENERIC",
+  "proto": "TCP",
+  "dst_port": "any",
+  "flow": ["established"],
+  "field": ["raw_payload"],
+  "content": [
+    "/bin/sh"
+  ],
+  "fast_pattern": "/bin/sh",
+  "action": "alert",
+  "severity": "high",
+  "message": "Generic Linux /bin/sh shellcode detected"
+},
+{
+  "uuid": "ids_shellcode_windows_meterpreter",
+  "group_id": "SHELLCODE_METASPLOIT",
+  "proto": "TCP",
+  "dst_port": "any",
+  "flow": ["established"],
+  "field": ["raw_payload"],
+  "content": [
+    "METERPRETER"
+  ],
+  "fast_pattern": "METERPRETER",
+  "action": "alert",
+  "severity": "critical",
+  "message": "Metasploit Windows Meterpreter stage detected"
+},
+{
+  "uuid": "ids_shellcode_windows_reverse_tcp",
+  "group_id": "SHELLCODE_METASPLOIT",
+  "proto": "TCP",
+  "dst_port": "any",
+  "flow": ["established"],
+  "field": ["raw_payload"],
+  "content": [
+    "|FC E8 86 00 00 00 60 89 E5 31 D2|"
+  ],
+  "fast_pattern": "|FC E8|",
+  "action": "alert",
+  "severity": "critical",
+  "message": "Metasploit Windows reverse TCP shellcode detected"
+}
+
 ]

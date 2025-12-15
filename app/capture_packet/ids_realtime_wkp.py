@@ -201,7 +201,10 @@ class IDS:
             s = f"ALERT [{rid}] {message} | proto={meta.get('proto')} {src}->{dst} variant={matched_variant} entropy={ent:.3f}\nhexdump:\n{hd}\n"
             alerts_logger.info(s)
             console_logger.info("ALERT %s %s -> %s (%s)", rid, src, dst, message)
-            severity = meta.get('severity', 'medium')
+            if severity is None:
+                severity = meta.get('severity', 'medium')
+            else:
+                severity = severity
             #Gửi cảnh báo đến api:
             try:
                 api_payload ={
@@ -220,7 +223,7 @@ class IDS:
                     "severity": severity
                 }
 
-                response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=10)
+                response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=600)
                 if response.status_code == 201:
                     console_logger.info("Alert sent to API successfully: %s", response.json())
                 else:
@@ -231,11 +234,11 @@ class IDS:
                 # console_logger.info("IDS Host IP: %s", my_ip)
                 my_send = f"http://{my_ip}:80/project_course/alerts/{ip_attack}"
                 # console_logger.info("Sending alert to: %s", my_send)
-                response1 = requests.post(my_send, timeout = 60)
-                if response1.status_code == 201:
-                    console_logger.info("Alert sent to API successfully: %s", response1.json())
-                else:
-                    console_logger.error("Failed to send alert to API: %s - %s", response1.status_code, response1.text)
+                # response1 = requests.post(my_send, timeout = 60)
+                # if response1.status_code == 201:
+                #     console_logger.info("Alert sent to API successfully: %s", response1.json())
+                # else:
+                #     console_logger.error("Failed to send alert to API: %s - %s", response1.status_code, response1.text)
             except requests.exceptions.RequestException as e:
                 console_logger.error("Error sending alert to API: %s", e)
                 # Handle specific request exceptions if needed
@@ -415,7 +418,7 @@ class IDS:
                     alert.get("message", ""),
                     alert.get("variant", ""),
                     alert.get("action", ""),
-                    alert.get("severity", "")
+                    alert.get("severity", "high")
                 )
 
         hits: List[Tuple[str, str, str]] = []
@@ -650,7 +653,7 @@ def _ingest_callback_factory(worker_queues: List["queue.Queue"], metrics: Dict[s
     return ingest
 
 def _worker_loop_shard(worker_id: int, ids: "IDS", q: "queue.Queue", stop_event: threading.Event, metrics: Dict[str, List[int]]):
-    allowed_ports = {80}  # HTTP
+    allowed_ports = {80} 
     console_logger.info("Worker %d started", worker_id)
 
     while not stop_event.is_set():

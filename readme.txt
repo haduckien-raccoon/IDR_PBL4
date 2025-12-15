@@ -1,6 +1,5 @@
 # Tạo venv
 python3 -m venv .venv
-
 # Kích hoạt venv
 source .venv/bin/activate   # Linux/Mac
 .venv\Scripts\activate      # Windows PowerShell

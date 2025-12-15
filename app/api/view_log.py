@@ -433,7 +433,7 @@ async def start_log_tailers() -> None:
         recent_cap=MAX_RECENT,
     )
     alert_tailer = LogTailer(
-        base / "ai_alerts.log",
+        base / "alerts.log",
         AlertParser,
         "alerts",
         alerts_recent,

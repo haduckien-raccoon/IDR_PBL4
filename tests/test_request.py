@@ -2,7 +2,7 @@ import requests
 import threading
 from queue import Queue
 
-URL = "http://127.0.0.1/api/logs/traffic?id=1%20'%20OR%20'1=1'"
+URL = "http://192.168.1.15/project_course/"
 NUM_REQUESTS = 10000
 NUM_THREADS = 20  # số luồng song song, có thể chỉnh
 

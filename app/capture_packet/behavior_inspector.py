@@ -97,7 +97,7 @@ class BehaviorInspector:
                         events.append({
                             "rid": "HTTP-FLOOD",
                             "severity": "high",
-                            "action": "alert",
+                            "action": "block",
                             "type": "dos",
                             "message": f"HTTP flood detected from {src} ({count10} req/{self.cfg['http_flood']['interval']}s)",
                             "window": f"{self.cfg['http_flood']['interval']}s",
@@ -109,8 +109,8 @@ class BehaviorInspector:
                     if self._should_alert(key):
                         events.append({
                             "rid": "FLOW-RATE-ANOMALY",
-                            "severity": "medium",
-                            "action": "alert",
+                            "severity": "high",
+                            "action": "block",
                             "type": "dos",
                             "message": f"Abnormal request rate from {src} ({count30} req/{self.cfg['flow_rate']['interval']}s)",
                             "window": f"{self.cfg['flow_rate']['interval']}s",

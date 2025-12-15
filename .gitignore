@@ -1,11 +1,21 @@
-# Environment variables
-.env
-app/services/cai_project/.env
+# ===== Python cache =====
+__pycache__/
+*.pyc
 
-# Virtual environment
-.venv/
+# ===== Logs =====
+*.log
+app/logs/
 
-# AI model / data
-app/services/cai_project/cai/*
-#app/logs/*.log
-#document/*.pdf
+# ===== Machine Learning (heavy files) =====
+*.h5
+*.pkl
+app/AI_ML/data/
+
+# ===== Jupyter cache =====
+.ipynb_checkpoints/
+
+# ===== Research documents (heavy PDFs) =====
+*.pdf
+
+# ===== IDE =====
+.vscode/

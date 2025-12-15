@@ -1249,3 +1249,188 @@ class TCPReassembler:
         except Exception:
             pass
 
+# class Segment:
+#     __slots__ = ("seq", "data")
+#     def __init__(self, seq: int, data: bytes):
+#         self.seq = seq
+#         self.data = data
+#     @property
+#     def end(self):
+#         return self.seq + len(self.data)
+
+# # ================= DIRECTION BUFFER =================
+# class DirectionBuffer:
+#     def __init__(self, isn: int):
+#         self.isn = isn
+#         self.segments: List[Segment] = []      # ordered, non-overlap
+#         self.holes: List[Tuple[int, int]] = [(isn, sys.maxsize)]
+#         self.last_seen = time.time()
+
+#     def insert(self, seq: int, payload: bytes):
+#         if not payload:
+#             return
+#         new = Segment(seq, payload)
+#         result: List[Segment] = []
+
+#         for s in self.segments:
+#             # no overlap
+#             if new is None or new.end <= s.seq or new.seq >= s.end:
+#                 result.append(s)
+#                 continue
+
+#             # overlap -> FIRST SEEN WINS
+#             if new.seq < s.seq:
+#                 left = new.data[: s.seq - new.seq]
+#                 if left:
+#                     result.append(Segment(new.seq, left))
+#             if new.end > s.end:
+#                 new = Segment(s.end, new.data[s.end - new.seq :])
+#             else:
+#                 new = None
+#             result.append(s)
+
+#         if new:
+#             result.append(new)
+
+#         # sort + merge adjacent
+#         result.sort(key=lambda x: x.seq)
+#         merged: List[Segment] = []
+#         for s in result:
+#             if not merged or merged[-1].end < s.seq:
+#                 merged.append(s)
+#             elif merged[-1].end == s.seq:
+#                 merged[-1] = Segment(merged[-1].seq, merged[-1].data + s.data)
+
+#         self.segments = merged
+#         self._update_holes(seq, seq + len(payload))
+#         self.last_seen = time.time()
+
+#     def _update_holes(self, start: int, end: int):
+#         new_holes = []
+#         for hs, he in self.holes:
+#             if end <= hs or start >= he:
+#                 new_holes.append((hs, he))
+#             else:
+#                 if start > hs:
+#                     new_holes.append((hs, start))
+#                 if end < he:
+#                     new_holes.append((end, he))
+#         self.holes = new_holes
+
+#     def assemble(self) -> bytes:
+#         data = bytearray()
+#         for s in self.segments:
+#             data.extend(s.data)
+#         return bytes(data)
+
+# # ================= FLOW BUFFER =================
+# class FlowBuffer:
+#     def __init__(self):
+#         self.dirs: Dict[BUFID, DirectionBuffer] = {}
+#         self.last_seen = time.time()
+
+# # ================= TCP REASSEMBLY =================
+# class TCPReassembly:
+#     def __init__(self):
+#         self.flows: Dict[BUFID, FlowBuffer] = {}
+#         self._datagrams: Deque[Dict[str, Any]] = deque()
+#         self.flow_tracker = FlowTracker()
+#         self.idle_timeout = 120
+#         self.lock = threading.Lock()
+
+#     def process_packet(self, pkt):
+#         if not pkt.haslayer(IP) or not pkt.haslayer(TCP):
+#             return
+
+#         ip, tcp = pkt[IP], pkt[TCP]
+#         payload = bytes(tcp.payload)
+#         seq = int(tcp.seq)
+#         syn = tcp.flags & 0x02
+#         fin = tcp.flags & 0x01
+#         rst = tcp.flags & 0x04
+
+#         bufid: BUFID = (str(ip.src), str(ip.dst), int(tcp.sport), int(tcp.dport))
+#         self.flow_tracker.update(bufid, tcp, ip)
+
+#         with self.lock:
+#             flow = self.flows.setdefault(bufid, FlowBuffer())
+#             flow.last_seen = time.time()
+
+#             if bufid not in flow.dirs:
+#                 isn = seq + (1 if syn else 0)
+#                 flow.dirs[bufid] = DirectionBuffer(isn)
+
+#             dbuf = flow.dirs[bufid]
+#             dbuf.insert(seq, payload)
+
+#             if fin or rst:
+#                 self._flush_flow(bufid, reason="fin_or_rst")
+
+#     def _flush_flow(self, bufid: BUFID, reason: str):
+#         flow = self.flows.get(bufid)
+#         if not flow:
+#             return
+#         for dbuf in flow.dirs.values():
+#             payload = dbuf.assemble()
+#             self._datagrams.append({
+#                 "payload": payload,
+#                 "id": {
+#                     "src": (bufid[0], bufid[2]),
+#                     "dst": (bufid[1], bufid[3]),
+#                 },
+#                 "flow": self.flow_tracker.get_flow_safe(bufid, None),
+#                 "flush_reason": reason,
+#                 "incomplete": len(dbuf.holes) > 0,
+#             })
+#         self.flows.pop(bufid, None)
+
+#     def cleanup_timeouts(self):
+#         now = time.time()
+#         with self.lock:
+#             for bufid in list(self.flows.keys()):
+#                 if now - self.flows[bufid].last_seen > self.idle_timeout:
+#                     self._flush_flow(bufid, reason="idle_timeout")
+
+#     def get_datagrams(self) -> List[Dict[str, Any]]:
+#         return list(self._datagrams)
+
+#     def clear_datagrams(self):
+#         self._datagrams.clear()
+
+# # ================= WRAPPER =================
+# class TCPReassembler:
+#     def __init__(self, timeout: int = 120):
+#         self.reasm = TCPReassembly()
+#         self._outq: Deque[Tuple[bytes, BUFID]] = deque()
+#         self.lock = threading.Lock()
+
+#     def feed(self, ip_pkt) -> Optional[Tuple[bytes, BUFID]]:
+#         try:
+#             self.reasm.cleanup_timeouts()
+#         except Exception:
+#             pass
+
+#         with self.lock:
+#             if self._outq:
+#                 return self._outq.popleft()
+
+#             self.reasm.process_packet(ip_pkt)
+#             dgs = self.reasm.get_datagrams()
+#             if not dgs:
+#                 return None
+
+#             for d in dgs:
+#                 payload = d["payload"]
+#                 src = d["id"]["src"]
+#                 dst = d["id"]["dst"]
+#                 key = (str(src[0]), str(dst[0]), int(src[1]), int(dst[1]))
+#                 self._outq.append((payload, key))
+
+#             self.reasm.clear_datagrams()
+#             return self._outq.popleft() if self._outq else None
+        
+#     def _cleanup(self):
+#         try:
+#             self.reasm.flow_tracker.prune_stale()
+#         except Exception:
+#             pass

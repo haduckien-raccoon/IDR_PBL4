@@ -1660,79 +1660,48 @@
         "message": "Path traversal chained with command execution attempt"
     },
     {
-  "uuid": "ids_shellcode_linux_x86_reverse_tcp",
-  "group_id": "SHELLCODE_METASPLOIT",
-  "proto": "TCP",
-  "dst_port": "any",
-  "flow": ["established"],
-  "field": ["raw_payload"],
-  "content": [
-    "|31 DB F7 E3 53 43 53 6A 02 B0 66 89 E1 CD 80|"
-  ],
-  "pcre": "(?s)\\x31\\xDB\\xF7\\xE3.*\\xCD\\x80",
-  "action": "alert",
-  "severity": "critical",
-  "message": "Metasploit Linux x86 reverse TCP shellcode detected"
-},
-{
-  "uuid": "ids_shellcode_linux_x86_meterpreter",
-  "group_id": "SHELLCODE_METASPLOIT",
-  "proto": "TCP",
-  "dst_port": "any",
-  "flow": ["established"],
-  "field": ["raw_payload"],
-  "content": [
-    "|6A 04 5A 89 E1 89 FB 6A 03 58 CD 80|"
-  ],
-  "fast_pattern": "|6A 04 5A|",
-  "action": "alert",
-  "severity": "critical",
-  "message": "Metasploit Linux x86 meterpreter stage shellcode detected"
-},
-{
-  "uuid": "ids_shellcode_linux_binsh",
-  "group_id": "SHELLCODE_GENERIC",
-  "proto": "TCP",
-  "dst_port": "any",
-  "flow": ["established"],
-  "field": ["raw_payload"],
-  "content": [
-    "/bin/sh"
-  ],
-  "fast_pattern": "/bin/sh",
-  "action": "alert",
-  "severity": "high",
-  "message": "Generic Linux /bin/sh shellcode detected"
-},
-{
-  "uuid": "ids_shellcode_windows_meterpreter",
-  "group_id": "SHELLCODE_METASPLOIT",
-  "proto": "TCP",
-  "dst_port": "any",
-  "flow": ["established"],
-  "field": ["raw_payload"],
-  "content": [
-    "METERPRETER"
-  ],
-  "fast_pattern": "METERPRETER",
-  "action": "alert",
-  "severity": "critical",
-  "message": "Metasploit Windows Meterpreter stage detected"
-},
-{
-  "uuid": "ids_shellcode_windows_reverse_tcp",
-  "group_id": "SHELLCODE_METASPLOIT",
-  "proto": "TCP",
-  "dst_port": "any",
-  "flow": ["established"],
-  "field": ["raw_payload"],
-  "content": [
-    "|FC E8 86 00 00 00 60 89 E5 31 D2|"
-  ],
-  "fast_pattern": "|FC E8|",
-  "action": "alert",
-  "severity": "critical",
-  "message": "Metasploit Windows reverse TCP shellcode detected"
-}
-
+        "uuid": "ids_shellcode_linux_x86_reverse_tcp",
+        "group_id": "SHELLCODE_METASPLOIT",
+        "proto": "TCP",
+        "dst_port": "any",
+        "flow": ["established"],
+        "field": ["raw_payload"],
+        "content": [
+            "|31 DB F7 E3 53 43 53 6A 02 B0 66 89 E1 CD 80|"
+        ],
+        "pcre": "(?s)\\x31\\xDB\\xF7\\xE3.*\\xCD\\x80",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Metasploit Linux x86 reverse TCP shellcode detected"
+    },
+    {
+        "uuid": "ids_shellcode_linux_x86_meterpreter",
+        "group_id": "SHELLCODE_METASPLOIT",
+        "proto": "TCP",
+        "dst_port": "any",
+        "flow": ["established"],
+        "field": ["raw_payload"],
+        "content": [
+            "|6A 04 5A 89 E1 89 FB 6A 03 58 CD 80|"
+        ],
+        "fast_pattern": "|6A 04 5A|",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Metasploit Linux x86 meterpreter stage shellcode detected"
+    },
+    {
+        "uuid": "ids_shellcode_windows_reverse_tcp",
+        "group_id": "SHELLCODE_METASPLOIT",
+        "proto": "TCP",
+        "dst_port": "any",
+        "flow": ["established"],
+        "field": ["raw_payload"],
+        "content": [
+            "|FC E8 86 00 00 00 60 89 E5 31 D2|"
+        ],
+        "fast_pattern": "|FC E8|",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Metasploit Windows reverse TCP shellcode detected"
+    }
 ]

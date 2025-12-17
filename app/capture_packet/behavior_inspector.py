@@ -1,4 +1,173 @@
-# behavior_inspector_snortstyle_fixed.py
+# import time
+# import threading
+# from collections import defaultdict, deque
+
+
+# class BehaviorInspector:
+#     """
+#     Stateful Behavior Detector – Snort style
+#     - DDOS detection (HTTP + RAW flood)
+#     - Flow rate anomaly
+#     - Brute-force login (content‑based)
+#     """
+
+#     def __init__(self, debug: bool = False):
+#         # Sliding windows per IP
+#         self.ddos_window = defaultdict(deque)    # HTTP + RAW flood (gộp)
+#         self.flow_window = defaultdict(deque)    # Flow-rate (30s)
+#         self.login_fail = defaultdict(deque)     # Login brute-force (20s)
+
+#         # Last alert timestamp per IP + rule
+#         self.last_alert = {}
+
+#         # Thread safety
+#         self.lock = threading.Lock()
+
+#         # IDS thresholds
+#         self.cfg = {
+#             "ddos": {"interval": 10, "threshold": 200},   # events /10s
+#             "flow_rate": {"interval": 30, "threshold": 300},  # events /30s
+#             "login_fail": {"interval": 20, "threshold": 8},    # failed login /20s
+#         }
+
+#         # Cooldowns (seconds)
+#         self.cooldowns = {
+#             "DDOS": 15,
+#             "FLOW_RATE": 20,
+#             "BRUTEFORCE": 30,
+#         }
+
+#         self.debug = debug
+
+#     # ---------------------------
+#     def _clean_window(self, q: deque, now: float, interval: int) -> int:
+#         """Remove timestamps older than interval and return count"""
+#         while q and now - q[0] > interval:
+#             q.popleft()
+#         return len(q)
+
+#     # ---------------------------
+#     def _should_alert(self, key: tuple) -> bool:
+#         """Check cooldown per IP + rule"""
+#         now = time.time()
+#         last = self.last_alert.get(key, 0)
+#         cooldown = self.cooldowns.get(key[1], 10)
+#         if now - last < cooldown:
+#             return False
+#         self.last_alert[key] = now
+#         return True
+
+#     # ---------------------------
+#     def process(
+#         self,
+#         meta: dict,
+#         http_uri: str | None = None,
+#         status_code: int | None = None,
+#         method: str | None = None,
+#         response_body: bytes | None = None,
+#         raw_packet: bool = False
+#     ):
+#         now = time.time()
+#         src = meta.get("src", "0.0.0.0")
+#         events = []
+
+#         with self.lock:
+#             # ---------------------------
+#             # 1) DDOS detection (HTTP + RAW)
+#             # ---------------------------
+#             q_ddos = self.ddos_window[src]
+#             interval_ddos = self.cfg["ddos"]["interval"]
+#             threshold_ddos = self.cfg["ddos"]["threshold"]
+
+#             # Clean old events
+#             count_ddos = self._clean_window(q_ddos, now, interval_ddos)
+
+#             # Append HTTP event
+#             if http_uri or (meta.get("dst_port") == 80):
+#                 q_ddos.append(now)
+#                 count_ddos += 1
+
+#             # Append RAW event
+#             if raw_packet:
+#                 q_ddos.append(now)
+#                 count_ddos += 1
+
+#             # Debug
+#             if self.debug:
+#                 print(
+#                     f"[DEBUG][DDOS] src={src} "
+#                     f"count={count_ddos} "
+#                     f"proto={meta.get('proto')} "
+#                     f"dport={meta.get('dst_port')}"
+#                 )
+
+#             # Check DDOS alert
+#             if count_ddos >= threshold_ddos:
+#                 key = (src, "DDOS")
+#                 if self._should_alert(key):
+#                     events.append({
+#                         "rid": "DDOS",
+#                         "severity": "high",
+#                         "action": "block",
+#                         "type": "dos",
+#                         "message": f"DDOS detected from {src} ({count_ddos} events in {interval_ddos}s)",
+#                     })
+
+#             # ---------------------------
+#             # 2) Flow-rate anomaly (30s window)
+#             # ---------------------------
+#             q_flow = self.flow_window[src]
+#             interval_flow = self.cfg["flow_rate"]["interval"]
+#             count_flow = self._clean_window(q_flow, now, interval_flow)
+#             q_flow.append(now)
+#             count_flow += 1
+
+#             if self.debug:
+#                 print(f"[DEBUG] {src} FLOW count={count_flow}")
+
+#             if count_flow >= self.cfg["flow_rate"]["threshold"]:
+#                 key = (src, "FLOW_RATE")
+#                 if self._should_alert(key):
+#                     events.append({
+#                         "rid": "FLOW-RATE-ANOMALY",
+#                         "severity": "high",
+#                         "action": "block",
+#                         "type": "dos",
+#                         "message": f"Abnormal flow from {src} ({count_flow} req/{interval_flow}s)"
+#                     })
+
+#             # ---------------------------
+#             # 3) Brute-force login detection
+#             # ---------------------------
+#             login_fail_detected = False
+#             if method == "POST" and response_body:
+#                 body = response_body.lower()
+#                 if (b"<form" in body and b"dang nhap" in body) or b"/project_course/login" in body:
+#                     login_fail_detected = True
+
+#             if login_fail_detected:
+#                 qf = self.login_fail[src]
+#                 interval_login = self.cfg["login_fail"]["interval"]
+#                 fail_count = self._clean_window(qf, now, interval_login)
+#                 qf.append(now)
+#                 fail_count += 1
+
+#                 if self.debug:
+#                     print(f"[DEBUG] {src} LOGIN_FAIL count={fail_count}")
+
+#                 if fail_count >= self.cfg["login_fail"]["threshold"]:
+#                     key = (src, "BRUTEFORCE")
+#                     if self._should_alert(key):
+#                         events.append({
+#                             "rid": "BRUTE-FORCE",
+#                             "severity": "high",
+#                             "action": "alert",
+#                             "type": "auth",
+#                             "message": f"Bruteforce login attempts detected from {src} ({fail_count} fails/{interval_login}s)",
+#                         })
+
+#         return events
+
 import time
 import threading
 from collections import defaultdict, deque
@@ -6,48 +175,41 @@ from collections import defaultdict, deque
 
 class BehaviorInspector:
     """
-    Stateful Behavior Detector – Snort style
-    - HTTP flood / flow rate
-    - Brute-force login (content‑based)
-    - Anti-spam alert per IP + rule
+    Stateful Behavior Detector
+    - DDOS flood (ALL packets: HTTP + RAW + SYN)
+    - Flow-rate anomaly
+    - Brute-force login (HTTP only)
     """
 
-    def __init__(self):
-        # Sliding windows per IP
-        self.http_10s = defaultdict(deque)     # HTTP flood (10s)
-        self.http_30s = defaultdict(deque)     # Flow rate (30s)
-        self.login_fail = defaultdict(deque)   # Login brute-force (20s)
+    def __init__(self, debug: bool = False):
+        # Sliding windows
+        self.ddos_window = defaultdict(deque)     # ALL packets
+        self.flow_window = defaultdict(deque)     # ALL packets
+        self.login_fail = defaultdict(deque)      # HTTP only
 
-        # Last alert timestamp per IP + rule
         self.last_alert = {}
-
-        # Thread safety
         self.lock = threading.Lock()
 
-        # IDS thresholds
         self.cfg = {
-            "http_flood": {"interval": 10, "threshold": 100},   # requests /10s
-            "flow_rate":  {"interval": 30, "threshold": 300},   # requests /30s
-            "login_fail": {"interval": 20, "threshold": 8},     # failed login /20s
+            "ddos": {"interval": 10, "threshold": 100},
+            "flow_rate": {"interval": 30, "threshold": 300},
+            "login_fail": {"interval": 20, "threshold": 8},
         }
 
-        # Cooldowns
         self.cooldowns = {
-            "HTTP_FLOOD": 15,
+            "DDOS": 15,
             "FLOW_RATE": 20,
             "BRUTEFORCE": 30,
         }
 
-    # ---------------------------
-    # Clean old timestamps
+        self.debug = debug
+
     # ---------------------------
     def _clean_window(self, q: deque, now: float, interval: int) -> int:
         while q and now - q[0] > interval:
             q.popleft()
         return len(q)
 
-    # ---------------------------
-    # Check cooldown to prevent spam
     # ---------------------------
     def _should_alert(self, key: tuple) -> bool:
         now = time.time()
@@ -58,8 +220,6 @@ class BehaviorInspector:
         self.last_alert[key] = now
         return True
 
-    # ---------------------------
-    # Main process function
     # ---------------------------
     def process(
         self,
@@ -73,92 +233,97 @@ class BehaviorInspector:
         src = meta.get("src", "0.0.0.0")
         events = []
 
+        proto = meta.get("proto")
+        dport = meta.get("dst_port")
+
+        # HTTP chỉ khi parse được URI
+        is_http = bool(http_uri)
+        is_raw = not is_http
+
         with self.lock:
+            # =====================================================
+            # 1) DDOS DETECTION (🔥 ALL PACKETS 🔥)
+            # =====================================================
+            q_ddos = self.ddos_window[src]
+            interval = self.cfg["ddos"]["interval"]
+            threshold = self.cfg["ddos"]["threshold"]
 
-            # ---------------------------
-            # 1) HTTP flood / flow rate
-            # ---------------------------
-            if http_uri:
-                q10 = self.http_10s[src]
-                q30 = self.http_30s[src]
+            count_ddos = self._clean_window(q_ddos, now, interval)
 
-                count10 = self._clean_window(q10, now, self.cfg["http_flood"]["interval"])
-                count30 = self._clean_window(q30, now, self.cfg["flow_rate"]["interval"])
+            # 🔥 MỖI PACKET = 1 EVENT
+            q_ddos.append(now)
+            count_ddos += 1
 
-                q10.append(now)
-                q30.append(now)
-                count10 += 1
-                count30 += 1
+            if self.debug:
+                print(
+                    f"[DEBUG][DDOS] src={src} "
+                    f"count={count_ddos} "
+                    f"is_http={is_http} "
+                    f"is_raw={is_raw} "
+                    f"proto={proto} "
+                    f"dport={dport}"
+                )
 
-                # HTTP Flood
-                if count10 >= self.cfg["http_flood"]["threshold"]:
-                    key = (src, "HTTP_FLOOD")
-                    if self._should_alert(key):
-                        events.append({
-                            "rid": "HTTP-FLOOD",
-                            "severity": "high",
-                            "action": "block",
-                            "type": "dos",
-                            "message": f"HTTP flood detected from {src} ({count10} req/{self.cfg['http_flood']['interval']}s)",
-                            "window": f"{self.cfg['http_flood']['interval']}s",
-                        })
+            if count_ddos >= threshold:
+                key = (src, "DDOS")
+                if self._should_alert(key):
+                    events.append({
+                        "rid": "DDOS",
+                        "severity": "high",
+                        "action": "block",
+                        "type": "dos",
+                        "message": f"DDOS detected from {src} ({count_ddos}/{interval}s)",
+                    })
 
-                # Flow-rate anomaly
-                if count30 >= self.cfg["flow_rate"]["threshold"]:
-                    key = (src, "FLOW_RATE")
-                    if self._should_alert(key):
-                        events.append({
-                            "rid": "FLOW-RATE-ANOMALY",
-                            "severity": "high",
-                            "action": "block",
-                            "type": "dos",
-                            "message": f"Abnormal request rate from {src} ({count30} req/{self.cfg['flow_rate']['interval']}s)",
-                            "window": f"{self.cfg['flow_rate']['interval']}s",
-                        })
+            # =====================================================
+            # 2) FLOW RATE (ALL PACKETS)
+            # =====================================================
+            q_flow = self.flow_window[src]
+            interval_flow = self.cfg["flow_rate"]["interval"]
 
-            # ---------------------------
-            # 2) Brute-force login detection (content‑based)
-            # ---------------------------
-            # - Website của bạn trả 200 OK cả khi sai mật khẩu
-            # - Login fail được xác định bằng CONTENT trong response
-            # ---------------------------
+            count_flow = self._clean_window(q_flow, now, interval_flow)
+            q_flow.append(now)
+            count_flow += 1
 
-            login_fail_detected = False
+            if self.debug:
+                print(f"[DEBUG][FLOW] src={src} count={count_flow}")
 
-            if (
-                method == "POST"
-                and http_uri
-                and ("/login" in http_uri.lower())
-                and response_body
-            ):
+            if count_flow >= self.cfg["flow_rate"]["threshold"]:
+                key = (src, "FLOW_RATE")
+                if self._should_alert(key):
+                    events.append({
+                        "rid": "FLOW-RATE-ANOMALY",
+                        "severity": "high",
+                        "action": "block",
+                        "type": "dos",
+                        "message": f"Abnormal flow from {src} ({count_flow}/{interval_flow}s)",
+                    })
+
+            # =====================================================
+            # 3) BRUTE FORCE LOGIN (HTTP ONLY)
+            # =====================================================
+            if is_http and method == "POST" and response_body:
                 body = response_body.lower()
+                if b"login" in body or b"dang nhap" in body:
+                    qf = self.login_fail[src]
+                    interval_login = self.cfg["login_fail"]["interval"]
 
-                # Pattern đặc trưng khi login thất bại
-                if (
-                    b"<form" in body
-                    and b"dang nhap" in body  # Tiếng Việt unicode đã bị chuyển UTF-8 → bytes
-                ):
-                    login_fail_detected = True
+                    fail_count = self._clean_window(qf, now, interval_login)
+                    qf.append(now)
+                    fail_count += 1
 
-                # Dự phòng trường hợp HTML khác nhau
-                if b"/project_course/login" in body:
-                    login_fail_detected = True
+                    if self.debug:
+                        print(f"[DEBUG][LOGIN] src={src} fails={fail_count}")
 
-            if login_fail_detected:
-                qf = self.login_fail[src]
-                fail_count = self._clean_window(qf, now, self.cfg["login_fail"]["interval"])
-                qf.append(now)
-                fail_count += 1
-
-                if fail_count >= self.cfg["login_fail"]["threshold"]:
-                    key = (src, "BRUTEFORCE")
-                    if self._should_alert(key):
-                        events.append({
-                            "rid": "BRUTE-FORCE",
-                            "severity": "high",
-                            "action": "alert",
-                            "type": "auth",
-                            "message": f"Bruteforce login attempts detected from {src} ({fail_count} fails/{self.cfg['login_fail']['interval']}s)",
-                        })
+                    if fail_count >= self.cfg["login_fail"]["threshold"]:
+                        key = (src, "BRUTEFORCE")
+                        if self._should_alert(key):
+                            events.append({
+                                "rid": "BRUTE-FORCE",
+                                "severity": "high",
+                                "action": "alert",
+                                "type": "auth",
+                                "message": f"Bruteforce login detected from {src}",
+                            })
 
         return events

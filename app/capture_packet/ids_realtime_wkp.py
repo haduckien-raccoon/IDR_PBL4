@@ -153,7 +153,7 @@ class IDS:
             self._start_rules_watcher()
         self.http_parser = HTTPParser()
                 #behavior inspector
-        self.behavior_inspector = BehaviorInspector()
+        self.behavior_inspector = BehaviorInspector(debug=True)
 
     def log_traffic(self, meta: Dict[str, Any], payload: bytes):
         """
@@ -205,6 +205,10 @@ class IDS:
                 severity = meta.get('severity', 'medium')
             else:
                 severity = severity
+            #action nếu là block thì tiến hành chặn IP nguồn
+            if action == "block":
+                enqueue_block(src.split(":")[0])
+                console_logger.info("Blocking IP: %s due to alert %s", meta.get('src'), rid)
             #Gửi cảnh báo đến api:
             try:
                 api_payload ={
@@ -401,11 +405,17 @@ class IDS:
         status_code = meta.get("status_code")
         method = buffers.get("http_method", b"").decode("latin1", "ignore")
         response_body = buffers.get("http_client_body", b"")
+        is_http = bool(http_uri) or (meta.get("dst_port") == 80 and meta.get("proto") == "TCP")
+        is_raw  = not is_http
         # console_logger.info(
         #     "HTTP Request: uri=%s, status=%s, method=%s, body=%s",
         #     http_uri, status_code, method, response_body
         # )
-
+        #in ra console để kiểm tra
+        console_logger.info(
+            "HTTP Request: uri=%s, status=%s, method=%s, is_http=%s, is_raw=%s, ip_src=%s, ip_dst=%s",
+            http_uri, status_code, method, is_http, is_raw, meta.get("src"), meta.get("dst")
+        )
         # Gọi BehaviorInspector
         alerts = self.behavior_inspector.process(meta, http_uri, status_code, method, response_body)
         # Nếu có alert, log tất cả, không chỉ dùng phần tử đầu tiên
@@ -417,7 +427,7 @@ class IDS:
                     alert.get("rid", ""),
                     alert.get("message", ""),
                     alert.get("variant", ""),
-                    alert.get("action", ""),
+                    alert.get("action", "block"),
                     alert.get("severity", "high")
                 )
 
@@ -735,7 +745,7 @@ def _worker_loop_shard(worker_id: int, ids: "IDS", q: "queue.Queue", stop_event:
                 pass
 
 def start_pool(primary_ids: "IDS", iface: str, bpf: str, num_workers: int):
-    worker_queues: List["queue.Queue"] = [queue.Queue(maxsize=20000) for _ in range(num_workers)]
+    worker_queues: List["queue.Queue"] = [queue.Queue(maxsize=2000000) for _ in range(num_workers)]
     metrics = {"enq": [0]*num_workers, "drop": [0]*num_workers, "proc": [0]*num_workers}
     stop_event = threading.Event()
     workers: List[threading.Thread] = []

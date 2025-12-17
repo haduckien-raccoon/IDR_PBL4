@@ -26,5 +26,19 @@
         "action": "alert",
         "severity": "critical",
         "message": "DOS – HTTP Flood detected (too many requests)"
-    }
+    },
+    {
+  "uuid": "ids_shellcode_linux_binsh",
+  "group_id": "SHELLCODE_GENERIC",
+  "proto": "TCP",
+  "dst_port": "any",
+  "flow": ["established"],
+  "field": ["raw_payload"],
+  "content": ["/bin/sh"],
+  "fast_pattern": "/bin/sh",
+  "pcre": "(?s)(\\x2fbin\\x2fsh|\\x90{5,}.*\\x2fbin\\x2fsh)",
+  "action": "alert",
+  "severity": "high",
+  "message": "Generic Linux /bin/sh shellcode detected"
+}
 ]

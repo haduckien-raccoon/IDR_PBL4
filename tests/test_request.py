@@ -2,8 +2,8 @@ import requests
 import threading
 from queue import Queue
 
-URL = "http://192.168.1.15/project_course/"
-NUM_REQUESTS = 10000
+URL = "http://127.0.0.1/ai"
+NUM_REQUESTS = 50
 NUM_THREADS = 20  # số luồng song song, có thể chỉnh
 
 def worker(q: Queue, results: dict):

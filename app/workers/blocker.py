@@ -28,12 +28,12 @@ def enqueue_block(ip: str, reason="unknown"):
     BlockedIPModel.block_ip(ip, reason, duration_minutes=BLOCK_DURATION_MINUTES)
     redis_conn.publish("iptables_commands", f"BLOCK {ip}")
     logger.warning(f"[PUBLISH] Block {ip} ({reason})")
-
     timer = threading.Timer(BLOCK_DURATION_MINUTES * 60, enqueue_unblock, args=[ip])
     timer.start()
 
 def enqueue_unblock(ip: str):
     """Gửi lệnh gỡ IP (unblock) lên Redis service"""
+    from app.AI_ML.DDoS.live_predictor import LivePredictor
     redis_conn.publish("iptables_commands", f"UNBLOCK {ip}")
     BlockedIPModel.unblock_ip(ip)
     logger.info(f"[PUBLISH] Unblock {ip} (hết thời gian)")

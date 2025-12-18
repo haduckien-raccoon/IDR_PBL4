@@ -1,0 +1,17 @@
+.venv
+.env
+.cursor
+/notes/*.txt
+/notes/*.pdf
+/archive/*
+__pycache__/
+/models/*.pkl
+/models/*.h5
+/vibe/*
+/data/UNSW-NB15_training-set.csv
+/data/UNSW-NB15_testing-set.csv
+/data/*.csv
+howto.md 
+/code samples/*
+/notes/*.html
+.github

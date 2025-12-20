@@ -179,6 +179,7 @@ import numpy as np
 import joblib
 from datetime import datetime, timedelta
 import requests
+from app.workers.blocker import enqueue_block, is_ip_blocked
 
 # Paths setup
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -196,7 +197,6 @@ UPPER_BOUNDS_PATH = os.path.join(MODELS_DIR, 'rf_feature_upper_bounds.pkl')
 # Placeholder for API call
 def send_alert(ip_src, payload)-> int:
     # Gọi API với payload
-    from app.workers.blocker import enqueue_block
     enqueue_block(ip_src, reason="DDoS detected by LivePredictor")
     response = requests.post("http://localhost:8000/api/alerts/raw", json=payload, timeout=60)
     if response.status_code == 200 or response.status_code == 201:
@@ -218,7 +218,7 @@ class LivePredictor:
         self.upper_bounds = None
         self.load_model_and_features()
         self.lock = threading.Lock()
-        self.black_list = {}  # {ip_src: datetime}
+        # self.black_list = {}  # {ip_src: datetime}
 
         # Ensure predict.csv exists with header
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -273,9 +273,9 @@ class LivePredictor:
                 print(ip_src + "Hello")
                 if pred_str == 'DDoS' and ip_src:
                     now = datetime.now()
-                    if ip_src not in self.black_list:
+                    if not is_ip_blocked(ip_src):
                         # Chưa tồn tại → block 4 phút + gửi alert
-                        self.black_list[ip_src] = now + timedelta(minutes=4)
+                        # self.black_list[ip_src] = now + timedelta(minutes=4)
                         payload ={
                                 "rid": "DDoS-001",
                                 "message": "DDoS attack detected",
@@ -293,29 +293,7 @@ class LivePredictor:
                         }
                         send_alert(ip_src, payload)
                     else:
-                        if now >= self.black_list[ip_src]:
-                            # Hết block → gửi alert và reset block
-                            self.black_list[ip_src] = now + timedelta(minutes=1)
-                            payload ={
-                                "rid": "DDoS-001",
-                                "message": "DDoS attack detected",
-                                "src": ip_src,
-                                "dst": row_dict.get('dst') or row_dict.get('Dst IP') or row_dict.get('DestinationIP'),
-                                "sport": row_dict.get('sport') or row_dict.get('Src Port') or row_dict.get('SourcePort') or '0',
-                                "dport": row_dict.get('dport') or row_dict.get('Dst Port') or row_dict.get('DestinationPort') or '80',
-                                "proto": row_dict.get('proto') or row_dict.get('Protocol'),
-                                "variant": "rf_model_v1",
-                                "entropy": 0.0,
-                                "hexdump": "",
-                                "action": "block",
-                                "payload": base64.b64encode(raw_line.encode('utf-8')).decode('ascii'),
-                                "severity": "high"
-                            }
-                            send_alert(ip_src, payload)
-                        else:
-                            # Đang block, không gửi
-                            pass
-
+                        print(f"[BlackList] {ip_src} is already blocked.")
         except Exception as e:
             print(f"[LivePredictor] Prediction Error: {e}")
 

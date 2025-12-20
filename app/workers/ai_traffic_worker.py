@@ -23,13 +23,15 @@ from app.models import Event, Alert, AttackType, IncidentReport
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from datetime import timezone
+#im port request for api call
+import requests
 
 engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 LOG_FILE = "app/logs/traffic.log"
 STATE_FILE = "app/workers/ai_state.json"
 ALERT_LOG = "app/logs/ai_alerts.log"
-API_ALERT_ENDPOINT = "http://127.0.0.1:8000/api/alerts/analyze"
+API_ALERT_ENDPOINT = "http://127.0.0.1:8000/api/alerts/raw"
 POLL_INTERVAL = 2
 THROTTLE_MIN = 1  # giây
 THROTTLE_MAX = 3  # giây
@@ -208,40 +210,88 @@ async def ai_process_block(queue: asyncio.Queue):
                     logger.exception(f"[DB ERROR] Failed to insert alert: {db_err}")
                 finally:
                     session.close()
+                # api_payload = {
+                #     "sent_at": datetime.now().isoformat(),
+                #     "alert_id": alert_id,
+                #     "event_id": event_id,
+                #     "message": label,
+                #     "alert_message": "AI " + label,
+                #     "src_ip": result.get("src", "0.0.0.0"),
+                #     "dst_ip": result.get("dst", "0.0.0.0"),
+                #     "proto": result.get("proto", "TCP"),
+                #     "entropy": result.get("entropy", 0.0),
+                #     "hexdump": block.strip(),
+                #     "severity": result.get("severity", "medium")+"-"+str(result.get("confidence", "0.5"))+"-"+result.get("action", "warning"),
+                #     "alert_level": result.get("severity", "medium"),
+                #     "confidence": result.get("confidence", 0.5),
+                #     "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
+                #     "description": description,
+                #     "action": result.get("action", "monitor"),
+                #     "captured_file": LOG_FILE,
+                #     "timestamp": datetime.now().isoformat(),
+                #     "status": "New",
+                #     "source_ip": result.get("src", "0.0.0.0"),
+                #     "destination_ip": result.get("dst", "0.0.0.0"),
+                #     "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
+                # }
+                # email_attempted = False
+                protocol = result.get("proto", "N/A").upper()
+                if protocol == "6":
+                    protocol = "TCP"
+                elif protocol == "17":
+                    protocol = "UDP"
+                elif protocol == "1":
+                    protocol = "ICMP"
                 api_payload = {
-                    "sent_at": datetime.now().isoformat(),
-                    "alert_id": alert_id,
-                    "event_id": event_id,
-                    "message": label,
-                    "alert_message": "AI " + label,
-                    "src_ip": result.get("src", "0.0.0.0"),
-                    "dst_ip": result.get("dst", "0.0.0.0"),
-                    "proto": result.get("proto", "TCP"),
-                    "entropy": result.get("entropy", 0.0),
-                    "hexdump": block.strip(),
-                    "severity": result.get("severity", "medium")+"-"+str(result.get("confidence", "0.5"))+"-"+result.get("action", "warning"),
-                    "alert_level": result.get("severity", "medium"),
-                    "confidence": result.get("confidence", 0.5),
-                    "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
-                    "description": description,
-                    "action": result.get("action", "monitor"),
-                    "captured_file": LOG_FILE,
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "New",
-                    "source_ip": result.get("src", "0.0.0.0"),
-                    "destination_ip": result.get("dst", "0.0.0.0"),
-                    "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
-                }
-                email_attempted = False
-                try:
-                    # await to_thread(_send_email_sync, api_payload)
-                    email_attempted = True
-                    logger.info(f"Email alert sent for alert_id: {api_payload['alert_id']}")
-                except Exception as e:
-                    print(f"[WARN] Failed to send API alert: {e}")
+                    # 🔑 BẮT BUỘC
+                    "rid": result.get("label", "AI_DETECTED"),
+                    "message": result.get("summary") or label,
 
-            else:
-                print(f"[{datetime.now().isoformat()}] Normal traffic block skipped.")
+                    # 🔑 IP (dùng alias backend)
+                    "src": result.get("src", "0.0.0.0"),
+                    "dst": result.get("dst", "0.0.0.0"),
+
+                    # 🔹 OPTIONAL
+                    "sport": result.get("sport"),
+                    "dport": result.get("dport"),
+                    "protocol": protocol,
+                    "entropy": result.get("entropy", 0.0),
+
+                    "severity": result.get("severity", "medium"),
+                    "action": result.get("action", "monitor"),
+
+                    # 🔹 RAW DATA
+                    "hexdump": block.strip(),
+                    "payload_b64": base64.b64encode(block.encode()).decode("ascii"),
+                }
+            #     try:
+            #         response = requests.post(API_ALERT_ENDPOINT, json=api_payload, timeout=10)
+            #         response.raise_for_status()
+            #         if response.status_code == 200 or response.status_code == 201:
+            #             print(f"[INFO] API alert sent successfully for alert_id: {api_payload['alert_id']}")
+            #         else:
+            #             print(f"[WARN] API alert returned status {response.status_code} for alert_id: {api_payload['alert_id']}")
+            #     except Exception as e:
+            #         print(f"[WARN] Failed to send API alert: {e}")
+
+            # else:
+            #     print(f"[{datetime.now().isoformat()}] Normal traffic block skipped.")
+            try:
+                response = requests.post(
+                    API_ALERT_ENDPOINT,
+                    json=api_payload,
+                    timeout=60
+                )
+
+                print("[API DEBUG] status =", response.status_code)
+                if response.text:
+                    print("[API DEBUG] body =", response.text)
+
+                response.raise_for_status()
+                print(f"[INFO] API raw alert sent successfully (rid={api_payload['rid']})")
+
+            except Exception as e:
+                print(f"[WARN] Failed to send raw alert to API: {e}")
 
             # 🔹 Throttle 1-3 giây giữa các request
             await asyncio.sleep(random.uniform(THROTTLE_MIN, THROTTLE_MAX))

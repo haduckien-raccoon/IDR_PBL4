@@ -7,7 +7,7 @@ class BlockedIPModel:
     """Model thao tác bảng ip_blocked trong database."""
 
     @staticmethod
-    def block_ip(ip_address: str, reason: str, duration_minutes: int = 15):
+    def block_ip(ip_address: str, reason: str, duration_minutes: int = 5):
         """Chặn IP trong thời gian duration_minutes (mặc định 15 phút)."""
         expires_at = datetime.datetime.now() + datetime.timedelta(minutes=duration_minutes)
 

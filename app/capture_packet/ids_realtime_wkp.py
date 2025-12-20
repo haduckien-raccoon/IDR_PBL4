@@ -153,7 +153,7 @@ class IDS:
             self._start_rules_watcher()
         self.http_parser = HTTPParser()
                 #behavior inspector
-        self.behavior_inspector = BehaviorInspector(debug=True)
+        self.behavior_inspector = BehaviorInspector(debug=False)
 
     def log_traffic(self, meta: Dict[str, Any], payload: bytes):
         """
@@ -412,10 +412,10 @@ class IDS:
         #     http_uri, status_code, method, response_body
         # )
         #in ra console để kiểm tra
-        console_logger.info(
-            "HTTP Request: uri=%s, status=%s, method=%s, is_http=%s, is_raw=%s, ip_src=%s, ip_dst=%s",
-            http_uri, status_code, method, is_http, is_raw, meta.get("src"), meta.get("dst")
-        )
+        # console_logger.info(
+        #     "HTTP Request: uri=%s, status=%s, method=%s, is_http=%s, is_raw=%s, ip_src=%s, ip_dst=%s",
+        #     http_uri, status_code, method, is_http, is_raw, meta.get("src"), meta.get("dst")
+        # )
         # Gọi BehaviorInspector
         alerts = self.behavior_inspector.process(meta, http_uri, status_code, method, response_body)
         # Nếu có alert, log tất cả, không chỉ dùng phần tử đầu tiên

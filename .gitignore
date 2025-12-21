@@ -19,3 +19,4 @@ app/AI_ML/data/
 
 # ===== IDE =====
 .vscode/
+data/live_flow.csv

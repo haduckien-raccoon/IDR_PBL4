@@ -192,7 +192,7 @@ class BehaviorInspector:
 
         self.cfg = {
             "ddos": {"interval": 10, "threshold": 1000},
-            "flow_rate": {"interval": 30, "threshold": 300},
+            "flow_rate": {"interval": 30, "threshold": 800},
             "login_fail": {"interval": 20, "threshold": 8},
         }
 
@@ -294,7 +294,7 @@ class BehaviorInspector:
                     events.append({
                         "rid": "FLOW-RATE-ANOMALY",
                         "severity": "high",
-                        "action": "block",
+                        "action": "alert",
                         "type": "dos",
                         "message": f"Abnormal flow from {src} ({count_flow}/{interval_flow}s)",
                     })

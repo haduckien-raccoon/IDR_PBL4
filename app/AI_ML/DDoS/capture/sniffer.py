@@ -16,7 +16,7 @@ from .packet_parser import PacketScratch, parse_ipv4_tcp_udp_into
 CSV_FILE = "data/live_flow.csv"
 
 _FLOW_ACTIVITY_TIMEOUT_US = 1_000_000
-_FLOW_TIMEOUT_S = 30.0  # max lifetime 30s
+_FLOW_TIMEOUT_S = 30.0  # max lifetime 120s
 _SYN_FLUSH_PKT_THRESHOLD = 50
 _CLEANUP_INTERVAL_S = 5.0
 

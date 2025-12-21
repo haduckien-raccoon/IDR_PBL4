@@ -235,13 +235,6 @@ async def ai_process_block(queue: asyncio.Queue):
                 #     "payload_b64": base64.b64encode(block.encode()).decode('ascii'),
                 # }
                 # email_attempted = False
-                protocol = result.get("proto", "N/A").upper()
-                if protocol == "6":
-                    protocol = "TCP"
-                elif protocol == "17":
-                    protocol = "UDP"
-                elif protocol == "1":
-                    protocol = "ICMP"
                 api_payload = {
                     # 🔑 BẮT BUỘC
                     "rid": result.get("label", "AI_DETECTED"),
@@ -254,7 +247,7 @@ async def ai_process_block(queue: asyncio.Queue):
                     # 🔹 OPTIONAL
                     "sport": result.get("sport"),
                     "dport": result.get("dport"),
-                    "protocol": protocol,
+                    "protocol": "TCP",
                     "entropy": result.get("entropy", 0.0),
 
                     "severity": result.get("severity", "medium"),

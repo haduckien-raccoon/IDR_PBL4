@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.database import get_session as get_db
+from app.models import Event, Alert, AttackType
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -130,3 +131,70 @@ def heatmap_data(
         return [{"day": r["wday"], "hour": r["hour"], "value": r["cnt"]} for r in rows]
     except Exception:
         return []
+    
+import io
+import csv
+from fastapi.responses import StreamingResponse
+
+@router.get("/export_csv")
+def export_csv(
+    mode: str = "30d",
+    from_date: str = None,
+    to_date: str = None,
+    db: Session = Depends(get_db)
+):
+    # --- 1. Xác định khoảng thời gian ---
+    now = datetime.now()
+    if mode == "custom" and from_date and to_date:
+        start = datetime.strptime(from_date, "%Y-%m-%d")
+        end = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+    elif mode == "7d":
+        start = now - timedelta(days=7)
+        end = now
+    else:  # default 30d
+        start = now - timedelta(days=30)
+        end = now
+
+    # --- 2. Query Event kèm AttackType và Alerts ---
+    events = (
+        db.query(Event)
+        .filter(Event.timestamp >= start, Event.timestamp <= end)
+        .all()
+    )
+
+    # --- 3. Tạo CSV ---
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Header CSV
+    writer.writerow([
+        "Event ID", "Timestamp", "Source IP", "Destination IP",
+        "Severity", "Status", "Detected By", "Event Description",
+        "Attack Name", "Attack Category", "Attack Description",
+        "Alerts"
+    ])
+
+    for e in events:
+        # Nối tất cả alerts của event thành chuỗi
+        alerts_str = " | ".join([f"[{a.alert_level}] {a.alert_message}" for a in e.alerts])
+        writer.writerow([
+            e.event_id,
+            e.timestamp,
+            e.source_ip,
+            e.destination_ip,
+            e.severity,
+            e.status,
+            e.detected_by,
+            e.description or "",
+            e.attack.attack_name if e.attack else "",
+            e.attack.category if e.attack else "",
+            e.attack.description if e.attack else "",
+            alerts_str
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=analytics_{mode}.csv"}
+    )

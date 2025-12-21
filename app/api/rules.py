@@ -13,7 +13,7 @@ RULES_FILE_PATH = os.path.join(
     os.path.dirname(__file__),  # app/api
     "..",                       # app
     "capture_packet",
-    "rules.json"
+    "rules_fix_end.json"
 )
 
 # ============= HÀM ĐỌC / GHI FILE ============= #

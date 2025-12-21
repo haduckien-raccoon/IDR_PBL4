@@ -7,7 +7,7 @@ from app.services.manager_rules import RulesManager
 import datetime
 from datetime import timedelta  
 
-RULES_FILE = "app/capture_packet/rules.json"
+RULES_FILE = "app/capture_packet/rules_fix_end.json"
 app = FastAPI(title="IDS Rules API")
 rules_manager = RulesManager(RULES_FILE)
 

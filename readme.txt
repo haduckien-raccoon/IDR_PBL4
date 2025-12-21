@@ -21,6 +21,11 @@ conda activate
 python3 -m app.workers.ai_traffic_worker
 339962832
 sudo tcpdump -i wlx8c86ddd72150 'tcp port 80'
+
 sudo /media/haduckien/E/Tool/miniconda3/bin/conda run -n pentest_env --no-capture-output python fast_sniffer.py --iface wlx8c86ddd72150 --print --header cic2017 --port 80
 python3 -m app.AI_ML.DDoS.live_predictor
 python3 -m app.workers.blocker
+sudo /media/haduckien/E/Tool/miniconda3/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+sudo /media/haduckien/E/Tool/miniconda3/bin/conda run -n base --no-capture-output python app/capture_packet/ids_realtime_wkp.py --iface wlx8c86ddd72150 --filter "tcp port 80"
+python3 -m app.workers.ai_traffic_worker
+sudo /media/haduckien/E/Tool/miniconda3/bin/python -m app.services.iptables_service

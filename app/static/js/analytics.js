@@ -1,4 +1,17 @@
 // static/js/analytics.js
+// function exportCSV() {
+//     const mode = document.getElementById("range-mode").value;
+//     const from = document.getElementById("range-from")?.value;
+//     const to = document.getElementById("range-to")?.value;
+
+//     let url = `${window.__CONFIG__.API_BASE}/export_csv?mode=${mode}`;
+//     if (mode === "custom") {
+//         url += `&from_date=${from}&to_date=${to}`;
+//     }
+
+//     // Trigger download
+//     window.location.href = url;
+// }
 document.addEventListener("DOMContentLoaded", () => {
     const API_BASE = (window.__CONFIG__ && window.__CONFIG__.API_BASE) || "";
     

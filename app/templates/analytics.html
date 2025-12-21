@@ -129,8 +129,22 @@
           <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="alert('Feature coming soon: Export PDF')">
             <i class="fa-solid fa-file-pdf"></i> Export PDF
           </button>
-          <button class="btn btn-secondary" style="width:100%;margin-top:6px;" onclick="alert('Feature coming soon: Export CSV')">
-            <i class="fa-solid fa-file-csv"></i> Export CSV
+          <!-- Nút CSV truyền mode -->
+          <button class="btn btn-secondary" style="width:100%;margin-top:6px;"
+                  onclick="exportCSVWithMode('7d')">
+            <i class="fa-solid fa-file-csv"></i> Export Last 7 Days CSV
+          </button>
+          <button class="btn btn-secondary" style="width:100%;margin-top:6px;"
+                  onclick="exportCSVWithMode('30d')">
+            <i class="fa-solid fa-file-csv"></i> Export Last 30 Days CSV
+          </button>
+          <button class="btn btn-secondary" style="width:100%;margin-top:6px;"
+                  onclick="exportCSVWithMode('90d')">
+            <i class="fa-solid fa-file-csv"></i> Export Last 90 Days CSV
+          </button>
+          <button class="btn btn-secondary" style="width:100%;margin-top:6px;"
+                  onclick="exportCSVWithMode('custom')">
+            <i class="fa-solid fa-file-csv"></i> Export Custom Range CSV
           </button>
         </div>
       </aside>
@@ -143,5 +157,35 @@
     };
   </script>
   <script src="{{ url_for('static', path='js/analytics.js') }}"></script>
+<script>
+function exportCSVWithMode(mode) {
+    let from = document.getElementById("range-from")?.value;
+    let to = document.getElementById("range-to")?.value;
+
+    // Tính số ngày
+    let days = 30; // default
+    if (mode === "7d") days = 7;
+    else if (mode === "90d") days = 90;
+    else if (mode === "custom" && from && to) {
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+        days = Math.ceil((toDate - fromDate) / (1000*60*60*24)) + 1;
+    }
+
+    // Tạo URL download
+    let url = `${window.__CONFIG__.API_BASE}/api/analytics/export_csv?mode=${mode}&days=${days}`;
+    if (mode === "custom") {
+        url += `&from_date=${from}&to_date=${to}`;
+    }
+
+    // Tạo element <a> ẩn để download CSV
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics_${mode}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+</script>
 </body>
 </html>
